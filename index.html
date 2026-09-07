@@ -1,332 +1,114 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#16a34a">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Minha Lista">
-<link rel="manifest" href="manifest.json">
-<title>Lista de Supermercado</title>
+<meta name="description" content="Lista de supermercado pessoal, offline e local.">
+<link rel="manifest" href="./manifest.json">
+<title>Minha Lista</title>
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f4f7f5;
-    color: #172019;
-  }
-  .app {
-    max-width: 680px;
-    margin: 0 auto;
-    min-height: 100vh;
-    padding: 20px 16px 28px;
-  }
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
-  }
-  h1 {
-    margin: 0;
-    font-size: 27px;
-    letter-spacing: -0.5px;
-  }
-  .subtitle {
-    color: #68736c;
-    font-size: 14px;
-    margin-top: 3px;
-  }
-  .count {
-    background: #dcfce7;
-    color: #166534;
-    font-weight: 700;
-    min-width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    display: grid;
-    place-items: center;
-  }
-  .add-box {
-    display: flex;
-    gap: 9px;
-    margin-bottom: 14px;
-  }
-  input {
-    flex: 1;
-    min-width: 0;
-    border: 1px solid #d4ddd7;
-    border-radius: 14px;
-    padding: 14px 15px;
-    font-size: 16px;
-    outline: none;
-    background: white;
-  }
-  input:focus {
-    border-color: #22c55e;
-    box-shadow: 0 0 0 3px rgba(34,197,94,.12);
-  }
-  button {
-    border: 0;
-    cursor: pointer;
-    font: inherit;
-  }
-  .add-btn {
-    width: 52px;
-    border-radius: 14px;
-    background: #16a34a;
-    color: white;
-    font-size: 27px;
-    font-weight: 600;
-  }
-  .toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    min-height: 30px;
-  }
-  .toolbar span {
-    color: #66716a;
-    font-size: 13px;
-  }
-  .clear-btn {
-    color: #dc2626;
-    background: transparent;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 5px 0;
-  }
-  .list {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-  }
-  .item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: white;
-    border-radius: 16px;
-    padding: 13px 12px;
-    box-shadow: 0 2px 8px rgba(20,40,28,.05);
-    transition: .15s ease;
-  }
-  .item.done {
-    opacity: .72;
-  }
-  .checkbox {
-    appearance: none;
-    width: 25px;
-    height: 25px;
-    border: 2px solid #aeb9b1;
-    border-radius: 8px;
-    flex: 0 0 auto;
-    position: relative;
-    background: #fff;
-    cursor: pointer;
-  }
-  .checkbox:checked {
-    background: #16a34a;
-    border-color: #16a34a;
-  }
-  .checkbox:checked::after {
-    content: "✓";
-    color: white;
-    position: absolute;
-    font-size: 17px;
-    font-weight: 800;
-    left: 4px;
-    top: -1px;
-  }
-  .name {
-    flex: 1;
-    font-size: 16px;
-    overflow-wrap: anywhere;
-  }
-  .done .name {
-    text-decoration: line-through;
-    color: #69736d;
-  }
-  .delete {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: #fef2f2;
-    color: #dc2626;
-    font-size: 18px;
-  }
-  .empty {
-    text-align: center;
-    color: #7a857e;
-    padding: 52px 18px;
-  }
-  .empty .emoji {
-    font-size: 42px;
-    margin-bottom: 8px;
-  }
-  .empty strong {
-    display: block;
-    color: #455148;
-    margin-bottom: 4px;
-  }
-  @media (prefers-color-scheme: dark) {
-    body { background: #101512; color: #edf4ef; }
-    input, .item { background: #18201b; border-color: #2d3931; color: #edf4ef; }
-    input::placeholder { color: #7e8b82; }
-    .subtitle, .toolbar span { color: #8e9a92; }
-    .checkbox { background: #18201b; border-color: #526057; }
-    .empty strong { color: #d8e2db; }
-    .empty { color: #839086; }
-    .clear-btn { color: #f87171; }
-  }
+:root{--bg:#f4f7f5;--card:#fff;--text:#172019;--muted:#68736c;--border:#d4ddd7;--primary:#16a34a;--primary2:#15803d;--danger:#dc2626;--soft:#dcfce7;--shadow:0 2px 12px rgba(20,40,28,.06)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}body{padding-bottom:82px}.app{max-width:760px;margin:auto;padding:18px 14px 28px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.top h1{font-size:27px;margin:0;letter-spacing:-.5px}.sub{font-size:13px;color:var(--muted);margin-top:3px}.badge{min-width:44px;height:44px;border-radius:14px;background:var(--soft);color:#166534;display:grid;place-items:center;font-weight:800}.view{display:none}.view.active{display:block}.panel{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;box-shadow:var(--shadow);margin-bottom:12px}.row{display:flex;gap:9px;align-items:center}.row>*{min-width:0}.input,.select{width:100%;border:1px solid var(--border);border-radius:13px;padding:12px 13px;font:inherit;font-size:16px;background:var(--card);color:var(--text);outline:none}.input:focus,.select:focus{border-color:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.12)}.btn{border:0;border-radius:13px;padding:11px 14px;font:inherit;font-weight:700;cursor:pointer;min-height:44px}.btn.primary{background:var(--primary);color:#fff}.btn.primary:active{background:var(--primary2)}.btn.ghost{background:#eef3ef;color:#344139}.btn.danger{background:#fef2f2;color:var(--danger)}.btn.small{padding:8px 10px;min-height:38px;font-size:14px}.section-title{font-size:19px;font-weight:800;margin:0 0 10px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0}.muted{color:var(--muted);font-size:13px}.search{margin:10px 0}.cards{display:flex;flex-direction:column;gap:9px}.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px;box-shadow:var(--shadow)}.card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.card-title{font-weight:800;font-size:17px;overflow-wrap:anywhere}.meta{color:var(--muted);font-size:12px;margin-top:4px}.actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.empty{text-align:center;color:var(--muted);padding:38px 15px}.empty .emoji{font-size:38px;margin-bottom:7px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.stat{background:#f0f5f1;border-radius:13px;padding:10px;text-align:center}.stat strong{display:block;font-size:18px}.stat span{font-size:11px;color:var(--muted)}.total{font-size:20px;font-weight:900;text-align:right;margin-top:8px}.item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #edf1ee}.item:last-child{border-bottom:0}.check{appearance:none;width:25px;height:25px;border:2px solid #aeb9b1;border-radius:8px;flex:0 0 auto;background:var(--card);position:relative}.check:checked{background:var(--primary);border-color:var(--primary)}.check:checked:after{content:"✓";color:white;position:absolute;font-size:17px;font-weight:900;left:4px;top:-2px}.item-main{flex:1;min-width:0}.item-name{font-size:16px;font-weight:650;overflow-wrap:anywhere}.done .item-name{text-decoration:line-through;color:#69736d}.item-meta{font-size:12px;color:var(--muted);margin-top:3px}.item-actions{display:flex;gap:5px}.iconbtn{width:38px;height:38px;border:0;border-radius:11px;background:#eef3ef;font-size:17px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.field label{display:block;font-size:12px;font-weight:750;color:var(--muted);margin:0 0 5px}.field.full{grid-column:1/-1}.hint{font-size:12px;color:var(--muted);margin-top:6px}.nav{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);border-top:1px solid var(--border);z-index:20;padding:7px max(8px,env(safe-area-inset-left)) calc(7px + env(safe-area-inset-bottom));backdrop-filter:blur(10px)}.nav-inner{max-width:760px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.nav button{border:0;background:transparent;color:var(--muted);padding:7px 2px;border-radius:12px;font:inherit;font-size:11px;font-weight:700}.nav button.active{background:var(--soft);color:#166534}.nav-icon{font-size:19px;display:block;margin-bottom:2px}.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}.modal.show{display:flex}.sheet{width:min(760px,100%);max-height:92vh;overflow:auto;background:var(--card);border-radius:22px 22px 0 0;padding:18px 15px calc(20px + env(safe-area-inset-bottom))}.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.sheet h2{margin:0;font-size:20px}.close{border:0;background:#eef3ef;border-radius:10px;width:40px;height:40px;font-size:20px}.toast{position:fixed;left:50%;bottom:88px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#172019;color:#fff;padding:11px 14px;border-radius:13px;font-size:13px;z-index:80;transition:.2s;max-width:90%;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}.table-wrap{overflow:auto}.history-table{width:100%;border-collapse:collapse;font-size:13px}.history-table th,.history-table td{text-align:left;padding:9px 7px;border-bottom:1px solid var(--border);white-space:nowrap}.price{font-weight:800}.danger-zone{border:1px solid #fecaca;background:#fff7f7}.file-label{display:block;text-align:center}.hidden{display:none!important}
+
+html[data-theme="light"] body{background:#f4f7f5;color:#172019}html[data-theme="dark"]{--bg:#101512;--card:#18201b;--text:#edf4ef;--muted:#8e9a92;--border:#2d3931;--soft:#183b25;--shadow:0 2px 12px rgba(0,0,0,.18)}html[data-theme="dark"] body{background:var(--bg);color:var(--text)}html[data-theme="dark"] .btn.ghost,html[data-theme="dark"] .iconbtn,html[data-theme="dark"] .close{background:#253028;color:#dfe8e2}html[data-theme="dark"] .stat{background:#202a23}html[data-theme="dark"] .nav{background:rgba(16,21,18,.96)}html[data-theme="dark"] .danger-zone{background:#251818;border-color:#5c2929}
+@media(max-width:520px){.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.actions .btn{font-size:12px}.stats{gap:5px}.stat{padding:8px 4px}}
+@media(prefers-color-scheme:dark){:root{--bg:#101512;--card:#18201b;--text:#edf4ef;--muted:#8e9a92;--border:#2d3931;--soft:#183b25;--shadow:0 2px 12px rgba(0,0,0,.18)}.btn.ghost,.iconbtn,.close{background:#253028;color:#dfe8e2}.stat{background:#202a23}.nav{background:rgba(16,21,18,.96)}.danger-zone{background:#251818;border-color:#5c2929}.history-table th,.history-table td{border-color:#2d3931}}
 </style>
 </head>
 <body>
 <div class="app">
-  <header>
-    <div>
-      <h1>🛒 Minha lista</h1>
-      <div class="subtitle">Lista de supermercado</div>
-    </div>
-    <div class="count" id="pendingCount">0</div>
-  </header>
+<header class="top"><div><h1>🛒 Minha lista</h1><div class="sub">Supermercado • offline • v2.0</div></div><div class="badge" id="globalBadge">0</div></header>
 
-  <form class="add-box" id="form">
-    <input id="itemInput" type="text" placeholder="Adicionar item..." autocomplete="off" maxlength="100">
-    <button class="add-btn" type="submit" aria-label="Adicionar">+</button>
-  </form>
+<section id="listsView" class="view active">
+  <div class="panel"><div class="row"><input id="listSearch" class="input" placeholder="Pesquisar listas..." autocomplete="off"><button class="btn primary" id="newListBtn">+ Lista</button></div></div>
+  <div class="toolbar"><span class="muted" id="listsSummary">0 listas</span></div>
+  <div id="listsCards" class="cards"></div>
+</section>
 
-  <div class="toolbar">
-    <span id="summary">Nenhum item</span>
-    <button class="clear-btn" id="clearDone" type="button">Limpar comprados</button>
-  </div>
+<section id="catalogView" class="view">
+  <div class="panel"><h2 class="section-title">📦 Lista Principal</h2><div class="row"><input id="catalogInput" class="input" placeholder="Adicionar produto..." maxlength="120" autocomplete="off"><button class="btn primary" id="addCatalogBtn">+</button></div><div class="hint">Cadastre aqui os produtos que poderão ser usados nas listas.</div></div>
+  <div class="search"><input id="catalogSearch" class="input" placeholder="Pesquisar produto..." autocomplete="off"></div>
+  <div id="catalogCards" class="cards"></div>
+</section>
 
-  <div class="list" id="list"></div>
+<section id="historyView" class="view">
+  <div class="panel"><h2 class="section-title">💰 Histórico de preços</h2><div class="form-grid"><div class="field"><label>Produto</label><input id="historyItemSearch" class="input" placeholder="Pesquisar..."></div><div class="field"><label>Mercado</label><input id="historyMarketSearch" class="input" placeholder="Pesquisar..."></div></div><div class="toolbar"><span class="muted" id="historySummary">0 registros</span><button class="btn danger small" id="clearHistoryBtn">Limpar histórico</button></div></div>
+  <div id="historyCards" class="cards"></div>
+</section>
+
+<section id="settingsView" class="view">
+  <div class="panel"><h2 class="section-title">⚙️ Configurações</h2><p class="muted">Os dados ficam no armazenamento local deste navegador. O IndexedDB não é criptografia e não envia seus dados para um servidor.</p><div class="row" style="flex-wrap:wrap"><button class="btn primary" id="exportBtn">⬇️ Exportar backup</button><label class="btn ghost file-label">⬆️ Importar backup<input id="importInput" class="hidden" type="file" accept="application/json,.json"></label></div><div class="row" style="margin-top:10px"><span class="muted">Tema</span><button class="btn ghost small" id="themeBtn">Usar tema do sistema</button></div></div>
+  <div class="panel"><h3 style="margin:0 0 8px">Backup</h3><p class="muted">Recomendação: exporte um backup de tempos em tempos. Limpar os dados do navegador pode remover o IndexedDB.</p><button class="btn ghost" id="installHintBtn">ℹ️ Sobre a instalação</button></div>
+  <div class="panel danger-zone"><h3 style="margin:0 0 8px;color:#dc2626">Zona de perigo</h3><button class="btn danger" id="clearAllBtn">Apagar todos os dados</button></div>
+  <div class="panel"><strong>Minha Lista v2.0</strong><div class="muted" style="margin-top:4px">PWA • IndexedDB • offline</div></div>
+</section>
 </div>
+
+<nav class="nav"><div class="nav-inner"><button data-view="listsView" class="active"><span class="nav-icon">📝</span>Listas</button><button data-view="catalogView"><span class="nav-icon">📦</span>Principal</button><button data-view="historyView"><span class="nav-icon">💰</span>Histórico</button><button data-view="settingsView"><span class="nav-icon">⚙️</span>Config.</button></div></nav>
+
+<div id="modal" class="modal"><div class="sheet"><div class="sheet-head"><h2 id="modalTitle"></h2><button class="close" id="modalClose">×</button></div><div id="modalBody"></div></div></div>
+<div id="toast" class="toast"></div>
 
 <script>
 (() => {
-  const STORAGE_KEY = "lista_supermercado_v1";
-  const form = document.getElementById("form");
-  const input = document.getElementById("itemInput");
-  const list = document.getElementById("list");
-  const pendingCount = document.getElementById("pendingCount");
-  const summary = document.getElementById("summary");
-  const clearDone = document.getElementById("clearDone");
-
-  let items = load();
-
-  function load() {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }
-
-  function render() {
-    list.innerHTML = "";
-
-    if (!items.length) {
-      list.innerHTML = `
-        <div class="empty">
-          <div class="emoji">🛍️</div>
-          <strong>Lista vazia</strong>
-          Adicione seu primeiro item acima.
-        </div>`;
-    } else {
-      items.forEach(item => {
-        const row = document.createElement("div");
-        row.className = "item" + (item.done ? " done" : "");
-
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.className = "checkbox";
-        checkbox.checked = item.done;
-        checkbox.setAttribute("aria-label", "Marcar " + item.name);
-        checkbox.addEventListener("change", () => {
-          item.done = checkbox.checked;
-          save();
-          render();
-        });
-
-        const name = document.createElement("div");
-        name.className = "name";
-        name.textContent = item.name;
-
-        const del = document.createElement("button");
-        del.className = "delete";
-        del.type = "button";
-        del.textContent = "🗑";
-        del.setAttribute("aria-label", "Excluir " + item.name);
-        del.addEventListener("click", () => {
-          items = items.filter(x => x.id !== item.id);
-          save();
-          render();
-        });
-
-        row.append(checkbox, name, del);
-        list.appendChild(row);
-      });
-    }
-
-    const total = items.length;
-    const done = items.filter(x => x.done).length;
-    const pending = total - done;
-
-    pendingCount.textContent = pending;
-    summary.textContent = total === 0
-      ? "Nenhum item"
-      : `${total} ${total === 1 ? "item" : "itens"} • ${pending} ${pending === 1 ? "pendente" : "pendentes"}`;
-  }
-
-  form.addEventListener("submit", event => {
-    event.preventDefault();
-    const name = input.value.trim();
-    if (!name) {
-      input.focus();
-      return;
-    }
-
-    items.push({
-      id: Date.now() + Math.random(),
-      name,
-      done: false
-    });
-
-    save();
-    input.value = "";
-    render();
-    input.focus();
-  });
-
-  clearDone.addEventListener("click", () => {
-    const hadDone = items.some(item => item.done);
-    if (!hadDone) return;
-
-    items = items.filter(item => !item.done);
-    save();
-    render();
-  });
-
-  render();
-})();
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(console.error);
-  });
+'use strict';
+const DB_NAME='MinhaListaDB', DB_VERSION=2, OLD_KEY='lista_supermercado_v1';
+let db, catalogs=[], lists=[], history=[], settings={}, currentListId=null, undoAction=null, undoTimer=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const uid=()=>crypto?.randomUUID?.() || Date.now().toString(36)+Math.random().toString(36).slice(2);
+const today=()=>new Date().toISOString().slice(0,10);
+const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n)||0);
+const parseMoney=v=>{if(v===null||v===undefined||String(v).trim()==='')return null;let s=String(v).trim().replace(/R\$/gi,'').replace(/\s/g,'');if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else s=s.replace(',','.');const n=Number(s);return Number.isFinite(n)&&n>=0?n:null};
+function notify(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600)}
+function confirmText(msg){return window.confirm(msg)}
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('catalogs'))d.createObjectStore('catalogs',{keyPath:'id'});if(!d.objectStoreNames.contains('lists'))d.createObjectStore('lists',{keyPath:'id'});if(!d.objectStoreNames.contains('history'))d.createObjectStore('history',{keyPath:'id'});if(!d.objectStoreNames.contains('settings'))d.createObjectStore('settings',{keyPath:'key'});};r.onsuccess=()=>{db=r.result;res(db)};r.onerror=()=>rej(r.error)})}
+function tx(store,mode='readonly'){return db.transaction(store,mode).objectStore(store)}
+function all(store){return new Promise((res,rej)=>{const r=tx(store).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})}
+function put(store,obj){return new Promise((res,rej)=>{const r=tx(store,'readwrite').put(obj);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function del(store,key){return new Promise((res,rej)=>{const r=tx(store,'readwrite').delete(key);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
+function clearStore(store){return new Promise((res,rej)=>{const r=tx(store,'readwrite').clear();r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
+async function migrateOld(){
+  const raw=localStorage.getItem(OLD_KEY); if(!raw)return;
+  let old;try{old=JSON.parse(raw)}catch{return}
+  if(!Array.isArray(old)||!old.length){localStorage.removeItem(OLD_KEY);return}
+  const existing=await all('catalogs'); const byName=new Map(existing.map(x=>[x.name.trim().toLowerCase(),x])); const items=[];
+  for(const o of old){const name=String(o.name||'').trim();if(!name)continue;let c=byName.get(name.toLowerCase());if(!c){c={id:uid(),name};byName.set(name.toLowerCase(),c);await put('catalogs',c)}items.push({id:uid(),mainItemId:c.id,done:!!o.done,quantity:null,date:null,value:null,marketName:''})}
+  await put('lists',{id:uid(),name:'Lista antiga',date:today(),createdAt:new Date().toISOString(),items});localStorage.removeItem(OLD_KEY);notify('Lista antiga migrada para o novo armazenamento.')
 }
+async function load(){catalogs=await all('catalogs');lists=await all('lists');history=await all('history');settings={};for(const s of await all('settings'))settings[s.key]=s.value;applyTheme();catalogs.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));lists.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));history.sort((a,b)=>String(b.date||b.createdAt).localeCompare(String(a.date||a.createdAt)));renderAll()}
+function catalogName(id){return catalogs.find(c=>c.id===id)?.name||'Produto removido'}
+function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));renderAll()}
+function applyTheme(){const mode=settings.theme||'system';document.documentElement.dataset.theme=mode;const b=$('themeBtn');if(b)b.textContent=mode==='dark'?'Tema escuro':mode==='light'?'Tema claro':'Usar tema do sistema';}
+async function setTheme(mode){settings.theme=mode;await put('settings',{key:'theme',value:mode});applyTheme()}
+function renderAll(){renderLists();renderCatalog();renderHistory();$('globalBadge').textContent=lists.reduce((n,l)=>n+(l.items||[]).filter(i=>!i.done).length,0);applyTheme()}
+function renderLists(){const q=$('listSearch').value.trim().toLowerCase();const arr=lists.filter(l=>String(l.name).toLowerCase().includes(q));$('listsSummary').textContent=`${lists.length} ${lists.length===1?'lista':'listas'}`;if(!arr.length){$('listsCards').innerHTML='<div class="empty"><div class="emoji">🛍️</div><strong>Nenhuma lista encontrada</strong><div>Crie uma nova lista para começar.</div></div>';return}$('listsCards').innerHTML=arr.map(l=>{const items=l.items||[],done=items.filter(i=>i.done).length,total=items.reduce((s,i)=>s+(i.value!=null?(Number(i.value)||0)*(Number(i.quantity)||1):0),0);return `<div class="card"><div class="card-head"><div><div class="card-title">${esc(l.name)}</div><div class="meta">${l.date?`📅 ${formatDate(l.date)} • `:''}${items.length} ${items.length===1?'item':'itens'} • ${done} comprados</div>${total?`<div class="meta">Total: <strong>${money(total)}</strong></div>`:''}</div><div class="actions"><button class="btn primary small" data-open-list="${l.id}">Abrir</button><button class="btn ghost small" data-edit-list="${l.id}">Editar</button><button class="btn ghost small" data-dup-list="${l.id}">Duplicar</button><button class="btn danger small" data-del-list="${l.id}">Excluir</button></div></div></div>`}).join('')}
+function renderCatalog(){const q=$('catalogSearch').value.trim().toLowerCase();const arr=catalogs.filter(c=>c.name.toLowerCase().includes(q));if(!arr.length){$('catalogCards').innerHTML='<div class="empty"><div class="emoji">📦</div><strong>Catálogo vazio</strong><div>Adicione produtos na Lista Principal.</div></div>';return}$('catalogCards').innerHTML=arr.map(c=>`<div class="card"><div class="card-head"><div><div class="card-title">${esc(c.name)}</div><div class="meta">Usado em ${lists.reduce((n,l)=>n+(l.items||[]).filter(i=>i.mainItemId===c.id).length,0)} item(ns) de listas</div></div><div class="actions"><button class="btn ghost small" data-edit-cat="${c.id}">Editar</button><button class="btn danger small" data-del-cat="${c.id}">Excluir</button></div></div></div>`).join('')}
+function renderHistory(){const qi=$('historyItemSearch').value.trim().toLowerCase(),qm=$('historyMarketSearch').value.trim().toLowerCase();const arr=history.filter(h=>String(h.itemName).toLowerCase().includes(qi)&&String(h.marketName||'').toLowerCase().includes(qm));$('historySummary').textContent=`${history.length} ${history.length===1?'registro':'registros'}`;if(!arr.length){$('historyCards').innerHTML='<div class="empty"><div class="emoji">💰</div><strong>Nenhum histórico encontrado</strong><div>Preços informados nas listas serão registrados aqui.</div></div>';return}const grouped={};arr.forEach(h=>(grouped[h.itemName]??=[]).push(h));$('historyCards').innerHTML=Object.entries(grouped).map(([name,rows])=>{const nums=rows.map(x=>Number(x.value)).filter(Number.isFinite);const min=nums.length?Math.min(...nums):0,max=nums.length?Math.max(...nums):0,latest=rows.slice().sort((a,b)=>String(b.date||b.createdAt).localeCompare(String(a.date||a.createdAt)))[0];return `<div class="card"><div class="card-head"><div><div class="card-title">${esc(name)}</div><div class="meta">${rows.length} ${rows.length===1?'registro':'registros'} • menor ${money(min)} • maior ${money(max)} • mais recente ${latest?money(latest.value):'-'}</div></div></div><div class="table-wrap"><table class="history-table"><thead><tr><th>Mercado</th><th>Data</th><th>Valor</th></tr></thead><tbody>${rows.map(h=>`<tr><td>${esc(h.marketName||'—')}</td><td>${formatDate(h.date)}</td><td class="price">${money(h.value)}</td></tr>`).join('')}</tbody></table></div></div>`}).join('')}
+function formatDate(s){if(!s)return'—';const p=String(s).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s}
+function showModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.add('show')}
+function closeModal(){$('modal').classList.remove('show');$('modalBody').innerHTML='';currentListId=null}
+function listForm(l){return `<form id="listForm"><div class="field"><label>Nome da lista *</label><input id="lfName" class="input" maxlength="120" required value="${esc(l?.name||'')}"></div><div class="field" style="margin-top:9px"><label>Data (opcional)</label><input id="lfDate" class="input" type="date" value="${esc(l?.date||'')}"></div><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar lista</button></div></form>`}
+function itemForm(listId,item){const opts=catalogs.slice().sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(c=>`<option value="${c.id}" ${item?.mainItemId===c.id?'selected':''}>${esc(c.name)}</option>`).join('');return `<form id="itemForm"><div class="field"><label>Produto *</label><select id="ifProduct" class="select" required><option value="">Selecione...</option>${opts}</select></div><div class="form-grid" style="margin-top:9px"><div class="field"><label>Quantidade</label><input id="ifQty" class="input" type="number" min="0.01" step="0.01" inputmode="decimal" value="${item?.quantity??''}" placeholder="Ex.: 2"></div><div class="field"><label>Valor</label><input id="ifValue" class="input" inputmode="decimal" value="${item?.value!=null?String(item.value).replace('.',','):''}" placeholder="Ex.: 18,90"></div><div class="field"><label>Data</label><input id="ifDate" class="input" type="date" value="${esc(item?.date||'')}"></div><div class="field"><label>Mercado</label><input id="ifMarket" class="input" list="marketList" maxlength="100" value="${esc(item?.marketName||'')}" placeholder="Ex.: Atacadão"></div></div><datalist id="marketList">${[...new Set(history.map(h=>h.marketName).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(x=>`<option value="${esc(x)}">`).join('')}</datalist><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar produto</button></div></form>`}
+async function saveList(e,id){e.preventDefault();const name=$('lfName').value.trim();if(!name)return;if(id){const l=lists.find(x=>x.id===id);l.name=name;l.date=$('lfDate').value||null;await put('lists',l);notify('Lista atualizada.')}else{const l={id:uid(),name,date:$('lfDate').value||null,createdAt:new Date().toISOString(),items:[]};await put('lists',l);lists.push(l);notify('Lista criada.')}closeModal();await load()}
+function openList(id){const l=lists.find(x=>x.id===id);if(!l)return;currentListId=id;renderListModal()}
+function renderListModal(){const l=lists.find(x=>x.id===currentListId);if(!l)return;const q=window._listItemSearch?.toLowerCase()||'';const f=window._listFilter||'all';let items=(l.items||[]).map((x,idx)=>({...x,_idx:idx})).filter(x=>catalogName(x.mainItemId).toLowerCase().includes(q)).filter(x=>f==='all'||(f==='done'?x.done:!x.done));const done=(l.items||[]).filter(x=>x.done).length,total=l.items?.length||0,sum=(l.items||[]).reduce((s,i)=>s+(i.value!=null?(Number(i.value)||0)*(Number(i.quantity)||1):0),0);showModal(l.name,`<div class="stats"><div class="stat"><strong>${total}</strong><span>itens</span></div><div class="stat"><strong>${done}</strong><span>comprados</span></div><div class="stat"><strong>${total-done}</strong><span>pendentes</span></div></div><div class="total">${sum?`Total: ${money(sum)}`:'Sem valores'}</div><div class="row" style="margin:12px 0"><input id="listItemSearch" class="input" placeholder="Pesquisar item..." value="${esc(window._listItemSearch||'')}"><select id="listFilter" class="select" style="max-width:145px"><option value="all" ${f==='all'?'selected':''}>Todos</option><option value="pending" ${f==='pending'?'selected':''}>Pendentes</option><option value="done" ${f==='done'?'selected':''}>Comprados</option></select></div><div class="row" style="margin-bottom:10px"><button class="btn primary" id="addItemBtn">+ Adicionar produto</button><button class="btn danger small" id="clearDoneBtn">Limpar comprados</button></div><div id="listItems">${items.length?items.map(x=>`<div class="item ${x.done?'done':''}"><input class="check" type="checkbox" data-toggle-item="${x._idx}" ${x.done?'checked':''}><div class="item-main"><div class="item-name">${esc(catalogName(x.mainItemId))}${x.quantity?` × ${esc(x.quantity)}`:''}</div><div class="item-meta">${x.value!=null?money(x.value):'Sem valor'}${x.marketName?` • ${esc(x.marketName)}`:''}${x.date?` • ${formatDate(x.date)}`:''}</div></div><div class="item-actions"><button class="iconbtn" data-edit-item="${x._idx}">✏️</button><button class="iconbtn" data-del-item="${x._idx}">🗑️</button></div></div>`).join(''):'<div class="empty"><div class="emoji">🛒</div><strong>Lista vazia</strong><div>Adicione um produto da Lista Principal.</div></div>'}</div>`);$('listItemSearch').oninput=e=>{window._listItemSearch=e.target.value;renderListModal();setTimeout(()=>{$('listItemSearch')?.focus();$('listItemSearch').setSelectionRange(e.target.value.length,e.target.value.length)},0)};$('listFilter').onchange=e=>{window._listFilter=e.target.value;renderListModal()};$('addItemBtn').onclick=()=>{if(!catalogs.length){notify('Adicione produtos na Lista Principal primeiro.');return}showModal('Adicionar produto',itemForm(l.id,null));bindItemForm(l.id,null)};$('clearDoneBtn').onclick=async()=>{if(!(l.items||[]).some(x=>x.done))return;if(!confirmText('Remover todos os produtos marcados como comprados desta lista?'))return;l.items=l.items.filter(x=>!x.done);await put('lists',l);notify('Comprados removidos.');renderListModal();await load()};document.querySelectorAll('[data-toggle-item]').forEach(el=>el.onchange=async()=>{l.items[Number(el.dataset.toggleItem)].done=el.checked;await put('lists',l);renderListModal();await load()});document.querySelectorAll('[data-edit-item]').forEach(b=>b.onclick=()=>{const it=l.items[Number(b.dataset.editItem)];showModal('Editar produto',itemForm(l.id,it));bindItemForm(l.id,it)});document.querySelectorAll('[data-del-item]').forEach(b=>b.onclick=async()=>{const idx=Number(b.dataset.delItem),removed=l.items[idx];if(!confirmText(`Excluir "${catalogName(removed.mainItemId)}" desta lista?`))return;l.items.splice(idx,1);await put('lists',l);undoAction=async()=>{l.items.splice(idx,0,removed);await put('lists',l);renderListModal();await load()};showUndo('Produto excluído');renderListModal();await load()})}
+function bindItemForm(listId,existing){$('itemForm').onsubmit=async e=>{e.preventDefault();const l=lists.find(x=>x.id===listId);const mainItemId=$('ifProduct').value;if(!mainItemId)return;const value=parseMoney($('ifValue').value),quantity=$('ifQty').value.trim()===''?null:Number($('ifQty').value);const obj=existing?existing:{id:uid(),mainItemId,done:false,quantity:null,date:null,value:null,marketName:''};const old={mainItemId:obj.mainItemId,value:obj.value,date:obj.date,marketName:obj.marketName};obj.mainItemId=mainItemId;obj.quantity=quantity&&quantity>0?quantity:null;obj.value=value;obj.date=$('ifDate').value||null;obj.marketName=$('ifMarket').value.trim();l.items=l.items||[];if(existing===null)l.items.push(obj);await put('lists',l);const changed=old.mainItemId!==obj.mainItemId||old.value!==obj.value||old.date!==obj.date||old.marketName!==obj.marketName;if(obj.value!=null&&(existing===null||changed)){await put('history',{id:uid(),itemName:catalogName(obj.mainItemId),marketName:obj.marketName||'',date:obj.date||today(),value:obj.value,createdAt:new Date().toISOString()})}notify(existing?'Produto atualizado.':'Produto adicionado.');window._listItemSearch='';window._listFilter='all';await load();renderListModal()}}
+async function duplicateList(id){const l=lists.find(x=>x.id===id);if(!l)return;const copy=JSON.parse(JSON.stringify(l));copy.id=uid();copy.name=l.name+' (cópia)';copy.createdAt=new Date().toISOString();copy.items=(copy.items||[]).map(i=>({...i,id:uid(),done:false}));await put('lists',copy);lists.push(copy);notify('Lista duplicada.');renderAll()}
+function showUndo(msg){clearTimeout(undoTimer);const t=$('toast');t.innerHTML=`${esc(msg)} <button id="undoBtn" style="border:0;background:transparent;color:#86efac;font-weight:800;margin-left:8px">Desfazer</button>`;t.classList.add('show');$('undoBtn').onclick=async()=>{if(undoAction)await undoAction();undoAction=null;t.classList.remove('show')};undoTimer=setTimeout(()=>{undoAction=null;t.classList.remove('show')},4500)}
+async function addCatalog(){const input=$('catalogInput'),name=input.value.trim();if(!name)return;if(catalogs.some(c=>c.name.trim().toLowerCase()===name.toLowerCase())){notify('Esse produto já está cadastrado.');return}const c={id:uid(),name};await put('catalogs',c);catalogs.push(c);catalogs.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));input.value='';renderAll();input.focus();notify('Produto adicionado.')}
+function editCatalog(id){const c=catalogs.find(x=>x.id===id);if(!c)return;showModal('Editar produto',`<form id="catForm"><div class="field"><label>Nome *</label><input id="cfName" class="input" required maxlength="120" value="${esc(c.name)}"></div><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar</button></div></form>`);$('catForm').onsubmit=async e=>{e.preventDefault();const n=$('cfName').value.trim();if(!n)return;if(catalogs.some(x=>x.id!==id&&x.name.toLowerCase()===n.toLowerCase())){notify('Esse produto já existe.');return}c.name=n;await put('catalogs',c);closeModal();await load();notify('Produto atualizado.')}}
+async function deleteCatalog(id){const c=catalogs.find(x=>x.id===id);const used=lists.some(l=>(l.items||[]).some(i=>i.mainItemId===id));if(used){notify('Não é possível excluir: o produto está em uma lista.');return}if(!confirmText(`Excluir "${c.name}" da Lista Principal?`))return;await del('catalogs',id);catalogs=catalogs.filter(x=>x.id!==id);renderAll();undoAction=async()=>{await put('catalogs',c);catalogs.push(c);catalogs.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));renderAll()};showUndo('Produto excluído')}
+async function exportBackup(){const data={app:'Minha Lista de Supermercado',version:'2.0',exportedAt:new Date().toISOString(),catalogs,lists,history,settings:{}};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`minha-lista-backup-${today()}.json`;a.click();URL.revokeObjectURL(url);notify('Backup exportado.')}
+async function importBackup(file){let data;try{data=JSON.parse(await file.text())}catch{notify('Arquivo JSON inválido.');return}if(!Array.isArray(data.catalogs)||!Array.isArray(data.lists)||!Array.isArray(data.history)){notify('Backup incompatível.');return}if(!confirmText('Restaurar este backup? Os dados atuais serão substituídos.'))return;await clearStore('catalogs');await clearStore('lists');await clearStore('history');for(const c of data.catalogs)await put('catalogs',c);for(const l of data.lists)await put('lists',l);for(const h of data.history)await put('history',h);if(data.settings&&typeof data.settings==='object'){for(const [key,value] of Object.entries(data.settings)){await put('settings',{key,value})}}notify('Backup restaurado.');await load()}
+async function clearAll(){if(!confirmText('ATENÇÃO: apagar todos os produtos, listas e histórico? Esta ação não pode ser desfeita.'))return;await clearStore('catalogs');await clearStore('lists');await clearStore('history');await clearStore('settings');settings={};localStorage.removeItem(OLD_KEY);notify('Todos os dados foram apagados.');await load()}
+$('newListBtn').onclick=()=>showModal('Nova lista',listForm(null));$('modalClose').onclick=closeModal;$('modal').onclick=e=>{if(e.target===$('modal'))closeModal()};$('listSearch').oninput=renderLists;$('catalogSearch').oninput=renderCatalog;$('historyItemSearch').oninput=renderHistory;$('historyMarketSearch').oninput=renderHistory;$('addCatalogBtn').onclick=addCatalog;$('catalogInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addCatalog()}};$('clearHistoryBtn').onclick=async()=>{if(!history.length||!confirmText('Limpar todo o histórico de preços?'))return;await clearStore('history');history=[];renderHistory();notify('Histórico limpo.')};$('exportBtn').onclick=exportBackup;$('importInput').onchange=e=>{const f=e.target.files?.[0];if(f)importBackup(f);e.target.value=''};$('clearAllBtn').onclick=clearAll;$('themeBtn').onclick=async()=>{const mode=settings.theme||'system';await setTheme(mode==='system'?'light':mode==='light'?'dark':'system')};$('installHintBtn').onclick=()=>alert('Para instalar: abra a aplicação pelo endereço HTTPS do GitHub Pages e use o menu do navegador > Adicionar à tela inicial/Instalar aplicativo. Depois da atualização, talvez seja necessário fechar e abrir a PWA novamente para carregar a V2.');
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>switchView(b.dataset.view));document.addEventListener('click',e=>{const t=e.target;if(t.dataset.openList)openList(t.dataset.openList);if(t.dataset.editList){const l=lists.find(x=>x.id===t.dataset.editList);showModal('Editar lista',listForm(l));$('listForm').onsubmit=e2=>saveList(e2,l.id)}if(t.dataset.dupList)duplicateList(t.dataset.dupList);if(t.dataset.delList)deleteList(t.dataset.delList);if(t.dataset.editCat)editCatalog(t.dataset.editCat);if(t.dataset.delCat)deleteCatalog(t.dataset.delCat)});
+async function deleteList(id){const l=lists.find(x=>x.id===id);if(!l||!confirmText(`Excluir a lista "${l.name}"?`))return;await del('lists',id);lists=lists.filter(x=>x.id!==id);undoAction=async()=>{await put('lists',l);lists.push(l);lists.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));renderAll()};showUndo('Lista excluída');renderAll()}
+async function init(){if(!('indexedDB'in window)){alert('Este navegador não suporta IndexedDB.');return}try{await openDB();await migrateOld();await load()}catch(err){console.error(err);alert('Não foi possível abrir o armazenamento local. Tente novamente pelo endereço HTTPS do GitHub Pages.')}}
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.warn));init();
+})();
 </script>
 </body>
 </html>
