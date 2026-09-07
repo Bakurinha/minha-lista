@@ -41,7 +41,7 @@ html[data-theme="light"] body{background:#f4f7f5;color:#172019}html[data-theme="
   <div class="panel"><h2 class="section-title">⚙️ Configurações</h2><p class="muted">Os dados ficam no armazenamento local deste navegador. O IndexedDB não é criptografia e não envia seus dados para um servidor.</p><div class="row" style="flex-wrap:wrap"><button class="btn primary" id="exportBtn">⬇️ Exportar backup</button><label class="btn ghost file-label">⬆️ Importar backup<input id="importInput" class="hidden" type="file" accept="application/json,.json"></label></div><div class="row" style="margin-top:10px"><span class="muted">Tema</span><button class="btn ghost small" id="themeBtn">Usar tema do sistema</button></div></div>
   <div class="panel"><h3 style="margin:0 0 8px">Backup</h3><p class="muted">Recomendação: exporte um backup de tempos em tempos. Limpar os dados do navegador pode remover o IndexedDB.</p><button class="btn ghost" id="installHintBtn">ℹ️ Sobre a instalação</button></div>
   <div class="panel danger-zone"><h3 style="margin:0 0 8px;color:#dc2626">Zona de perigo</h3><button class="btn danger" id="clearAllBtn">Apagar todos os dados</button></div>
-  <div class="panel"><strong>Minha Lista v2.0</strong><div class="muted" style="margin-top:4px">PWA • IndexedDB • offline</div></div>
+  <div class="panel"><strong>Minha Lista v2.1</strong><div class="muted" style="margin-top:4px">PWA • IndexedDB • offline</div></div>
 </section>
 </div>
 
@@ -91,7 +91,53 @@ function showModal(title,body){$('modalTitle').textContent=title;$('modalBody').
 function closeModal(){$('modal').classList.remove('show');$('modalBody').innerHTML='';currentListId=null}
 function listForm(l){return `<form id="listForm"><div class="field"><label>Nome da lista *</label><input id="lfName" class="input" maxlength="120" required value="${esc(l?.name||'')}"></div><div class="field" style="margin-top:9px"><label>Data (opcional)</label><input id="lfDate" class="input" type="date" value="${esc(l?.date||'')}"></div><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar lista</button></div></form>`}
 function itemForm(listId,item){const opts=catalogs.slice().sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(c=>`<option value="${c.id}" ${item?.mainItemId===c.id?'selected':''}>${esc(c.name)}</option>`).join('');return `<form id="itemForm"><div class="field"><label>Produto *</label><select id="ifProduct" class="select" required><option value="">Selecione...</option>${opts}</select></div><div class="form-grid" style="margin-top:9px"><div class="field"><label>Quantidade</label><input id="ifQty" class="input" type="number" min="0.01" step="0.01" inputmode="decimal" value="${item?.quantity??''}" placeholder="Ex.: 2"></div><div class="field"><label>Valor</label><input id="ifValue" class="input" inputmode="decimal" value="${item?.value!=null?String(item.value).replace('.',','):''}" placeholder="Ex.: 18,90"></div><div class="field"><label>Data</label><input id="ifDate" class="input" type="date" value="${esc(item?.date||'')}"></div><div class="field"><label>Mercado</label><input id="ifMarket" class="input" list="marketList" maxlength="100" value="${esc(item?.marketName||'')}" placeholder="Ex.: Atacadão"></div></div><datalist id="marketList">${[...new Set(history.map(h=>h.marketName).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')).map(x=>`<option value="${esc(x)}">`).join('')}</datalist><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar produto</button></div></form>`}
-async function saveList(e,id){e.preventDefault();const name=$('lfName').value.trim();if(!name)return;if(id){const l=lists.find(x=>x.id===id);l.name=name;l.date=$('lfDate').value||null;await put('lists',l);notify('Lista atualizada.')}else{const l={id:uid(),name,date:$('lfDate').value||null,createdAt:new Date().toISOString(),items:[]};await put('lists',l);lists.push(l);notify('Lista criada.')}closeModal();await load()}
+async function async function saveList(e,id){
+  e.preventDefault();
+
+  try {
+    const name = $('lfName').value.trim();
+    if (!name) {
+      notify('Digite um nome para a lista.');
+      return;
+    }
+
+    const date = $('lfDate').value || null;
+
+    if (id) {
+      const l = lists.find(x => x.id === id);
+      if (!l) {
+        notify('Lista não encontrada.');
+        return;
+      }
+
+      l.name = name;
+      l.date = date;
+
+      await put('lists', l);
+      notify('Lista atualizada.');
+    } else {
+      const l = {
+        id: uid(),
+        name: name,
+        date: date,
+        createdAt: new Date().toISOString(),
+        items: []
+      };
+
+      await put('lists', l);
+      lists.push(l);
+
+      notify('Lista criada.');
+    }
+
+    closeModal();
+    await load();
+
+  } catch (err) {
+    console.error('Erro ao salvar lista:', err);
+    notify('Erro ao salvar a lista.');
+  }
+}
 function openList(id){const l=lists.find(x=>x.id===id);if(!l)return;currentListId=id;renderListModal()}
 function renderListModal(){const l=lists.find(x=>x.id===currentListId);if(!l)return;const q=window._listItemSearch?.toLowerCase()||'';const f=window._listFilter||'all';let items=(l.items||[]).map((x,idx)=>({...x,_idx:idx})).filter(x=>catalogName(x.mainItemId).toLowerCase().includes(q)).filter(x=>f==='all'||(f==='done'?x.done:!x.done));const done=(l.items||[]).filter(x=>x.done).length,total=l.items?.length||0,sum=(l.items||[]).reduce((s,i)=>s+(i.value!=null?(Number(i.value)||0)*(Number(i.quantity)||1):0),0);showModal(l.name,`<div class="stats"><div class="stat"><strong>${total}</strong><span>itens</span></div><div class="stat"><strong>${done}</strong><span>comprados</span></div><div class="stat"><strong>${total-done}</strong><span>pendentes</span></div></div><div class="total">${sum?`Total: ${money(sum)}`:'Sem valores'}</div><div class="row" style="margin:12px 0"><input id="listItemSearch" class="input" placeholder="Pesquisar item..." value="${esc(window._listItemSearch||'')}"><select id="listFilter" class="select" style="max-width:145px"><option value="all" ${f==='all'?'selected':''}>Todos</option><option value="pending" ${f==='pending'?'selected':''}>Pendentes</option><option value="done" ${f==='done'?'selected':''}>Comprados</option></select></div><div class="row" style="margin-bottom:10px"><button class="btn primary" id="addItemBtn">+ Adicionar produto</button><button class="btn danger small" id="clearDoneBtn">Limpar comprados</button></div><div id="listItems">${items.length?items.map(x=>`<div class="item ${x.done?'done':''}"><input class="check" type="checkbox" data-toggle-item="${x._idx}" ${x.done?'checked':''}><div class="item-main"><div class="item-name">${esc(catalogName(x.mainItemId))}${x.quantity?` × ${esc(x.quantity)}`:''}</div><div class="item-meta">${x.value!=null?money(x.value):'Sem valor'}${x.marketName?` • ${esc(x.marketName)}`:''}${x.date?` • ${formatDate(x.date)}`:''}</div></div><div class="item-actions"><button class="iconbtn" data-edit-item="${x._idx}">✏️</button><button class="iconbtn" data-del-item="${x._idx}">🗑️</button></div></div>`).join(''):'<div class="empty"><div class="emoji">🛒</div><strong>Lista vazia</strong><div>Adicione um produto da Lista Principal.</div></div>'}</div>`);$('listItemSearch').oninput=e=>{window._listItemSearch=e.target.value;renderListModal();setTimeout(()=>{$('listItemSearch')?.focus();$('listItemSearch').setSelectionRange(e.target.value.length,e.target.value.length)},0)};$('listFilter').onchange=e=>{window._listFilter=e.target.value;renderListModal()};$('addItemBtn').onclick=()=>{if(!catalogs.length){notify('Adicione produtos na Lista Principal primeiro.');return}showModal('Adicionar produto',itemForm(l.id,null));bindItemForm(l.id,null)};$('clearDoneBtn').onclick=async()=>{if(!(l.items||[]).some(x=>x.done))return;if(!confirmText('Remover todos os produtos marcados como comprados desta lista?'))return;l.items=l.items.filter(x=>!x.done);await put('lists',l);notify('Comprados removidos.');renderListModal();await load()};document.querySelectorAll('[data-toggle-item]').forEach(el=>el.onchange=async()=>{l.items[Number(el.dataset.toggleItem)].done=el.checked;await put('lists',l);renderListModal();await load()});document.querySelectorAll('[data-edit-item]').forEach(b=>b.onclick=()=>{const it=l.items[Number(b.dataset.editItem)];showModal('Editar produto',itemForm(l.id,it));bindItemForm(l.id,it)});document.querySelectorAll('[data-del-item]').forEach(b=>b.onclick=async()=>{const idx=Number(b.dataset.delItem),removed=l.items[idx];if(!confirmText(`Excluir "${catalogName(removed.mainItemId)}" desta lista?`))return;l.items.splice(idx,1);await put('lists',l);undoAction=async()=>{l.items.splice(idx,0,removed);await put('lists',l);renderListModal();await load()};showUndo('Produto excluído');renderListModal();await load()})}
 function bindItemForm(listId,existing){$('itemForm').onsubmit=async e=>{e.preventDefault();const l=lists.find(x=>x.id===listId);const mainItemId=$('ifProduct').value;if(!mainItemId)return;const value=parseMoney($('ifValue').value),quantity=$('ifQty').value.trim()===''?null:Number($('ifQty').value);const obj=existing?existing:{id:uid(),mainItemId,done:false,quantity:null,date:null,value:null,marketName:''};const old={mainItemId:obj.mainItemId,value:obj.value,date:obj.date,marketName:obj.marketName};obj.mainItemId=mainItemId;obj.quantity=quantity&&quantity>0?quantity:null;obj.value=value;obj.date=$('ifDate').value||null;obj.marketName=$('ifMarket').value.trim();l.items=l.items||[];if(existing===null)l.items.push(obj);await put('lists',l);const changed=old.mainItemId!==obj.mainItemId||old.value!==obj.value||old.date!==obj.date||old.marketName!==obj.marketName;if(obj.value!=null&&(existing===null||changed)){await put('history',{id:uid(),itemName:catalogName(obj.mainItemId),marketName:obj.marketName||'',date:obj.date||today(),value:obj.value,createdAt:new Date().toISOString()})}notify(existing?'Produto atualizado.':'Produto adicionado.');window._listItemSearch='';window._listFilter='all';await load();renderListModal()}}
@@ -100,7 +146,46 @@ function showUndo(msg){clearTimeout(undoTimer);const t=$('toast');t.innerHTML=`$
 async function addCatalog(){const input=$('catalogInput'),name=input.value.trim();if(!name)return;if(catalogs.some(c=>c.name.trim().toLowerCase()===name.toLowerCase())){notify('Esse produto já está cadastrado.');return}const c={id:uid(),name};await put('catalogs',c);catalogs.push(c);catalogs.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));input.value='';renderAll();input.focus();notify('Produto adicionado.')}
 function editCatalog(id){const c=catalogs.find(x=>x.id===id);if(!c)return;showModal('Editar produto',`<form id="catForm"><div class="field"><label>Nome *</label><input id="cfName" class="input" required maxlength="120" value="${esc(c.name)}"></div><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar</button></div></form>`);$('catForm').onsubmit=async e=>{e.preventDefault();const n=$('cfName').value.trim();if(!n)return;if(catalogs.some(x=>x.id!==id&&x.name.toLowerCase()===n.toLowerCase())){notify('Esse produto já existe.');return}c.name=n;await put('catalogs',c);closeModal();await load();notify('Produto atualizado.')}}
 async function deleteCatalog(id){const c=catalogs.find(x=>x.id===id);const used=lists.some(l=>(l.items||[]).some(i=>i.mainItemId===id));if(used){notify('Não é possível excluir: o produto está em uma lista.');return}if(!confirmText(`Excluir "${c.name}" da Lista Principal?`))return;await del('catalogs',id);catalogs=catalogs.filter(x=>x.id!==id);renderAll();undoAction=async()=>{await put('catalogs',c);catalogs.push(c);catalogs.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));renderAll()};showUndo('Produto excluído')}
-async function exportBackup(){const data={app:'Minha Lista de Supermercado',version:'2.0',exportedAt:new Date().toISOString(),catalogs,lists,history,settings:{}};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`minha-lista-backup-${today()}.json`;a.click();URL.revokeObjectURL(url);notify('Backup exportado.')}
+async function exportBackup(){
+  try {
+    const settingsRows = await all('settings');
+    const settingsBackup = {};
+
+    for (const row of settingsRows) {
+      settingsBackup[row.key] = row.value;
+    }
+
+    const data = {
+      app: 'Minha Lista de Supermercado',
+      version: '2.1',
+      exportedAt: new Date().toISOString(),
+      catalogs,
+      lists,
+      history,
+      settings: settingsBackup
+    };
+
+    const blob = new Blob(
+      [JSON.stringify(data, null, 2)],
+      {type:'application/json'}
+    );
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+
+    a.href = url;
+    a.download = `minha-lista-backup-${today()}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+    notify('Backup exportado com sucesso.');
+
+  } catch(err) {
+    console.error('Erro ao exportar backup:', err);
+    notify('Erro ao exportar o backup.');
+  }
+}
 async function importBackup(file){let data;try{data=JSON.parse(await file.text())}catch{notify('Arquivo JSON inválido.');return}if(!Array.isArray(data.catalogs)||!Array.isArray(data.lists)||!Array.isArray(data.history)){notify('Backup incompatível.');return}if(!confirmText('Restaurar este backup? Os dados atuais serão substituídos.'))return;await clearStore('catalogs');await clearStore('lists');await clearStore('history');for(const c of data.catalogs)await put('catalogs',c);for(const l of data.lists)await put('lists',l);for(const h of data.history)await put('history',h);if(data.settings&&typeof data.settings==='object'){for(const [key,value] of Object.entries(data.settings)){await put('settings',{key,value})}}notify('Backup restaurado.');await load()}
 async function clearAll(){if(!confirmText('ATENÇÃO: apagar todos os produtos, listas e histórico? Esta ação não pode ser desfeita.'))return;await clearStore('catalogs');await clearStore('lists');await clearStore('history');await clearStore('settings');settings={};localStorage.removeItem(OLD_KEY);notify('Todos os dados foram apagados.');await load()}
 $('newListBtn').onclick=()=>showModal('Nova lista',listForm(null));$('modalClose').onclick=closeModal;$('modal').onclick=e=>{if(e.target===$('modal'))closeModal()};$('listSearch').oninput=renderLists;$('catalogSearch').oninput=renderCatalog;$('historyItemSearch').oninput=renderHistory;$('historyMarketSearch').oninput=renderHistory;$('addCatalogBtn').onclick=addCatalog;$('catalogInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();addCatalog()}};$('clearHistoryBtn').onclick=async()=>{if(!history.length||!confirmText('Limpar todo o histórico de preços?'))return;await clearStore('history');history=[];renderHistory();notify('Histórico limpo.')};$('exportBtn').onclick=exportBackup;$('importInput').onchange=e=>{const f=e.target.files?.[0];if(f)importBackup(f);e.target.value=''};$('clearAllBtn').onclick=clearAll;$('themeBtn').onclick=async()=>{const mode=settings.theme||'system';await setTheme(mode==='system'?'light':mode==='light'?'dark':'system')};$('installHintBtn').onclick=()=>alert('Para instalar: abra a aplicação pelo endereço HTTPS do GitHub Pages e use o menu do navegador > Adicionar à tela inicial/Instalar aplicativo. Depois da atualização, talvez seja necessário fechar e abrir a PWA novamente para carregar a V2.');
