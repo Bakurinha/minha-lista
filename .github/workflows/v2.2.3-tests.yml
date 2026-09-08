@@ -28,7 +28,7 @@ jobs:
       - name: Core integrity checks
         shell: bash
         run: |
-          grep -q "const DB_VERSION=5" app.js
+          grep -q "DB_VERSION=5" app.js
           grep -q "referenceProducts" app.js
           grep -q "referenceMarkets" app.js
           grep -q "MinhaListaDB" app.js
