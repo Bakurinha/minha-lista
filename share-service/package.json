@@ -1,0 +1,1 @@
+{"name":"minha-lista-share-service","private":true,"type":"module","scripts":{"test":"node --test share-service/test/*.test.js","check":"node --check share-service/worker.js && node --check share-service/test/worker.test.js"},"engines":{"node":">=20"}}
