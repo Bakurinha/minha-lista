@@ -17,14 +17,14 @@ html[data-theme="light"] body{background:#f4f7f5;color:#172019}html[data-theme="
 </head>
 <body>
 <div class="app">
-<header class="top"><div><h1>🛒 Minha lista</h1><div class="sub">Supermercado • offline • v2.2</div></div><div class="badge" id="globalBadge" aria-label="Itens pendentes">0</div></header>
+<header class="top"><div><h1>🛒 Minha lista</h1><div class="sub">Supermercado • offline • v2.2.1</div></div><div class="badge" id="globalBadge" aria-label="Itens pendentes">0</div></header>
 <section id="listsView" class="view active">
   <div class="panel"><div class="row stack-mobile"><input id="listSearch" class="input" placeholder="Pesquisar listas..." autocomplete="off" aria-label="Pesquisar listas"><button class="btn primary" id="newListBtn">+ Lista</button></div></div>
   <div class="toolbar"><span class="muted" id="listsSummary">0 listas</span><button class="btn ghost small" id="showArchivedBtn">📁 Arquivadas</button></div>
   <div id="listsCards" class="cards"></div>
 </section>
 <section id="catalogView" class="view">
-  <div class="panel"><h2 class="section-title">📦 Itens Cadastrados</h2><div class="row stack-mobile"><input id="catalogInput" class="input" placeholder="Adicionar produto..." maxlength="120" autocomplete="off" aria-label="Novo produto"><button class="btn primary" id="addCatalogBtn">Adicionar</button></div><div class="hint">O cadastro mestre guarda nome, marca, unidade, categoria e observações.</div></div>
+  <div class="panel"><h2 class="section-title">📦 Itens Cadastrados</h2><div class="row stack-mobile"><input id="catalogInput" class="input" placeholder="Adicionar produto..." maxlength="120" autocomplete="off" aria-label="Novo produto"><button class="btn primary" id="addCatalogBtn">Adicionar</button><button class="btn ghost" id="referenceCatalogBtn">✨ Banco offline</button></div><div class="hint">O cadastro mestre guarda nome, marca, unidade, categoria e observações. O banco offline fornece sugestões pré-cadastradas.</div></div>
   <div class="search"><input id="catalogSearch" class="input" placeholder="Pesquisar nome, marca ou categoria..." autocomplete="off" aria-label="Pesquisar itens cadastrados"></div>
   <div id="catalogCards" class="cards"></div>
 </section>
@@ -42,9 +42,9 @@ html[data-theme="light"] body{background:#f4f7f5;color:#172019}html[data-theme="
   <div class="panel"><h3 class="section-title">💾 Dados</h3><div class="row stack-mobile"><button class="btn primary" id="exportBtn">⬇️ Exportar backup</button><label class="btn ghost file-label">⬆️ Importar backup<input id="importInput" type="file" accept="application/json,.json" class="hidden"></label></div><div class="hint">A importação substitui os dados atuais somente depois que o arquivo passar por validação.</div></div>
   <div class="panel"><h3 class="section-title">📁 Organização</h3><div class="row stack-mobile"><button class="btn ghost" id="showArchivedBtn2">📁 Listas arquivadas</button><button class="btn ghost" id="trashBtn">🗑️ Lixeira</button></div></div>
   <div class="panel"><h3 class="section-title">🔗 Compartilhamento</h3><div class="row stack-mobile"><button class="btn primary" id="shareListBtn">📤 Compartilhar lista</button><label class="btn ghost file-label">📥 Importar lista compartilhada<input id="sharedInput" type="file" accept="application/json,.json" class="hidden"></label></div><div class="hint">O compartilhamento é feito por arquivo/JSON local. Nenhum dado é enviado para um servidor pelo aplicativo.</div></div>
-  <div class="panel"><h3 class="section-title">🔐 Privacidade</h3><div class="notice"><strong>V2.2 local</strong><br>Esta versão não coleta preços, não possui Analytics, não possui login, não envia o conteúdo das listas para servidores e não usa banco remoto.</div><button class="btn ghost" id="privacyBtn" style="margin-top:10px">Ver informações de privacidade</button></div>
+  <div class="panel"><h3 class="section-title">🔐 Privacidade</h3><div class="notice"><strong>V2.2.1 local</strong><br>Esta versão não coleta preços, não possui Analytics, não possui login, não envia o conteúdo das listas para servidores e não usa banco remoto.</div><button class="btn ghost" id="privacyBtn" style="margin-top:10px">Ver informações de privacidade</button></div>
   <div class="panel"><h3 class="section-title">🧹 Manutenção</h3><div class="row stack-mobile"><button class="btn danger" id="clearHistoryBtn2">Limpar histórico</button><button class="btn danger" id="clearAllBtn">⚠️ Apagar todos os dados</button></div></div>
-  <div class="panel"><h3 class="section-title">ℹ️ Aplicativo</h3><div class="muted">Minha Lista de Supermercado • V2.2</div><button class="btn ghost" id="installHintBtn" style="margin-top:10px">📱 Como instalar</button></div>
+  <div class="panel"><h3 class="section-title">ℹ️ Aplicativo</h3><div class="muted">Minha Lista de Supermercado • V2.2.1</div><button class="btn ghost" id="installHintBtn" style="margin-top:10px">📱 Como instalar</button></div>
 </section>
 </div>
 <nav class="nav" aria-label="Navegação principal"><div class="nav-inner"><button class="active" data-view="listsView"><span class="nav-icon">📝</span>Listas</button><button data-view="catalogView"><span class="nav-icon">📦</span>Itens</button><button data-view="wishlistView"><span class="nav-icon">⭐</span>Desejos</button><button data-view="historyView"><span class="nav-icon">💰</span>Histórico</button><button data-view="settingsView"><span class="nav-icon">⚙️</span>Opções</button></div></nav>
