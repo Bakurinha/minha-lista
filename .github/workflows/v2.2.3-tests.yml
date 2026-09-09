@@ -1,4 +1,4 @@
-name: V2.2.3 validation
+name: V2.3.0 validation
 
 on:
   push:
@@ -20,16 +20,26 @@ jobs:
           node --check app.js
           node --check sw.js
           node --check enhancements.js
+          node --check inventory.js
+          node --check list-enhancements.js
+          node --check navigation.js
           node --check share-service/worker.js
           node --check share-service/test/worker.test.js
           node --check share-service/test/worker.http.test.js
       - name: Share service tests
         run: npm test --prefix share-service
-      - name: Core integrity checks
+      - name: V2.3.0 integrity checks
         shell: bash
         run: |
-          grep -q "DB_VERSION=5" app.js
+          grep -q "MinhaListaDB" app.js
           grep -q "referenceProducts" app.js
           grep -q "referenceMarkets" app.js
-          grep -q "MinhaListaDB" app.js
+          grep -q "const DB='MinhaListaDB', VERSION=6" inventory.js
+          grep -q "const STORE='inventory'" inventory.js
+          grep -q "shared-list-v2" enhancements.js
+          grep -q "minha-lista-v2-3-0" sw.js
+          grep -q "inventory.js" sw.js
+          grep -q "navigation.js" sw.js
+          grep -q "expiryDate" list-enhancements.js
+          grep -q "packageQuantity" list-enhancements.js
           ! grep -Eq "https?://" app.js
