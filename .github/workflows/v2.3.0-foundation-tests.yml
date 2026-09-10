@@ -1,0 +1,25 @@
+name: V2.3.0 foundation tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check
+        run: |
+          node --check app.js
+          node --check inventory.js
+          node --check reference-market-refresh.js
+          node --check enhancements.js
+          node --check sw.js
+      - name: Foundation invariants
+        run: node tests/v230-foundation.test.js
