@@ -23,6 +23,7 @@ jobs:
           node --check backup-v230.js
           node --check list-enhancements.js
           node --check share-service/worker.js
+          node --check share-service/test/worker.test.js
           node --check sw.js
       - name: Stage 2 invariants and migration checks
         run: node tests/v230-stage2.test.js
