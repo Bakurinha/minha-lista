@@ -1,6 +1,6 @@
 (()=>{
 'use strict';
-const DB_NAME='MinhaListaDB', DB_VERSION=5, OLD_KEY='lista_supermercado_v1', BACKUP_VERSION=1, SHARED_FORMAT='shared-list-v1', REFERENCE_VERSION=1;
+const DB_NAME='MinhaListaDB', DB_VERSION=6, OLD_KEY='lista_supermercado_v1', BACKUP_VERSION=1, SHARED_FORMAT='shared-list-v1', REFERENCE_VERSION=1;
 const STORES=['catalogs','lists','history','wishlist','trash','settings'];
 const REFERENCE_STORES=['referenceProducts','referenceMarkets'];
 const ALL_STORES=[...STORES,...REFERENCE_STORES];
@@ -27,7 +27,7 @@ function notify(msg){const t=$('toast');t.textContent=msg;t.classList.add('show'
 function confirmText(msg){return window.confirm(msg)}
 function showError(err,msg='Não foi possível concluir a operação. Seus dados anteriores foram preservados.'){console.error(err);notify(msg)}
 
-function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{const d=r.result;for(const s of ALL_STORES)if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:s==='settings'?'key':'id'});};r.onsuccess=()=>{db=r.result;db.onversionchange=()=>db.close();resolve(db)};r.onerror=()=>reject(r.error||new Error('IndexedDB indisponível'));r.onblocked=()=>notify('Feche outra aba do aplicativo para concluir a atualização.')})}
+function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{const d=r.result;for(const s of ALL_STORES)if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:s==='settings'?'key':'id'});if(!d.objectStoreNames.contains('inventory'))d.createObjectStore('inventory',{keyPath:'id'});};r.onsuccess=()=>{db=r.result;db.onversionchange=()=>db.close();resolve(db)};r.onerror=()=>reject(r.error||new Error('IndexedDB indisponível'));r.onblocked=()=>notify('Feche outra aba do aplicativo para concluir a atualização.')})}
 function transaction(stores,mode,work){return new Promise((resolve,reject)=>{let tx;try{tx=db.transaction(stores,mode)}catch(e){reject(e);return}let result;let settled=false;tx.oncomplete=()=>{settled=true;resolve(result)};tx.onerror=()=>{if(!settled)reject(tx.error||new Error('Falha na transação IndexedDB'))};tx.onabort=()=>{if(!settled)reject(tx.error||new Error('Transação cancelada'))};try{result=work(tx)}catch(e){try{tx.abort()}catch{}reject(e)}})}
 const getAll=s=>transaction([s],'readonly',tx=>new Promise((resolve,reject)=>{const r=tx.objectStore(s).getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)}));
 function replaceAll(data){return transaction(STORES,'readwrite',tx=>{for(const s of STORES)tx.objectStore(s).clear();for(const c of data.catalogs)tx.objectStore('catalogs').put(c);for(const l of data.lists)tx.objectStore('lists').put(l);for(const h of data.history)tx.objectStore('history').put(h);for(const w of data.wishlist)tx.objectStore('wishlist').put(w);for(const t of data.trash)tx.objectStore('trash').put(t);for(const [key,value] of Object.entries(data.settings||{})){if(key!=='referenceDataVersion')tx.objectStore('settings').put({key,value})}tx.objectStore('settings').put({key:'referenceDataVersion',value:REFERENCE_VERSION});})}
