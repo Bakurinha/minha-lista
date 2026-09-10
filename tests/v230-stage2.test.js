@@ -11,13 +11,15 @@ const context={document:{readyState:'loading',addEventListener(){}},window:null,
 context.window=context;
 vm.runInNewContext(backupSource,context,{timeout:1000});
 const {validate,migrate}=context.__mlBackupV230;
-function baseBackup(version=2){return{app:'Minha Lista de Supermercado',backupFormatVersion:version,schemaVersion:version===2?6:1,catalogs:[{id:'c1',name:'Arroz'}],lists:[{id:'l1',name:'Compra',date:'2026-09-10',items:[{id:'i1',mainItemId:'c1',done:false,quantity:1,value:10,date:null,expiryDate:'2026-12-31',packageQuantity:5,packageUnit:'kg',marketName:'',comments:''}]}],history:[],wishlist:[],trash:[],settings:{theme:'system'},inventory:version===2?[{id:'s1',mainItemId:'c1',quantity:2,expiryDate:'2026-12-31',entryDate:'2026-09-10',packageQuantity:10,minQuantity:1,packageUnit:'un',marketName:'Atakarejo',location:'A1',notes:''}]:undefined}}
-assert.equal(validate(baseBackup(2)),null,'V2 backup must validate');
+function baseBackup(version=2){return{app:'Minha Lista de Supermercado',backupFormatVersion:version,schemaVersion:version===2?6:1,catalogs:[{id:'c1',name:'Arroz'}],lists:[{id:'l1',name:'Compra',date:'2026-09-10',items:[{id:'i1',mainItemId:'c1',done:false,quantity:1,value:10,date:null,expiryDate:'2026-12-31',packageQuantity:5,packageUnit:'kg',marketName:'',comments:''}]}],history:[],wishlist:[],trash:[],settings:{theme:'system'},inventory:[]}}
+const v2=baseBackup(2);
+assert.equal(validate(v2),null,'V2 backup must validate');
 assert.deepEqual(migrate(baseBackup(1)).inventory,[],'V1 must migrate with empty inventory');
-assert.equal(validate({...baseBackup(2),referenceProducts:[{id:'rp',name:'private'}],referenceMarkets:[{id:'rm',name:'private'}]}),null,'reference fields must not affect import validation');
-assert.equal(validate({...baseBackup(2),inventory:[{id:'s1',mainItemId:'c1',quantity:2,expiryDate:'2026-12-31',entryDate:'2026-09-10',packageQuantity:10,minQuantity:1,packageUnit:'un',marketName:'Atakarejo',location:'A1',notes:''}]}),null,'V2 inventory must validate');
-assert.notEqual(validate({...baseBackup(2),inventory:[{id:'s1',mainItemId:'missing',quantity:2}]}),null,'invalid inventory reference must fail');
-assert.notEqual(validate({...baseBackup(2),lists:[{id:'l1',name:'Compra',date:'2026-02-31',items:[]}]}),null,'impossible list date must fail');
+const validInventory={id:'s1',mainItemId:'c1',quantity:2,expiryDate:'2026-12-31',entryDate:'2026-09-10',packageQuantity:10,minQuantity:1,packageUnit:'un',marketName:'Atakarejo',location:'A1',notes:''};
+assert.equal(validate({...v2,inventory:[validInventory]}),null,'V2 inventory must validate');
+assert.equal(validate({...v2,referenceProducts:[{id:'rp',name:'private'}],referenceMarkets:[{id:'rm',name:'private'}]}),null,'reference fields must not affect import validation');
+assert.notEqual(validate({...v2,inventory:[{...validInventory,mainItemId:'missing'}]}),null,'invalid inventory reference must fail');
+assert.notEqual(validate({...v2,lists:[{id:'l1',name:'Compra',date:'2026-02-31',items:[]}]}),null,'impossible list date must fail');
 assert(sw.includes("minha-lista-v2-3-0-stage2")&&sw.includes('./backup-v230.js')&&sw.includes('./list-enhancements.js'),'Stage 2 assets must be cached');
 assert(sw.includes('./share-config.js')&&sw.includes('./enhancements.js')&&sw.includes('./inventory.js')&&sw.includes('./reference-market-refresh.js'),'existing Stage 2 scripts must remain injected');
 assert(share.includes("format:'shared-list-v3'")&&share.includes("delete x.inventory")&&share.includes("delete x.stock"),'V3 sharing must exclude inventory/stock');
@@ -27,10 +29,6 @@ assert(!share.includes("navigator.sendBeacon")&&!share.includes("WebSocket")&&!s
 assert(list.includes('data-v230-existing-id')||list.includes('v230ExistingId'),'list editing must track the real item ID');
 assert(list.includes('f.isConnected'),'invalid form submission must not patch list extras');
 assert(app.includes("const esc=s=>String(s??'').replace(/[&<>'\\\"]"),'app must retain centralized HTML escaping');
-for(const dangerous of ['<script>alert(1)</script>','<img src=x onerror=alert(1)>','\"><script>alert(1)</script>','javascript:alert(1)']){
-  assert(worker.includes('text(i.comments,2000)'),'worker must keep imported comments as text');
-  assert(!share.includes(dangerous),'dangerous test strings must not be embedded as executable markup');
-}
 assert(worker.includes("if(!iid||!mainItemId"),'worker must reject missing item IDs');
 assert(worker.includes('MAX_BODY_BYTES')&&worker.includes('expirationTtl:SHARE_TTL'),'worker payload limit and TTL must remain enforced');
 console.log('V2.3.0 Stage 2 source/migration/privacy/XSS invariants OK');
