@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {validatePayload} from '../worker.js';
 const catalog={id:'c1',name:'Arroz',brand:'Tio João',unit:'5 kg',category:'Alimentos',notes:'',ean:''};
 const item={id:'i1',mainItemId:'c1',done:false,quantity:2,date:'2026-09-08',value:35.5,marketName:'Atakarejo',comments:'',productName:'Arroz',productBrand:'Tio João',productUnit:'5 kg',productCategory:'Alimentos'};
-function payload(n=1,format='shared-list-v2'){return{app:'Minha Lista de Supermercado',format,version:format==='shared-list-v3'?3:2,list:{id:'x',name:'Compra',date:'2026-09-08',purchaseType:'local',comments:'',items:Array.from({length:n},(_,i)=>({...item,id:`i${i}`}))},catalogs:[catalog]}}
+function payload(n=1,format='shared-list-v2'){return{app:'Minha Lista de Supermercado',format,version:format==='shared-list-v3'?3:2,list:{id:'x',name:'Compra',date:'2026-09-08',purchaseType:'local',comments:'',items:Array.from({length:n},(_,i)=>({...item,id:`i${i}`}))},catalogs:[{...catalog}]}}
 test('payload V2 mínimo válido',()=>assert.equal(validatePayload(payload()).ok,true));
 test('payload V3 mínimo válido',()=>assert.equal(validatePayload(payload(1,'shared-list-v3')).ok,true));
 test('V3 com embalagem e validade',()=>{const p=payload(1,'shared-list-v3');p.list.items[0].packageQuantity=20;p.list.items[0].packageUnit='un';p.list.items[0].expiryDate='2026-12-31';assert.equal(validatePayload(p).ok,true)});
