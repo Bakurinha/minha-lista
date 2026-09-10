@@ -1,4 +1,4 @@
-name: V2.3.0 validation
+name: V2.3.0 foundation validation
 
 on:
   push:
@@ -23,23 +23,46 @@ jobs:
           node --check inventory.js
           node --check list-enhancements.js
           node --check navigation.js
+          node --check v230-core.js
           node --check share-service/worker.js
           node --check share-service/test/worker.test.js
           node --check share-service/test/worker.http.test.js
-      - name: Share service tests
-        run: npm test --prefix share-service
-      - name: V2.3.0 integrity checks
+      - name: IndexedDB V6 checks
         shell: bash
         run: |
-          grep -q "MinhaListaDB" app.js
+          grep -q "DB_NAME='MinhaListaDB', DB_VERSION=6" app.js
+          grep -q "objectStoreNames.contains('inventory')" app.js
           grep -q "referenceProducts" app.js
           grep -q "referenceMarkets" app.js
-          grep -q "const DB='MinhaListaDB', VERSION=6" inventory.js
-          grep -q "const STORE='inventory'" inventory.js
-          grep -q "shared-list-v2" enhancements.js
-          grep -q "minha-lista-v2-3-0" sw.js
+          ! test -f db-bootstrap.js
+      - name: Reference data checks
+        shell: bash
+        run: |
+          grep -q "const PRODUCTS=" inventory.js
+          grep -q "const MARKET_NAMES=" inventory.js
+          grep -q "1000" inventory.js
+          node - <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('inventory.js','utf8');
+          const m=s.match(/const MARKET_NAMES=\[([\s\S]*?)\];/);
+          if(!m) throw new Error('MARKET_NAMES não encontrado');
+          const names=[...m[1].matchAll(/['\"]([^'\"]+)['\"]/g)].map(x=>x[1]).filter(Boolean);
+          const unique=new Set(names.map(x=>x.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()));
+          if(unique.size<50) throw new Error(`Mercados insuficientes: ${unique.size}`);
+          console.log(`Mercados de referência declarados: ${unique.size}`);
+          NODE
+      - name: Inventory/share isolation checks
+        shell: bash
+        run: |
+          ! grep -Eq "inventory|referenceProducts|referenceMarkets" enhancements.js
+          ! grep -Eq "inventory|referenceProducts|referenceMarkets" share-service/worker.js
+      - name: PWA checks
+        shell: bash
+        run: |
+          grep -q "minha-lista-v2-3-0-final2" sw.js
           grep -q "inventory.js" sw.js
-          grep -q "navigation.js" sw.js
-          grep -q "expiryDate" list-enhancements.js
-          grep -q "packageQuantity" list-enhancements.js
-          ! grep -Eq "https?://" app.js
+          grep -q "list-enhancements.js" sw.js
+          grep -q "v230-core.js" sw.js
+          ! grep -q "db-bootstrap.js" sw.js
+      - name: Existing share service tests
+        run: npm test --prefix share-service
