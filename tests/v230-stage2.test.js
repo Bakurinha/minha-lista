@@ -14,7 +14,9 @@ const {validate,migrate}=context.__mlBackupV230;
 function baseBackup(version=2){return{app:'Minha Lista de Supermercado',backupFormatVersion:version,schemaVersion:version===2?6:1,catalogs:[{id:'c1',name:'Arroz'}],lists:[{id:'l1',name:'Compra',date:'2026-09-10',items:[{id:'i1',mainItemId:'c1',done:false,quantity:1,value:10,date:null,expiryDate:'2026-12-31',packageQuantity:5,packageUnit:'kg',marketName:'',comments:''}]}],history:[],wishlist:[],trash:[],settings:{theme:'system'},inventory:[]}}
 const v2=baseBackup(2);
 assert.equal(validate(v2),null,'V2 backup must validate');
-assert.deepEqual(migrate(baseBackup(1)).inventory,[],'V1 must migrate with empty inventory');
+const migrated=migrate(baseBackup(1));
+assert.equal(Array.isArray(migrated.inventory),true,'V1 migration must create inventory array');
+assert.equal(migrated.inventory.length,0,'V1 migration must create empty inventory');
 const validInventory={id:'s1',mainItemId:'c1',quantity:2,expiryDate:'2026-12-31',entryDate:'2026-09-10',packageQuantity:10,minQuantity:1,packageUnit:'un',marketName:'Atakarejo',location:'A1',notes:''};
 assert.equal(validate({...v2,inventory:[validInventory]}),null,'V2 inventory must validate');
 assert.equal(validate({...v2,referenceProducts:[{id:'rp',name:'private'}],referenceMarkets:[{id:'rm',name:'private'}]}),null,'reference fields must not affect import validation');
