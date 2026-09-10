@@ -24,4 +24,13 @@ test('valor negativo',()=>{const p=payload();p.list.items[0].value=-0.01;assert.
 test('conteúdo por embalagem negativo',()=>{const p=payload(1,'shared-list-v3');p.list.items[0].packageQuantity=-1;assert.equal(validatePayload(p).ok,false)});
 test('EAN acima do limite',()=>{const p=payload();p.catalogs[0].ean='123456789012345';assert.equal(validatePayload(p).ok,false)});
 test('ID de catálogo ausente',()=>{const p=payload();p.catalogs[0].id='';assert.equal(validatePayload(p).ok,false)});
-test('campos XSS são tratados como texto',()=>{const p=payload(1,'shared-list-v3');p.list.items[0].comments='<script>alert(1)</script>';p.list.items[0].packageUnit='"><img src=x onerror=alert(1)>';const r=validatePayload(p);assert.equal(r.ok,true);assert.equal(r.value.list.items[0].comments,'<script>alert(1)</script>')});
+test('campos XSS são tratados como texto',()=>{
+  const dangerous=['<script>alert(1)</script>','<img src=x onerror=alert(1)>','\"><script>alert(1)</script>','javascript:alert(1)'];
+  for(const value of dangerous){
+    const p=payload(1,'shared-list-v3');
+    p.list.items[0].comments=value;
+    const r=validatePayload(p);
+    assert.equal(r.ok,true);
+    assert.equal(r.value.list.items[0].comments,value);
+  }
+});
