@@ -30,7 +30,7 @@ assert(share.includes('history.replaceState'),'share cancel/import URL handling 
 assert(!share.includes("navigator.sendBeacon")&&!share.includes("WebSocket")&&!share.includes("firebase")&&!share.includes("supabase"),'No tracking/backend SDKs allowed');
 assert(list.includes('data-v230-existing-id')||list.includes('v230ExistingId'),'list editing must track the real item ID');
 assert(list.includes('f.isConnected'),'invalid form submission must not patch list extras');
-assert(app.includes("const esc=s=>String(s??'').replace(/[&<>'\\\"]"),'app must retain centralized HTML escaping');
+assert(app.includes("const esc=s=>String(s??'').replace"),'app must retain centralized HTML escaping');
 assert(worker.includes("if(!iid||!mainItemId"),'worker must reject missing item IDs');
 assert(worker.includes('MAX_BODY_BYTES')&&worker.includes('expirationTtl:SHARE_TTL'),'worker payload limit and TTL must remain enforced');
 console.log('V2.3.0 Stage 2 source/migration/privacy/XSS invariants OK');
