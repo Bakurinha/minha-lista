@@ -1,0 +1,32 @@
+name: V2.3.0 Stage 2 tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  stage2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax checks
+        run: |
+          node --check app.js
+          node --check inventory.js
+          node --check reference-market-refresh.js
+          node --check enhancements.js
+          node --check backup-v230.js
+          node --check list-enhancements.js
+          node --check share-service/worker.js
+          node --check sw.js
+      - name: Stage 2 invariants and migration checks
+        run: node tests/v230-stage2.test.js
+      - name: Worker validation tests
+        run: node --test share-service/test/worker.test.js
+      - name: Foundation checks
+        run: node tests/v230-foundation.test.js
