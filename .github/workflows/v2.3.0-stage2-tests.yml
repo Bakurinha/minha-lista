@@ -19,6 +19,7 @@ jobs:
           node --check app.js
           node --check inventory.js
           node --check reference-market-refresh.js
+          node --check reference-product-expansion-v230.js
           node --check enhancements.js
           node --check backup-v230.js
           node --check list-enhancements.js
