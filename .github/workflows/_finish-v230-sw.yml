@@ -1,0 +1,40 @@
+name: Finish V2.3.0 service worker
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch-sw:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch service worker and remove temporary workflow
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('sw.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("const CACHE='minha-lista-v2-3-0-foundation1';", "const CACHE='minha-lista-v2-3-0-stage2';")
+          old="const CORE=['./','./index.html','./app.js','./enhancements.js','./inventory.js','./reference-market-refresh.js','./share-config.js','./manifest.json','./icon-192.png','./icon-512.png'];"
+          new="const CORE=['./','./index.html','./app.js','./enhancements.js','./inventory.js','./reference-market-refresh.js','./backup-v230.js','./list-enhancements.js','./share-config.js','./manifest.json','./icon-192.png','./icon-512.png'];"
+          if old not in s:
+              raise SystemExit('Unexpected sw.js CORE; refusing unsafe replacement')
+          s=s.replace(old,new)
+          old_in="<script src=\"./share-config.js\"></script><script src=\"./enhancements.js\"></script><script src=\"./inventory.js\"></script><script src=\"./reference-market-refresh.js\"></script>"
+          new_in="<script src=\"./share-config.js\"></script><script src=\"./backup-v230.js\"></script><script src=\"./enhancements.js\"></script><script src=\"./inventory.js\"></script><script src=\"./reference-market-refresh.js\"></script><script src=\"./list-enhancements.js\"></script>"
+          if old_in not in s:
+              raise SystemExit('Unexpected sw.js injection; refusing unsafe replacement')
+          s=s.replace(old_in,new_in)
+          p.write_text(s,encoding='utf-8')
+          Path('.github/workflows/_finish-v230-sw.yml').unlink()
+      - name: Commit final service worker
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add sw.js .github/workflows/_finish-v230-sw.yml
+          git commit -m 'V2.3.0: finalizar cache e scripts do Service Worker'
+          git push
