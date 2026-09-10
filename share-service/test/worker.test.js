@@ -8,6 +8,7 @@ test('payload V2 mínimo válido',()=>assert.equal(validatePayload(payload()).ok
 test('payload V3 mínimo válido',()=>assert.equal(validatePayload(payload(1,'shared-list-v3')).ok,true));
 test('V3 com embalagem e validade',()=>{const p=payload(1,'shared-list-v3');p.list.items[0].packageQuantity=20;p.list.items[0].packageUnit='un';p.list.items[0].expiryDate='2026-12-31';assert.equal(validatePayload(p).ok,true)});
 test('300 itens',()=>assert.equal(validatePayload(payload(300)).ok,true));
+test('item sem ID',()=>{const p=payload();delete p.list.items[0].id;assert.equal(validatePayload(p).ok,false)});
 test('referência inválida',()=>{const p=payload();p.list.items[0].mainItemId='missing';assert.equal(validatePayload(p).ok,false)});
 test('nome vazio',()=>{const p=payload();p.list.name='';assert.equal(validatePayload(p).ok,false)});
 test('formato errado',()=>{const p=payload();p.version=1;assert.equal(validatePayload(p).ok,false)});
