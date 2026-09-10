@@ -1,0 +1,41 @@
+name: V2.3.0 one-time app migration
+on:
+  push:
+    branches: [feature/v2-3-0-inventory]
+permissions:
+  contents: write
+jobs:
+  migrate:
+    if: ${{ !contains(github.event.head_commit.message, '[app-v6-migrated]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply source V6 migration
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app.js')
+          s=p.read_text(encoding='utf-8')
+          old="const DB_NAME='MinhaListaDB', DB_VERSION=5, OLD_KEY='lista_supermercado_v1', BACKUP_VERSION=1, SHARED_FORMAT='shared-list-v1', REFERENCE_VERSION=1;"
+          new="const DB_NAME='MinhaListaDB', DB_VERSION=6, OLD_KEY='lista_supermercado_v1', BACKUP_VERSION=1, SHARED_FORMAT='shared-list-v1', REFERENCE_VERSION=1;"
+          if old not in s:
+              raise SystemExit('DB V5 declaration not found')
+          s=s.replace(old,new,1)
+          old2="r.onupgradeneeded=()=>{const d=r.result;for(const s of ALL_STORES)if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:s==='settings'?'key':'id'});};"
+          new2="r.onupgradeneeded=()=>{const d=r.result;for(const s of ALL_STORES)if(!d.objectStoreNames.contains(s))d.createObjectStore(s,{keyPath:s==='settings'?'key':'id'});if(!d.objectStoreNames.contains('inventory'))d.createObjectStore('inventory',{keyPath:'id'});};"
+          if old2 not in s:
+              raise SystemExit('openDB upgrade block not found')
+          s=s.replace(old2,new2,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Remove temporary workflow
+        run: rm -f .github/workflows/v230-one-time-migrate.yml
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.js .github/workflows/v230-one-time-migrate.yml
+          git diff --cached --quiet && exit 0
+          git commit -m 'V2.3.0: migração direta do IndexedDB para V6 [app-v6-migrated]'
+          git push
