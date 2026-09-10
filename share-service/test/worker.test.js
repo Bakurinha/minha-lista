@@ -30,7 +30,7 @@ test('campos XSS são tratados como texto',()=>{
     const p=payload(1,'shared-list-v3');
     p.list.items[0].comments=value;
     const r=validatePayload(p);
-    assert.equal(r.ok,true);
+    assert.equal(r.ok,true,`XSS valor rejeitado indevidamente: ${value}; erro=${r.error}`);
     assert.equal(r.value.list.items[0].comments,value);
   }
 });
