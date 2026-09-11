@@ -24,7 +24,9 @@ jobs:
           node --check backup-v230.js
           node --check list-enhancements.js
           node --check db-integrity-v230.js
+          node --check db-migrations-v230.js
           node --check tests/v230-data-preservation.test.js
+          node --check tests/v230-db-migrations.test.js
           node --check share-service/worker.js
           node --check share-service/test/worker.test.js
           node --check sw.js
@@ -34,6 +36,8 @@ jobs:
         run: node tests/v230-db-integrity.test.js
       - name: Data preservation checks
         run: node tests/v230-data-preservation.test.js
+      - name: Migration contract checks
+        run: node tests/v230-db-migrations.test.js
       - name: Worker validation tests
         run: node --test share-service/test/worker.test.js
       - name: Foundation checks
