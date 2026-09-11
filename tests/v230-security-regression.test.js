@@ -42,11 +42,23 @@ assert(
   (list.includes('f.isConnected') || list.includes('form.isConnected')),
   'formulário inválido não pode aplicar patch posterior'
 );
+assert(
+  list.includes('target.list.marketName') && list.includes('delete item.marketName'),
+  'item deve perder mercado quando a lista possui mercado'
+);
+assert(
+  list.includes('target.list.marketName') && list.includes('Keep legacy list data intact'),
+  'listas legadas devem ser preservadas durante a regra de mercado'
+);
 
 assert(listMarket.includes('v230ListMarket'), 'mercado da lista deve possuir campo próprio');
 assert(listMarket.includes('marketName'), 'mercado da lista deve ser persistido em marketName');
 assert(listMarket.includes('MAX_MARKET'), 'mercado da lista deve possuir limite de tamanho');
 assert(!listMarket.includes('inventory'), 'mercado da lista não deve acessar estoque');
+assert(
+  listMarket.includes('substitui o mercado individual dos itens'),
+  'mercado da lista deve ser apresentado como fonte de verdade'
+);
 
 assert(worker.includes('MAX_BODY_BYTES'), 'Worker deve limitar corpo recebido');
 assert(
