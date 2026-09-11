@@ -1,4 +1,4 @@
-const CACHE='minha-lista-v2-3-1';
+const CACHE='minha-lista-v2-3-2';
 const CORE=['./','./index.html','./app.js','./enhancements.js','./inventory.js','./reference-market-refresh.js','./reference-product-expansion-v230.js','./backup-v230.js','./list-enhancements.js','./list-market-v230.js','./db-integrity-v230.js','./db-migrations-v230.js','./version-v230.js','./share-config.js','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
