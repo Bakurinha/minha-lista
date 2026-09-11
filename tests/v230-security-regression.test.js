@@ -59,6 +59,11 @@ assert(
   listMarket.includes('substitui o mercado individual dos itens'),
   'mercado da lista deve ser apresentado como fonte de verdade'
 );
+assert(
+  listMarket.includes('target.items = (target.items || []).map') &&
+  listMarket.includes('delete next.marketName'),
+  'ao atribuir mercado à lista, mercados existentes dos itens devem ser removidos'
+);
 
 assert(worker.includes('MAX_BODY_BYTES'), 'Worker deve limitar corpo recebido');
 assert(
