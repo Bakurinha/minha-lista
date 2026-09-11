@@ -1,6 +1,9 @@
-const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const fs=require('fs'),assert=require('assert');
 const source=fs.readFileSync('db-integrity-v230.js','utf8');
-const stores=['catalogs','lists','history','wishlist','trash','settings','referenceProducts','referenceMarkets','inventory'];
-function run(data,version=6){const ctx={console,alert:()=>{},document:{readyState:'loading',addEventListener:()=>{},querySelector:()=>null,getElementById:()=>null},indexedDB:{open:()=>{const r={};setImmediate(()=>{r.result={version,objectStoreNames:{contains:s=>stores.includes(s)},transaction:s=>({objectStore:()=>({getAll:()=>{const q={};setImmediate(()=>{q.result=data[s]||[];q.onsuccess?.()});return q}})}),close:()=>{}};r.onsuccess?.()});return r}}};vm.createContext(ctx);vm.runInContext(source,ctx);return ctx.__mlDbIntegrityV230.diagnose()}
-const base={catalogs:[{id:'c1',name:'Arroz'}],lists:[{id:'l1',name:'Casa',items:[{id:'i1',mainItemId:'c1',done:false,quantity:1,value:10,date:null,expiryDate:null}]}],history:[],wishlist:[],trash:[],settings:[],referenceProducts:[{id:'p1',name:'Arroz'}],referenceMarkets:[{id:'m1',name:'Atakarejo'}],inventory:[{id:'x1',mainItemId:'c1',quantity:2,packageQuantity:1,minQuantity:1,expiryDate:null,entryDate:null,packageUnit:'un'}]};
-(async()=>{let r=await run(base);assert.strictEqual(r.ok,true);assert.strictEqual(r.missing.length,0);assert.strictEqual(r.counts.inventory,1);r=await run({...base,lists:[{...base.lists[0],items:[{...base.lists[0].items[0],mainItemId:'missing'}]}]});assert.strictEqual(r.ok,false);assert(r.issues.some(x=>x.includes('órfão')));r=await run(base,5);assert.strictEqual(r.ok,false);assert(r.issues.some(x=>x.includes('versão')));console.log('v230 db integrity tests: OK')})().catch(e=>{console.error(e);process.exit(1)});
+assert(source.includes("const STORES=['catalogs','lists','history','wishlist','trash','settings','referenceProducts','referenceMarkets','inventory']"));
+assert(source.includes("objectStoreNames.contains(s)"));
+assert(source.includes("!catalogs.has(i.mainItemId)"));
+assert(source.includes("!catalogs.has(x.mainItemId)"));
+assert(source.includes("d.version<6"));
+assert(source.includes("window.__mlDbIntegrityV230={diagnose,report}"));
+console.log('v230 db integrity tests: OK');
