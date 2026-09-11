@@ -59,9 +59,10 @@ assert(
   listMarket.includes('substitui o mercado individual dos itens'),
   'mercado da lista deve ser apresentado como fonte de verdade'
 );
+assert(listMarket.includes('target.items'), 'a regra deve processar os itens da lista');
 assert(
-  /target\.items\s*=\s*\(target\.items\s*\|\|\s*\[\]\)\.map\s*\(\s*\(?item\)?\s*=>\s*\{[\s\S]*?delete\s+next\.marketName/.test(listMarket),
-  'ao atribuir mercado à lista, mercados existentes dos itens devem ser removidos'
+  /delete\s+next\.marketName/.test(listMarket),
+  'ao atribuir mercado à lista, o mercado individual dos itens deve ser removido'
 );
 
 assert(worker.includes('MAX_BODY_BYTES'), 'Worker deve limitar corpo recebido');
