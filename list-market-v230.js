@@ -1,13 +1,20 @@
 (() => {
   'use strict';
 
-  // V2.3.0 — Mercado pertence à LISTA, não aos itens.
+  // V2.3.0 — Mercado pertence à LISTA, sem apagar dados legados dos itens.
   const DB = 'MinhaListaDB';
   const STORE = 'lists';
   const MARKET_STORE = 'referenceMarkets';
   const FIELD_ID = 'v230ListMarket';
   const FIELD_MARKER = 'data-v230-list-market';
+  const HYDRATED_MARKER = 'data-v230-list-market-hydrated';
   const MAX_MARKET = 160;
+  const FALLBACK_MARKETS = [
+    'Atakarejo', 'Atacadão', 'Assaí Atacadista', 'Hiperideal', 'RedeMix',
+    'Mercantil Rodrigues', 'Mix Bahia', 'Novo Mix', 'Mix Mateus', 'GBarbosa',
+    'Carrefour', "Sam's Club", 'Centro Sul', 'Mercantil de Brotas',
+    'Mercado Popular', 'Mercado Central', 'Mercado da Sete Portas', 'Mercado do Bairro'
+  ];
   const snapshots = new WeakMap();
 
   const esc = (value) => String(value ?? '').replace(/[&<>\"']/g, (char) => ({
@@ -42,41 +49,61 @@
     return document.getElementById('modalBody')?.querySelector('#listForm') || null;
   }
 
-  function marketField(markets, current) {
-    const names = [...new Set(markets.map((market) => String(market?.name || '').trim()).filter(Boolean))];
+  function marketField(names, current) {
+    const unique = [...new Set(names.map((name) => String(name || '').trim()).filter(Boolean))];
     return `<div class="field" ${FIELD_MARKER} style="margin-top:9px">
       <label for="${FIELD_ID}">Mercado da lista</label>
       <select id="${FIELD_ID}" name="marketName" class="select">
         <option value="">Sem mercado definido</option>
-        ${names.map((name) => `<option value="${esc(name)}"${name === current ? ' selected' : ''}>${esc(name)}</option>`).join('')}
+        ${unique.map((name) => `<option value="${esc(name)}"${name === current ? ' selected' : ''}>${esc(name)}</option>`).join('')}
       </select>
-      <div class="hint">O mercado será exibido na lista e será o mercado principal de todos os produtos dela.</div>
+      <div class="hint">O mercado será exibido na lista e ficará associado a ela.</div>
     </div>`;
   }
 
-  async function inject() {
-    const form = listForm();
+  function insertMarketField(form, current = '') {
     if (!form || form.querySelector(`[${FIELD_MARKER}]`)) return;
-    const db = await open();
-    try {
-      const [markets, lists] = await Promise.all([readAll(db, MARKET_STORE), readAll(db, STORE)]);
-      const idField = form.querySelector('[name="id"], [name="listId"], [data-list-id]');
-      const listId = idField?.value || idField?.dataset?.listId || '';
-      const name = document.getElementById('lfName')?.value?.trim() || '';
-      const date = document.getElementById('lfDate')?.value || '';
-      const matching = lists
-        .filter((list) => (!listId || list.id === listId) && (!name || list.name === name) && (!date || (list.date || '') === date))
-        .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')));
-      const current = matching[0]?.marketName || '';
+    const holder = document.createElement('div');
+    holder.innerHTML = marketField(FALLBACK_MARKETS, current);
+    const field = holder.firstElementChild;
+    const commentsField = document.getElementById('lfComments')?.closest('.field');
+    if (commentsField) commentsField.before(field);
+    else form.appendChild(field);
+  }
 
-      const holder = document.createElement('div');
-      holder.innerHTML = marketField(markets, current);
-      const field = holder.firstElementChild;
-      const commentsField = document.getElementById('lfComments')?.closest('.field');
-      if (commentsField) commentsField.before(field);
-      else form.appendChild(field);
-    } finally {
-      db.close();
+  async function hydrateMarketField(form) {
+    const field = form?.querySelector(`[${FIELD_MARKER}]`);
+    if (!field || field.hasAttribute(HYDRATED_MARKER)) return;
+    const select = field.querySelector(`#${FIELD_ID}`);
+    if (!select) return;
+
+    try {
+      const db = await open();
+      try {
+        const [markets, lists] = await Promise.all([readAll(db, MARKET_STORE), readAll(db, STORE)]);
+        const idField = form.querySelector('[name="id"], [name="listId"], [data-list-id]');
+        const listId = idField?.value || idField?.dataset?.listId || '';
+        const name = document.getElementById('lfName')?.value?.trim() || '';
+        const date = document.getElementById('lfDate')?.value || '';
+        const matching = lists
+          .filter((list) => (!listId || list.id === listId) && (!name || list.name === name) && (!date || (list.date || '') === date))
+          .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')));
+        const current = matching[0]?.marketName || '';
+        const names = [
+          ...markets.map((market) => market?.name),
+          ...FALLBACK_MARKETS,
+          ...(current ? [current] : [])
+        ];
+        const unique = [...new Set(names.map((value) => String(value || '').trim()).filter(Boolean))];
+        select.innerHTML = `<option value="">Sem mercado definido</option>${unique.map((nameValue) => `<option value="${esc(nameValue)}"${nameValue === current ? ' selected' : ''}>${esc(nameValue)}</option>`).join('')}`;
+        select.value = current || '';
+        field.setAttribute(HYDRATED_MARKER, '1');
+      } finally {
+        db.close();
+      }
+    } catch (error) {
+      console.error('Mercado da lista: falha ao carregar referências.', error);
+      // O campo permanece utilizável com a lista local de mercados de fallback.
     }
   }
 
@@ -89,13 +116,7 @@
       const current = lists.find((list) => list.id === listId);
       if (!current) return null;
       const next = { ...current, marketName: value, updatedAt: new Date().toISOString() };
-      if (value && Array.isArray(next.items)) {
-        next.items = next.items.map((item) => {
-          const clean = { ...item };
-          delete clean.marketName;
-          return clean;
-        });
-      }
+      // Regra de compatibilidade: nunca apagar o mercado antigo armazenado nos itens.
       await putList(db, next);
       return next;
     } finally {
@@ -167,7 +188,11 @@
 
   function scan() {
     const form = listForm();
-    if (form) inject().then(() => bind(form)).catch(console.error);
+    if (form) {
+      insertMarketField(form);
+      hydrateMarketField(form).catch(console.error);
+      bind(form);
+    }
     decorateListCards().catch(console.error);
   }
 
@@ -179,7 +204,8 @@
       const trigger = event.target.closest('#newListBtn, [data-action="edit-list"]');
       if (!trigger) return;
       setTimeout(scan, 0);
-      setTimeout(scan, 100);
+      setTimeout(scan, 50);
+      setTimeout(scan, 150);
       setTimeout(scan, 300);
     });
   }
