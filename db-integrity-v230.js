@@ -1,37 +1,228 @@
-(()=>{
-'use strict';
-const DB='MinhaListaDB',VERSION=6;
-const STORES=['catalogs','lists','history','wishlist','trash','settings','referenceProducts','referenceMarkets','inventory'];
-const $=id=>document.getElementById(id);
-const all=(db,store)=>new Promise((resolve,reject)=>{const r=db.transaction(store,'readonly').objectStore(store).getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error||Error('Falha IndexedDB'))});
-const open=()=>new Promise((resolve,reject)=>{const r=indexedDB.open(DB);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error||Error('IndexedDB indisponível'))});
-const date=v=>v==null||v===''||/^\d{4}-\d{2}-\d{2}$/.test(String(v));
-const num=v=>v==null||v===''||(typeof v==='number'&&Number.isFinite(v)&&v>=0);
-const id=v=>typeof v==='string'&&v.length>=1&&v.length<=200;
-async function diagnose(){
- const d=await open();
- try{
-  const missing=STORES.filter(s=>!d.objectStoreNames.contains(s));
-  if(missing.length)return {ok:false,version:d.version,missing,counts:{},issues:[`Stores ausentes: ${missing.join(', ')}`]};
-  const rows=Object.fromEntries(await Promise.all(STORES.map(async s=>[s,await all(d,s)])));
-  const issues=[];const add=(s,msg)=>issues.push(`${s}: ${msg}`);
-  const catalogs=new Set();
-  for(const c of rows.catalogs){if(!c||!id(c.id)||typeof c.name!=='string'||!c.name.trim())add('catalogs','registro inválido');else if(catalogs.has(c.id))add('catalogs','ID duplicado');else catalogs.add(c.id)}
-  const lists=new Set();
-  for(const l of rows.lists){if(!l||!id(l.id)||typeof l.name!=='string'||!l.name.trim()||!Array.isArray(l.items))add('lists','registro inválido');else{if(lists.has(l.id))add('lists','ID duplicado');lists.add(l.id);for(const i of l.items){if(!i||!id(i.id)||!id(i.mainItemId)||!catalogs.has(i.mainItemId)||typeof i.done!=='boolean'||!num(i.quantity)||!num(i.value)||!date(i.date)||!date(i.expiryDate))add('lists',`item inválido ou órfão (${i?.id||'sem ID'})`)}}}
-  for(const h of rows.history){if(!h||!id(h.id)||h.mainItemId&&!catalogs.has(h.mainItemId)||typeof h.itemName!=='string'||!num(h.value)||!date(h.date))add('history','registro inválido ou órfão')}
-  for(const w of rows.wishlist)if(!w||!id(w.id)||typeof w.name!=='string'||!w.name.trim())add('wishlist','registro inválido');
-  for(const t of rows.trash)if(!t||!id(t.id)||!['catalog','list'].includes(t.type)||!t.data)add('trash','registro inválido');
-  for(const x of rows.inventory){if(!x||!id(x.id)||!id(x.mainItemId)||!catalogs.has(x.mainItemId)||!num(x.quantity)||!num(x.packageQuantity)||!num(x.minQuantity)||!date(x.expiryDate)||!date(x.entryDate)||typeof (x.packageUnit??'')!=='string')add('inventory',`lote inválido ou órfão (${x?.id||'sem ID'})`)}
-  for(const s of rows.settings)if(!s||typeof s.key!=='string')add('settings','registro inválido');
-  if(d.version<6)add('database',`versão ${d.version}; esperado >= 6`);
-  const counts=Object.fromEntries(STORES.map(s=>[s,rows[s].length]));
-  return {ok:issues.length===0,version:d.version,missing:[],counts,issues};
- }finally{d.close()}
-}
-function report(r){const counts=Object.entries(r.counts).filter(([,n])=>n>0).map(([k,n])=>`${k}: ${n}`).join('\n');return `Integridade do armazenamento\n\n${r.ok?'✓ Nenhum problema encontrado.':'⚠ Problemas encontrados:'}\n${r.issues.length?r.issues.slice(0,20).map(x=>`• ${x}`).join('\n'):'• Estrutura e referências básicas OK.'}\n\nVersão do banco: ${r.version}\n\nRegistros:\n${counts||'nenhum'}${r.issues.length>20?'\n\n...mais problemas foram encontrados.':''}`}
-async function run(){try{const r=await diagnose();console.info('[Minha Lista] diagnóstico IndexedDB',r);alert(report(r));return r}catch(e){console.error(e);alert('Não foi possível verificar a integridade do armazenamento.')}}
-function bind(){const host=document.querySelector('#settingsView .panel:nth-of-type(2)');if(!host||$('dbIntegrityBtn'))return;const b=document.createElement('button');b.id='dbIntegrityBtn';b.className='btn ghost';b.type='button';b.textContent='🔎 Verificar integridade';b.addEventListener('click',run);host.querySelector('.row')?.appendChild(b)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-window.__mlDbIntegrityV230={diagnose,report};
+(() => {
+  'use strict';
+
+  const DB = 'MinhaListaDB';
+  const VERSION = 6;
+  const STORES = [
+    'catalogs',
+    'lists',
+    'history',
+    'wishlist',
+    'trash',
+    'settings',
+    'referenceProducts',
+    'referenceMarkets',
+    'inventory'
+  ];
+
+  const $ = (id) => document.getElementById(id);
+
+  const all = (db, store) => new Promise((resolve, reject) => {
+    const request = db.transaction(store, 'readonly').objectStore(store).getAll();
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error || Error('Falha IndexedDB'));
+  });
+
+  const open = () => new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
+  });
+
+  const date = (value) => (
+    value == null || value === '' || /^\d{4}-\d{2}-\d{2}$/.test(String(value))
+  );
+
+  const num = (value) => (
+    value == null || value === '' || (
+      typeof value === 'number' && Number.isFinite(value) && value >= 0
+    )
+  );
+
+  const id = (value) => (
+    typeof value === 'string' && value.length >= 1 && value.length <= 200
+  );
+
+  async function diagnose() {
+    const db = await open();
+
+    try {
+      const missing = STORES.filter((store) => !db.objectStoreNames.contains(store));
+
+      if (missing.length) {
+        return {
+          ok: false,
+          version: db.version,
+          missing,
+          counts: {},
+          issues: [`Stores ausentes: ${missing.join(', ')}`]
+        };
+      }
+
+      const rows = Object.fromEntries(
+        await Promise.all(STORES.map(async (store) => [store, await all(db, store)]))
+      );
+      const issues = [];
+      const add = (store, message) => issues.push(`${store}: ${message}`);
+      const catalogs = new Set();
+
+      for (const catalog of rows.catalogs) {
+        if (!catalog || !id(catalog.id) || typeof catalog.name !== 'string' || !catalog.name.trim()) {
+          add('catalogs', 'registro inválido');
+        } else if (catalogs.has(catalog.id)) {
+          add('catalogs', 'ID duplicado');
+        } else {
+          catalogs.add(catalog.id);
+        }
+      }
+
+      const lists = new Set();
+
+      for (const list of rows.lists) {
+        if (!list || !id(list.id) || typeof list.name !== 'string' || !list.name.trim() || !Array.isArray(list.items)) {
+          add('lists', 'registro inválido');
+        } else {
+          if (lists.has(list.id)) add('lists', 'ID duplicado');
+          lists.add(list.id);
+
+          for (const item of list.items) {
+            if (
+              !item ||
+              !id(item.id) ||
+              !id(item.mainItemId) ||
+              !catalogs.has(item.mainItemId) ||
+              typeof item.done !== 'boolean' ||
+              !num(item.quantity) ||
+              !num(item.value) ||
+              !date(item.date) ||
+              !date(item.expiryDate)
+            ) {
+              add('lists', `item inválido ou órfão (${item?.id || 'sem ID'})`);
+            }
+          }
+        }
+      }
+
+      for (const history of rows.history) {
+        if (
+          !history ||
+          !id(history.id) ||
+          (history.mainItemId && !catalogs.has(history.mainItemId)) ||
+          typeof history.itemName !== 'string' ||
+          !num(history.value) ||
+          !date(history.date)
+        ) {
+          add('history', 'registro inválido ou órfão');
+        }
+      }
+
+      for (const wish of rows.wishlist) {
+        if (!wish || !id(wish.id) || typeof wish.name !== 'string' || !wish.name.trim()) {
+          add('wishlist', 'registro inválido');
+        }
+      }
+
+      for (const trash of rows.trash) {
+        if (!trash || !id(trash.id) || !['catalog', 'list'].includes(trash.type) || !trash.data) {
+          add('trash', 'registro inválido');
+        }
+      }
+
+      for (const stock of rows.inventory) {
+        if (
+          !stock ||
+          !id(stock.id) ||
+          !id(stock.mainItemId) ||
+          !catalogs.has(stock.mainItemId) ||
+          !num(stock.quantity) ||
+          !num(stock.packageQuantity) ||
+          !num(stock.minQuantity) ||
+          !date(stock.expiryDate) ||
+          !date(stock.entryDate) ||
+          typeof (stock.packageUnit ?? '') !== 'string'
+        ) {
+          add('inventory', `lote inválido ou órfão (${stock?.id || 'sem ID'})`);
+        }
+      }
+
+      for (const setting of rows.settings) {
+        if (!setting || typeof setting.key !== 'string') {
+          add('settings', 'registro inválido');
+        }
+      }
+
+      if (db.version < VERSION) {
+        add('database', `versão ${db.version}; esperado >= ${VERSION}`);
+      }
+
+      const counts = Object.fromEntries(
+        STORES.map((store) => [store, rows[store].length])
+      );
+
+      return {
+        ok: issues.length === 0,
+        version: db.version,
+        missing: [],
+        counts,
+        issues
+      };
+    } finally {
+      db.close();
+    }
+  }
+
+  function report(result) {
+    const counts = Object.entries(result.counts)
+      .filter(([, count]) => count > 0)
+      .map(([store, count]) => `${store}: ${count}`)
+      .join('\n');
+
+    return [
+      'Integridade do armazenamento',
+      '',
+      result.ok ? '✓ Nenhum problema encontrado.' : '⚠ Problemas encontrados:',
+      result.issues.length
+        ? result.issues.slice(0, 20).map((issue) => `• ${issue}`).join('\n')
+        : '• Estrutura e referências básicas OK.',
+      '',
+      `Versão do banco: ${result.version}`,
+      '',
+      'Registros:',
+      counts || 'nenhum',
+      result.issues.length > 20 ? '\n...mais problemas foram encontrados.' : ''
+    ].join('\n');
+  }
+
+  async function run() {
+    try {
+      const result = await diagnose();
+      console.info('[Minha Lista] diagnóstico IndexedDB', result);
+      alert(report(result));
+      return result;
+    } catch (error) {
+      console.error(error);
+      alert('Não foi possível verificar a integridade do armazenamento.');
+    }
+  }
+
+  function bind() {
+    const host = document.querySelector('#settingsView .panel:nth-of-type(2)');
+    if (!host || $('dbIntegrityBtn')) return;
+
+    const button = document.createElement('button');
+    button.id = 'dbIntegrityBtn';
+    button.className = 'btn ghost';
+    button.type = 'button';
+    button.textContent = '🔎 Verificar integridade';
+    button.addEventListener('click', run);
+    host.querySelector('.row')?.appendChild(button);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind, { once: true });
+  } else {
+    bind();
+  }
+
+  window.__mlDbIntegrityV230 = { diagnose, report };
 })();
