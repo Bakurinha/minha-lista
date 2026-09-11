@@ -1,11 +1,14 @@
 name: V2.3.0 Stage 2 tests
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
 permissions:
   contents: read
+
 jobs:
   stage2:
     runs-on: ubuntu-latest
@@ -25,9 +28,11 @@ jobs:
           node --check list-enhancements.js
           node --check db-integrity-v230.js
           node --check db-migrations-v230.js
+          node --check version-v230.js
           node --check tests/v230-data-preservation.test.js
           node --check tests/v230-db-migrations.test.js
           node --check tests/v230-security-regression.test.js
+          node --check tests/v230-version.test.js
           node --check share-service/worker.js
           node --check share-service/test/worker.test.js
           node --check sw.js
@@ -41,6 +46,8 @@ jobs:
         run: node tests/v230-db-migrations.test.js
       - name: Security and regression audit
         run: node tests/v230-security-regression.test.js
+      - name: Visible version contract
+        run: node tests/v230-version.test.js
       - name: Worker validation tests
         run: node --test share-service/test/worker.test.js
       - name: Foundation checks
