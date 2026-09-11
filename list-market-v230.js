@@ -36,11 +36,11 @@
     request.onerror = () => reject(request.error || Error('Falha ao ler mercados'));
   });
 
-  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+  const esc = (value) => String(value ?? '').replace(/[&<>\"']/g, (char) => ({
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
-    '"': '&quot;',
+    '\"': '&quot;',
     "'": '&#39;'
   })[char]);
 
@@ -60,7 +60,7 @@
       <select class="select" id="v230ListMarket" name="v230ListMarket">
         ${options}
       </select>
-      <div class="hint">Define o mercado principal desta lista. O mercado individual dos itens continua disponível.</div>
+      <div class="hint">Define o mercado principal desta lista. Quando definido, ele substitui o mercado individual dos itens.</div>
     </div>`;
   }
 
