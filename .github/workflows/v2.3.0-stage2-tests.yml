@@ -23,11 +23,14 @@ jobs:
           node --check enhancements.js
           node --check backup-v230.js
           node --check list-enhancements.js
+          node --check db-integrity-v230.js
           node --check share-service/worker.js
           node --check share-service/test/worker.test.js
           node --check sw.js
       - name: Stage 2 invariants and migration checks
         run: node tests/v230-stage2.test.js
+      - name: Database integrity checks
+        run: node tests/v230-db-integrity.test.js
       - name: Worker validation tests
         run: node --test share-service/test/worker.test.js
       - name: Foundation checks
