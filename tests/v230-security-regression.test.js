@@ -43,7 +43,10 @@ assert(
 );
 
 assert(worker.includes('MAX_BODY_BYTES'), 'Worker deve limitar corpo recebido');
-assert(worker.includes('expirationTtl: SHARE_TTL'), 'Worker deve aplicar TTL');
+assert(
+  /expirationTtl\s*:\s*SHARE_TTL/.test(worker),
+  'Worker deve aplicar TTL'
+);
 assert(worker.includes('ID_RE'), 'ID do compartilhamento deve ter formato restrito');
 assert(worker.includes('APP_ORIGIN'), 'CORS deve ficar restrito à origem do aplicativo');
 assert(worker.includes('expiryDate'), 'Worker deve validar validade do V3');
