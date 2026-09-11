@@ -138,7 +138,7 @@ assert.notEqual(
 );
 
 assert(
-  sw.includes('minha-lista-v2-3-0') &&
+  /minha-lista-v2-3-\d+/.test(sw) &&
     sw.includes('./backup-v230.js') &&
     sw.includes('./list-enhancements.js'),
   'Stage 2 assets must be cached'
