@@ -121,6 +121,17 @@
       if (target.marketName === value) return;
 
       target.marketName = value;
+
+      // Once a market is assigned to the list, existing item-level markets
+      // are removed. The list becomes the single source of truth.
+      if (value) {
+        target.items = (target.items || []).map((item) => {
+          const next = { ...item };
+          delete next.marketName;
+          return next;
+        });
+      }
+
       target.updatedAt = new Date().toISOString();
       await putList(db, target);
     } finally {
