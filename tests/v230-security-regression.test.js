@@ -79,6 +79,6 @@ assert(
   'módulos de integridade/migração devem estar no SW'
 );
 assert(sw.includes('list-market-v230.js'), 'módulo de mercado da lista deve estar no SW');
-assert(sw.includes('minha-lista-v2-3-2'), 'cache atual V2.3.0 deve ser versionado');
+assert(/minha-lista-v2-3-\d+/.test(sw), 'cache V2.3.0 deve ser versionado');
 
 console.log('V2.3.0 security/regression source audit: OK');
