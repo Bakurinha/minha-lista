@@ -118,14 +118,18 @@
       if (!target) return;
 
       const value = String(market || '').trim().slice(0, MAX_MARKET);
-      if (target.marketName === value) return;
+      const sameMarket = target.marketName === value;
+      const items = target.items || [];
+      const needsItemCleanup = Boolean(value) && items.some((item) => Object.prototype.hasOwnProperty.call(item, 'marketName'));
+
+      if (sameMarket && !needsItemCleanup) return;
 
       target.marketName = value;
 
       // Once a market is assigned to the list, existing item-level markets
       // are removed. The list becomes the single source of truth.
       if (value) {
-        target.items = (target.items || []).map((item) => {
+        target.items = items.map((item) => {
           const next = { ...item };
           delete next.marketName;
           return next;
