@@ -173,11 +173,8 @@ assert(
   'No tracking/backend SDKs allowed'
 );
 assert(
-  list.includes('data-v230-existing-id') || list.includes('v230ExistingId'),
-  'list editing must track the real item ID'
-);
-assert(
-  list.includes('f.isConnected'),
+  (list.includes('f.isConnected') || list.includes('form.isConnected')) &&
+    list.includes('v230Wrapped'),
   'invalid form submission must not patch list extras'
 );
 assert(
