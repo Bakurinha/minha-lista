@@ -1,3 +1,10 @@
+/**
+ * Diagnóstico não destrutivo do IndexedDB V2.3.0.
+ *
+ * Verifica stores, registros básicos, referências entre catálogos/listas/
+ * estoque e tipos de campos. O módulo somente diagnostica: não corrige,
+ * remove nem reescreve dados automaticamente.
+ */
 (() => {
   'use strict';
 
@@ -29,10 +36,12 @@
     request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
   });
 
+  // Valida apenas o formato de data usado pelos registros do aplicativo.
   const date = (value) => (
     value == null || value === '' || /^\d{4}-\d{2}-\d{2}$/.test(String(value))
   );
 
+  // Campos numéricos de quantidade/valor aceitam zero e números finitos.
   const num = (value) => (
     value == null || value === '' || (
       typeof value === 'number' && Number.isFinite(value) && value >= 0
@@ -66,6 +75,7 @@
       const add = (store, message) => issues.push(`${store}: ${message}`);
       const catalogs = new Set();
 
+      // Catálogos são a base das referências usadas por listas e estoque.
       for (const catalog of rows.catalogs) {
         if (!catalog || !id(catalog.id) || typeof catalog.name !== 'string' || !catalog.name.trim()) {
           add('catalogs', 'registro inválido');
@@ -128,6 +138,7 @@
         }
       }
 
+      // O estoque referencia o catálogo, mas mantém seus próprios lotes.
       for (const stock of rows.inventory) {
         if (
           !stock ||
