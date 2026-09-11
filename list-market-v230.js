@@ -1,40 +1,15 @@
 (() => {
   'use strict';
 
+  // V2.3.0 — Mercado pertence à LISTA, não aos itens.
+  // Este módulo é deliberadamente independente do app.js para preservar
+  // compatibilidade com listas antigas e evitar alterações destrutivas.
   const DB = 'MinhaListaDB';
   const STORE = 'lists';
-  const MAX_MARKET = 160;
+  const MARKET_STORE = 'referenceMarkets';
+  const FIELD_ID = 'v230ListMarket';
   const FIELD_MARKER = 'data-v230-list-market';
-
-  const open = () => new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB);
-    request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
-    request.onsuccess = () => resolve(request.result);
-  });
-
-  const allLists = (db) => new Promise((resolve, reject) => {
-    const request = db.transaction(STORE, 'readonly').objectStore(STORE).getAll();
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error || Error('Falha na leitura das listas'));
-  });
-
-  const putList = (db, list) => new Promise((resolve, reject) => {
-    const request = db.transaction(STORE, 'readwrite').objectStore(STORE).put(list);
-    request.onsuccess = resolve;
-    request.onerror = () => reject(request.error || Error('Falha ao salvar mercado da lista'));
-  });
-
-  const getMarkets = (db) => new Promise((resolve, reject) => {
-    if (!db.objectStoreNames.contains('referenceMarkets')) {
-      resolve([]);
-      return;
-    }
-    const request = db.transaction('referenceMarkets', 'readonly')
-      .objectStore('referenceMarkets')
-      .getAll();
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error || Error('Falha ao ler mercados'));
-  });
+  const MAX_MARKET = 160;
 
   const esc = (value) => String(value ?? '').replace(/[&<>\"']/g, (char) => ({
     '&': '&amp;',
@@ -44,150 +19,151 @@
     "'": '&#39;'
   })[char]);
 
-  function marketField(markets, current = '') {
-    const options = [
-      '<option value="">Sem mercado definido</option>',
-      ...markets.map((market) => {
-        const name = String(market.name || '').trim();
-        return name
-          ? `<option value="${esc(name)}"${name === current ? ' selected' : ''}>${esc(name)}</option>`
-          : '';
-      })
-    ].join('');
+  const open = () => new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB);
+    request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
+    request.onsuccess = () => resolve(request.result);
+  });
 
-    return `<div class="field" ${FIELD_MARKER}>
-      <label for="v230ListMarket">Mercado da lista</label>
-      <select class="select" id="v230ListMarket" name="v230ListMarket">
-        ${options}
+  const readAll = (db, store) => new Promise((resolve, reject) => {
+    if (!db.objectStoreNames.contains(store)) {
+      resolve([]);
+      return;
+    }
+    const request = db.transaction(store, 'readonly').objectStore(store).getAll();
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error || Error(`Falha ao ler ${store}`));
+  });
+
+  const putList = (db, list) => new Promise((resolve, reject) => {
+    const request = db.transaction(STORE, 'readwrite').objectStore(STORE).put(list);
+    request.onsuccess = resolve;
+    request.onerror = () => reject(request.error || Error('Falha ao salvar mercado da lista'));
+  });
+
+  function listForm() {
+    const body = document.getElementById('modalBody');
+    return body?.querySelector('#listForm') || null;
+  }
+
+  function marketField(markets, current) {
+    const names = [...new Set(markets.map((market) => String(market?.name || '').trim()).filter(Boolean))];
+    return `<div class="field" ${FIELD_MARKER} style="margin-top:9px">
+      <label for="${FIELD_ID}">Mercado da lista</label>
+      <select id="${FIELD_ID}" name="marketName" class="select">
+        <option value="">Sem mercado definido</option>
+        ${names.map((name) => `<option value="${esc(name)}"${name === current ? ' selected' : ''}>${esc(name)}</option>`).join('')}
       </select>
-      <div class="hint">Define o mercado principal desta lista. Quando definido, ele substitui o mercado individual dos itens.</div>
+      <div class="hint">O mercado será exibido na lista e será o mercado principal de todos os produtos dela.</div>
     </div>`;
   }
 
-  function findListForm() {
-    const body = document.getElementById('modalBody');
-    if (!body) return null;
-
-    const direct = body.querySelector('#listForm');
-    if (direct) return direct;
-
-    const forms = [...body.querySelectorAll('form')];
-    return forms.find((form) => {
-      const text = form.textContent || '';
-      return /nome da lista/i.test(text)
-        && !form.querySelector('#itemForm, [name="mainItemId"], [data-action="edit-item"]');
-    }) || null;
-  }
-
   async function inject() {
-    const form = findListForm();
-    if (!form || form.querySelector(`[${FIELD_MARKER}]`)) return;
+    const form = listForm();
+    if (!form || form.querySelector(`[${FIELD_MARKER}]`)) return false;
 
     const db = await open();
     try {
-      const markets = await getMarkets(db);
-      let current = '';
-      const marker = form.querySelector('[name="id"], [name="listId"], [data-list-id]');
-      const listId = marker?.value || marker?.dataset?.listId || '';
+      const [markets, lists] = await Promise.all([
+        readAll(db, MARKET_STORE),
+        readAll(db, STORE)
+      ]);
+      const idField = form.querySelector('[name="id"], [name="listId"], [data-list-id]');
+      const listId = idField?.value || idField?.dataset?.listId || '';
+      const current = lists.find((list) => list.id === listId)?.marketName || '';
 
-      if (listId) {
-        const lists = await allLists(db);
-        current = lists.find((list) => list.id === listId)?.marketName || '';
-      }
-
-      const wrapper = document.createElement('div');
-      wrapper.className = 'field full';
-      wrapper.innerHTML = marketField(markets, current);
-      const field = wrapper.firstElementChild;
-      const submit = form.querySelector('button[type="submit"]');
-      if (submit) form.insertBefore(wrapper, submit);
-      else form.appendChild(wrapper);
-
-      if (field) field.closest('.field')?.removeAttribute('full');
+      const holder = document.createElement('div');
+      holder.innerHTML = marketField(markets, current);
+      const field = holder.firstElementChild;
+      const comments = form.querySelector('#lfComments');
+      const commentsField = comments?.closest('.field');
+      if (commentsField) commentsField.before(field);
+      else form.appendChild(field);
+      return true;
     } finally {
       db.close();
     }
   }
 
-  async function patchChangedList(before, market) {
+  async function normalizeListMarket(listId, market) {
+    if (!listId) return;
+    const value = String(market || '').trim().slice(0, MAX_MARKET);
     const db = await open();
     try {
-      const after = await allLists(db);
-      const beforeById = new Map(before.map((list) => [list.id, JSON.stringify(list)]));
-      const changed = after.filter((list) => beforeById.get(list.id) !== JSON.stringify(list));
-      const target = changed.length === 1
-        ? changed[0]
-        : after.find((list) => !beforeById.has(list.id));
+      const lists = await readAll(db, STORE);
+      const current = lists.find((list) => list.id === listId);
+      if (!current) return;
 
-      if (!target) return;
-
-      const value = String(market || '').trim().slice(0, MAX_MARKET);
-      const sameMarket = target.marketName === value;
-      const items = target.items || [];
-      const needsItemCleanup = Boolean(value) && items.some((item) => Object.prototype.hasOwnProperty.call(item, 'marketName'));
-
-      if (sameMarket && !needsItemCleanup) return;
-
-      target.marketName = value;
-
-      if (value) {
-        target.items = items.map((item) => {
-          const next = { ...item };
-          delete next.marketName;
-          return next;
+      const next = { ...current, marketName: value };
+      if (value && Array.isArray(next.items)) {
+        // Regra V2.3.0: mercado da lista substitui mercado individual dos itens.
+        next.items = next.items.map((item) => {
+          const clean = { ...item };
+          delete clean.marketName;
+          return clean;
         });
       }
-
-      target.updatedAt = new Date().toISOString();
-      await putList(db, target);
+      next.updatedAt = new Date().toISOString();
+      await putList(db, next);
     } finally {
       db.close();
     }
   }
 
-  function wrap(form) {
-    if (!form || form.dataset.v230MarketWrapped) return;
+  function refreshListUI(listId) {
+    // app.js mantém currentListId/renderListModal em seu próprio escopo.
+    // Um reload é usado apenas como fallback visual; os dados já estão salvos.
+    if (listId && document.getElementById('modal')?.classList.contains('show')) {
+      setTimeout(() => window.location.reload(), 0);
+    } else {
+      window.location.reload();
+    }
+  }
 
-    const original = form.onsubmit;
-    if (typeof original !== 'function') return;
+  function bind(form) {
+    if (!form || form.dataset.v230MarketBound === '1') return;
+    form.dataset.v230MarketBound = '1';
 
-    form.dataset.v230MarketWrapped = '1';
-    form.onsubmit = async (event) => {
-      const db = await open();
-      let before = [];
-      try {
-        before = await allLists(db);
-      } finally {
-        db.close();
-      }
-
-      const market = document.getElementById('v230ListMarket')?.value || '';
-      await original(event);
-
-      if (form.isConnected) return;
-      await patchChangedList(before, market).catch(console.error);
-    };
+    // O app.js instala o onsubmit depois que abre o modal. Portanto usamos
+    // um listener de submit + atraso curto para deixar o salvamento nativo
+    // terminar antes de normalizar o campo no mesmo registro da lista.
+    form.addEventListener('submit', () => {
+      const market = document.getElementById(FIELD_ID)?.value || '';
+      setTimeout(async () => {
+        try {
+          const db = await open();
+          const lists = await readAll(db, STORE);
+          db.close();
+          const name = document.getElementById('lfName')?.value?.trim() || '';
+          const date = document.getElementById('lfDate')?.value || '';
+          const target = lists
+            .filter((list) => list.name === name && (list.date || '') === date)
+            .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')))[0];
+          if (!target) return;
+          await normalizeListMarket(target.id, market);
+          refreshListUI(target.id);
+        } catch (error) {
+          console.error('Mercado da lista:', error);
+        }
+      }, 350);
+    });
   }
 
   function scan() {
-    inject().catch(console.error);
-    wrap(findListForm());
+    inject().then(() => bind(listForm())).catch(console.error);
   }
 
   function init() {
     scan();
-
     const observer = new MutationObserver(scan);
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // The list modal is created dynamically by app.js. This explicit hook
-    // guarantees a scan immediately after opening New/Edit List, even when
-    // the browser restores a cached page before the mutation observer fires.
     document.addEventListener('click', (event) => {
       const trigger = event.target.closest('#newListBtn, [data-action="edit-list"]');
       if (!trigger) return;
       setTimeout(scan, 0);
-      setTimeout(scan, 50);
+      setTimeout(scan, 100);
+      setTimeout(scan, 300);
     });
   }
 
