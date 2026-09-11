@@ -68,10 +68,14 @@
     const body = document.getElementById('modalBody');
     if (!body) return null;
 
+    const direct = body.querySelector('#listForm');
+    if (direct) return direct;
+
     const forms = [...body.querySelectorAll('form')];
     return forms.find((form) => {
       const text = form.textContent || '';
-      return /lista/i.test(text) && !form.querySelector('#itemForm, [name="mainItemId"], [data-action="edit-item"]');
+      return /nome da lista/i.test(text)
+        && !form.querySelector('#itemForm, [name="mainItemId"], [data-action="edit-item"]');
     }) || null;
   }
 
@@ -126,8 +130,6 @@
 
       target.marketName = value;
 
-      // Once a market is assigned to the list, existing item-level markets
-      // are removed. The list becomes the single source of truth.
       if (value) {
         target.items = items.map((item) => {
           const next = { ...item };
@@ -169,14 +171,24 @@
 
   function scan() {
     inject().catch(console.error);
-    const form = findListForm();
-    wrap(form);
+    wrap(findListForm());
   }
 
   function init() {
     scan();
+
     const observer = new MutationObserver(scan);
     observer.observe(document.body, { childList: true, subtree: true });
+
+    // The list modal is created dynamically by app.js. This explicit hook
+    // guarantees a scan immediately after opening New/Edit List, even when
+    // the browser restores a cached page before the mutation observer fires.
+    document.addEventListener('click', (event) => {
+      const trigger = event.target.closest('#newListBtn, [data-action="edit-list"]');
+      if (!trigger) return;
+      setTimeout(scan, 0);
+      setTimeout(scan, 50);
+    });
   }
 
   if (document.readyState === 'loading') {
