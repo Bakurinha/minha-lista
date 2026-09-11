@@ -1,43 +1,97 @@
-# Minha Lista de Supermercado — V2.2.2 (interno)
+# Minha Lista de Supermercado — V2.3.0
 
-Documento técnico interno da versão V2.2.2. O aplicativo permanece PWA, local e offline.
+Documento técnico interno. O aplicativo permanece PWA, local e offline, sem redesign visual nesta versão.
 
 ## Base
 - HTML + CSS + JavaScript puro.
-- IndexedDB v5.
+- IndexedDB v6.
 - Service Worker + Manifest.
 - Sem login, servidor, nuvem, Firebase, Firestore, Analytics, Supabase, anúncios, pagamentos ou API externa de preços.
 - Dados pessoais permanecem no dispositivo.
 
-## Alterações da V2.2.2
-- Corrigido o fluxo de pesquisa dentro da lista para não reconstruir o campo de pesquisa durante a digitação; os resultados são atualizados sem substituir o input.
-- Tratamento dos controles de itens da lista passou a usar delegação de eventos, evitando reanexação de handlers durante a pesquisa.
-- Layout dos `.row` ajustado para quebra responsiva; campos e botões não devem sair do container em desktop/tablet.
-- Lixeira separada visualmente em **Listas excluídas** e **Itens excluídos**, mantendo restauração, exclusão permanente e desfazer.
-- Cadastro de produto agora abre formulário completo na criação, permitindo nome, marca opcional, unidade (padrão `un`), categoria, EAN opcional e observações.
-- ID interno permanece independente de nome/marca/unidade/EAN e é gerado automaticamente.
-- Adicionada estrutura opcional de EAN/código de barras aos produtos pessoais e produtos de referência, com validação de 8, 12, 13 ou 14 dígitos.
-- Compartilhamento melhorado: tenta compartilhamento nativo de arquivo; quando indisponível, tenta compartilhamento de texto; depois usa área de transferência e, por último, arquivo JSON local.
-- Lista compartilhada preserva snapshots de nome, marca, unidade e categoria dos itens.
-- Banco de referência offline continua separado dos dados pessoais e excluído do backup pessoal.
-- Versão do cache do Service Worker atualizada para V2.2.2.
+## V2.3.0 — arquitetura e responsabilidades
+A V2.3.0 adiciona controle de estoque por lotes, expansão do banco de referência, migrações explícitas, backup atualizado, compartilhamento V3 e verificações de integridade.
+
+### Módulos
+- `app.js`: núcleo existente da aplicação e compatibilidade com o fluxo principal.
+- `inventory.js`: CRUD do estoque, múltiplos lotes, validade, quantidade mínima e ajustes rápidos.
+- `backup-v230.js`: exportação/importação dos dados pessoais e migração de backups V1/V2.
+- `db-migrations-v230.js`: contrato documentado das versões do IndexedDB de V1 a V6.
+- `db-integrity-v230.js`: diagnóstico da estrutura e dos vínculos do banco, sem reparo automático.
+- `enhancements.js`: compartilhamento V3, importação compartilhada e integração com histórico/navegação.
+- `list-enhancements.js`: extensão do formulário de itens da lista para validade e dados de embalagem.
+- `reference-product-expansion-v230.js`: expansão idempotente do catálogo de referência.
+- `reference-market-refresh.js`: seed/atualização idempotente do catálogo de mercados.
+- `version-v230.js`: atualização da versão visível no rodapé sem alterar o núcleo.
+- `sw.js`: cache PWA e injeção dos módulos necessários nas páginas navegadas.
+
+## Modelo de estoque
+Cada registro de estoque representa um lote independente:
+
+`id, catalogId/mainItemId, quantity, packageQuantity, packageUnit, expiryDate, entryDate, minQuantity, marketName, location, notes, createdAt, updatedAt`
+
+Regras importantes:
+- `quantity` continua representando a quantidade de embalagens/lotes conforme o modelo do estoque.
+- `packageQuantity` e `packageUnit` são opcionais e não reutilizam o campo `unit` do produto.
+- Um mesmo produto pode possuir vários lotes.
+- A validade é informativa: vencido, vence hoje ou vence em X dias.
+- Lotes não são apagados automaticamente por validade.
+- O filtro de estoque considera validade e quantidade mínima.
+
+## Banco de referência
+`referenceProducts` e `referenceMarkets` são bancos locais de referência, separados dos dados pessoais.
+
+- Produtos de referência são excluídos do backup pessoal.
+- A expansão V2.3.0 é idempotente e usa marcador em `settings`.
+- A expansão acrescenta até 1000 combinações novas de produtos, evitando duplicidade por nome, marca e unidade.
+- O catálogo de mercados possui dezenas de nomes brasileiros, incluindo referências da Bahia/Salvador.
+
+## Migrações IndexedDB
+Contrato da V2.3.0:
+- V1: `catalogs`, `lists`, `history`, `settings`.
+- V2: `wishlist`.
+- V3: `trash`.
+- V4: `referenceProducts`, `referenceMarkets`.
+- V5: nenhuma nova store.
+- V6: `inventory`.
+
+A migração deve preservar os dados pessoais existentes. O módulo `db-migrations-v230.js` mantém o contrato técnico separado para auditoria e testes; o núcleo legado continua contendo compatibilidade interna para não alterar o fluxo estável da aplicação sem necessidade.
+
+## Backup
+- Formato atual: `backupFormatVersion: 2`.
+- Schema atual: IndexedDB v6.
+- Inclui `inventory` e os demais dados pessoais.
+- Aceita backups V1 e backups legados identificados como `version: "2.2"`.
+- Limite de segurança do backup: 20 MB.
+- Catálogos e dados de referência internos não são misturados aos dados pessoais.
+
+## Compartilhamento
+- Formato V3 aceita payloads V2/V3.
+- Apenas a lista e os catálogos necessários são compartilhados.
+- Estoque/inventário nunca é incluído no compartilhamento.
+- O modo local usa serialização Base64URL.
+- O modo remoto opcional usa Worker/KV com origem restrita ao aplicativo.
+- TTL remoto: 7 dias.
+- Limites e validações de quantidade, datas e strings são aplicados antes do armazenamento.
+
+## Segurança e privacidade
+- Conteúdo inserido pelo usuário deve ser escapado antes de entrar em HTML.
+- Não usar `sendBeacon`, WebSocket, Firebase, Supabase ou SDK de rastreamento para enviar dados pessoais.
+- O Worker aceita apenas a origem oficial do aplicativo e limita corpo, itens, catálogos e validade.
+- Dados de estoque não são persistidos em payloads compartilhados.
+- O diagnóstico de integridade não executa reparos automáticos, reduzindo o risco de perda silenciosa de dados.
+
+## Service Worker / PWA
+O cache é versionado como `minha-lista-v2-3-0` e inclui os módulos V2.3.0 necessários para operação offline. O Service Worker também injeta os módulos de compatibilidade/expansão durante a navegação.
 
 ## Compatibilidade
 - Migração `lista_supermercado_v1` mantida.
 - Backups anteriores compatíveis continuam sendo normalizados antes da importação.
 - IDs existentes são preservados quando válidos.
 - Produtos antigos sem EAN permanecem válidos.
-
-## Banco offline
-`referenceProducts` e `referenceMarkets` são bancos de referência locais. O seed é versionado e idempotente. A expansão diária do banco deve ocorrer de forma controlada, sem misturar dados pessoais com dados de referência.
-
-## Compartilhamento
-O aplicativo não possui servidor de compartilhamento. A lista é serializada localmente em JSON. A disponibilidade de `navigator.share` depende do navegador e do dispositivo.
+- O campo `expiryDate` da lista é independente do estoque.
 
 ## Auditoria
-Executados nesta entrega:
-- `node --check app.js`
-- `node --check sw.js`
-- verificação estrutural de versão, IndexedDB, referências offline, EAN, compartilhamento, lixeira e layout.
+A entrega V2.3.0 possui testes automatizados de fundação, Stage 2, preservação de dados, segurança/regressão, migração, integridade, versão e compatibilidade da validação V2.2.3.
 
 Limitação: teste E2E completo em navegador real não é declarado como aprovado neste ambiente.
