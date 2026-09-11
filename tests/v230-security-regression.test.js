@@ -43,12 +43,12 @@ assert(
   'formulário inválido não pode aplicar patch posterior'
 );
 assert(
-  list.includes('target.list.marketName') && list.includes('delete item.marketName'),
-  'item deve perder mercado quando a lista possui mercado'
-);
-assert(
   list.includes('target.list.marketName') && list.includes('Keep legacy list data intact'),
   'listas legadas devem ser preservadas durante a regra de mercado'
+);
+assert(
+  !/delete\s+item\.marketName/.test(list),
+  'mercado antigo dos itens não deve ser apagado durante a atualização'
 );
 
 assert(listMarket.includes('v230ListMarket'), 'mercado da lista deve possuir campo próprio');
@@ -56,13 +56,13 @@ assert(listMarket.includes('marketName'), 'mercado da lista deve ser persistido 
 assert(listMarket.includes('MAX_MARKET'), 'mercado da lista deve possuir limite de tamanho');
 assert(!listMarket.includes('inventory'), 'mercado da lista não deve acessar estoque');
 assert(
-  listMarket.includes('substitui o mercado individual dos itens'),
-  'mercado da lista deve ser apresentado como fonte de verdade'
+  listMarket.includes('O mercado será exibido na lista e ficará associado a ela.'),
+  'mercado da lista deve ser apresentado como dado da própria lista'
 );
-assert(listMarket.includes('target.items'), 'a regra deve processar os itens da lista');
+assert(listMarket.includes('FALLBACK_MARKETS'), 'seletor deve possuir fallback local para não depender da leitura do banco para aparecer');
 assert(
-  /delete\s+next\.marketName/.test(listMarket),
-  'ao atribuir mercado à lista, o mercado individual dos itens deve ser removido'
+  !/delete\s+next\.marketName/.test(listMarket),
+  'mercado antigo dos itens não deve ser removido ao salvar o mercado da lista'
 );
 
 assert(worker.includes('MAX_BODY_BYTES'), 'Worker deve limitar corpo recebido');
@@ -79,6 +79,6 @@ assert(
   'módulos de integridade/migração devem estar no SW'
 );
 assert(sw.includes('list-market-v230.js'), 'módulo de mercado da lista deve estar no SW');
-assert(sw.includes('minha-lista-v2-3-0'), 'cache V2.3.0 deve ser versionado');
+assert(sw.includes('minha-lista-v2-3-2'), 'cache atual V2.3.0 deve ser versionado');
 
 console.log('V2.3.0 security/regression source audit: OK');
