@@ -43,8 +43,8 @@ assert(
   'formulário inválido não pode aplicar patch posterior'
 );
 assert(
-  list.includes('target.list.marketName') && list.includes('Keep legacy list data intact'),
-  'listas legadas devem ser preservadas durante a regra de mercado'
+  list.includes('Mercado antigo do item é preservado'),
+  'mercado legado do item deve ser explicitamente preservado'
 );
 assert(
   !/delete\s+item\.marketName/.test(list),
