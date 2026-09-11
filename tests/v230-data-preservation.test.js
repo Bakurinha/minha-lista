@@ -2,7 +2,7 @@ const fs=require('fs');
 const vm=require('vm');
 const assert=require('assert');
 const source=fs.readFileSync('backup-v230.js','utf8');
-const context={document:{readyState:'complete',getElementById:()=>null,body:{},addEventListener(){}},indexedDB:{},console,URL:{createObjectURL:()=>'',revokeObjectURL(){}},Blob:function(){},setTimeout,clearTimeout,confirm:()=>true,location:{reload(){}},Date,JSON,Promise,Error,Object,Array,Number,String,Boolean,RegExp,Math};
+const context={document:{readyState:'complete',getElementById:()=>null,body:{},addEventListener(){}},indexedDB:{},console,URL:{createObjectURL:()=>'',revokeObjectURL(){}},Blob:function(){},setTimeout,clearTimeout,confirm:()=>true,location:{reload(){}},Date,JSON,Promise,Error,Object,Array,Number,String,Boolean,RegExp,Math,MutationObserver:class{observe(){}}};
 context.window=context;
 vm.createContext(context);
 vm.runInContext(source,context);
