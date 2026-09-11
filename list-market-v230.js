@@ -62,7 +62,13 @@
       const [markets, lists] = await Promise.all([readAll(db, MARKET_STORE), readAll(db, STORE)]);
       const idField = form.querySelector('[name="id"], [name="listId"], [data-list-id]');
       const listId = idField?.value || idField?.dataset?.listId || '';
-      const current = lists.find((list) => list.id === listId)?.marketName || '';
+      const name = document.getElementById('lfName')?.value?.trim() || '';
+      const date = document.getElementById('lfDate')?.value || '';
+      const matching = lists
+        .filter((list) => (!listId || list.id === listId) && (!name || list.name === name) && (!date || (list.date || '') === date))
+        .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')));
+      const current = matching[0]?.marketName || '';
+
       const holder = document.createElement('div');
       holder.innerHTML = marketField(markets, current);
       const field = holder.firstElementChild;
