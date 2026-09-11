@@ -1,0 +1,15 @@
+name: V2.3.0 TypeScript contracts
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate TypeScript contract source
+        run: node tests/v230-types.test.js
