@@ -60,8 +60,7 @@ assert(
   'mercado da lista deve ser apresentado como fonte de verdade'
 );
 assert(
-  listMarket.includes('target.items = (target.items || []).map') &&
-  listMarket.includes('delete next.marketName'),
+  /target\.items\s*=\s*\(target\.items\s*\|\|\s*\[\]\)\.map\s*\(\s*\(?item\)?\s*=>\s*\{[\s\S]*?delete\s+next\.marketName/.test(listMarket),
   'ao atribuir mercado à lista, mercados existentes dos itens devem ser removidos'
 );
 
