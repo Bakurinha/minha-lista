@@ -108,13 +108,7 @@
     if (extra.expiryDate) item.expiryDate = extra.expiryDate;
     else delete item.expiryDate;
 
-    // When the list has its own market, it is the source of truth.
-    // Keep legacy list data intact; only clear the item's market after
-    // the item is actually saved into a market-scoped list.
-    if (String(target.list.marketName || '').trim()) {
-      delete item.marketName;
-    }
-
+    // Mercado antigo do item é preservado. O novo mercado da lista é apenas adicional.
     item.updatedAt = new Date().toISOString();
 
     const db = await open();
