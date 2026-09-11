@@ -2,8 +2,6 @@
   'use strict';
 
   // V2.3.0 — Mercado pertence à LISTA, não aos itens.
-  // Este módulo é deliberadamente independente do app.js para preservar
-  // compatibilidade com listas antigas e evitar alterações destrutivas.
   const DB = 'MinhaListaDB';
   const STORE = 'lists';
   const MARKET_STORE = 'referenceMarkets';
@@ -26,10 +24,7 @@
   });
 
   const readAll = (db, store) => new Promise((resolve, reject) => {
-    if (!db.objectStoreNames.contains(store)) {
-      resolve([]);
-      return;
-    }
+    if (!db.objectStoreNames.contains(store)) return resolve([]);
     const request = db.transaction(store, 'readonly').objectStore(store).getAll();
     request.onsuccess = () => resolve(request.result || []);
     request.onerror = () => reject(request.error || Error(`Falha ao ler ${store}`));
@@ -42,8 +37,7 @@
   });
 
   function listForm() {
-    const body = document.getElementById('modalBody');
-    return body?.querySelector('#listForm') || null;
+    return document.getElementById('modalBody')?.querySelector('#listForm') || null;
   }
 
   function marketField(markets, current) {
@@ -60,104 +54,120 @@
 
   async function inject() {
     const form = listForm();
-    if (!form || form.querySelector(`[${FIELD_MARKER}]`)) return false;
-
+    if (!form || form.querySelector(`[${FIELD_MARKER}]`)) return;
     const db = await open();
     try {
-      const [markets, lists] = await Promise.all([
-        readAll(db, MARKET_STORE),
-        readAll(db, STORE)
-      ]);
+      const [markets, lists] = await Promise.all([readAll(db, MARKET_STORE), readAll(db, STORE)]);
       const idField = form.querySelector('[name="id"], [name="listId"], [data-list-id]');
       const listId = idField?.value || idField?.dataset?.listId || '';
       const current = lists.find((list) => list.id === listId)?.marketName || '';
-
       const holder = document.createElement('div');
       holder.innerHTML = marketField(markets, current);
       const field = holder.firstElementChild;
-      const comments = form.querySelector('#lfComments');
-      const commentsField = comments?.closest('.field');
+      const commentsField = document.getElementById('lfComments')?.closest('.field');
       if (commentsField) commentsField.before(field);
       else form.appendChild(field);
-      return true;
     } finally {
       db.close();
     }
   }
 
-  async function normalizeListMarket(listId, market) {
-    if (!listId) return;
+  async function saveMarket(listId, market) {
+    if (!listId) return null;
     const value = String(market || '').trim().slice(0, MAX_MARKET);
     const db = await open();
     try {
       const lists = await readAll(db, STORE);
       const current = lists.find((list) => list.id === listId);
-      if (!current) return;
-
-      const next = { ...current, marketName: value };
+      if (!current) return null;
+      const next = { ...current, marketName: value, updatedAt: new Date().toISOString() };
       if (value && Array.isArray(next.items)) {
-        // Regra V2.3.0: mercado da lista substitui mercado individual dos itens.
         next.items = next.items.map((item) => {
           const clean = { ...item };
           delete clean.marketName;
           return clean;
         });
       }
-      next.updatedAt = new Date().toISOString();
       await putList(db, next);
+      return next;
     } finally {
       db.close();
     }
   }
 
-  function refreshListUI(listId) {
-    // app.js mantém currentListId/renderListModal em seu próprio escopo.
-    // Um reload é usado apenas como fallback visual; os dados já estão salvos.
-    if (listId && document.getElementById('modal')?.classList.contains('show')) {
-      setTimeout(() => window.location.reload(), 0);
-    } else {
-      window.location.reload();
+  async function listsSnapshot() {
+    const db = await open();
+    try { return await readAll(db, STORE); } finally { db.close(); }
+  }
+
+  async function persistSubmittedList(before, market, name, date) {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 100 : 150));
+      const after = await listsSnapshot();
+      const beforeMap = new Map(before.map((list) => [list.id, JSON.stringify(list)]));
+      const changed = after.filter((list) => beforeMap.get(list.id) !== JSON.stringify(list));
+      const created = after.filter((list) => !beforeMap.has(list.id));
+      const candidates = [...created, ...changed]
+        .filter((list) => !name || list.name === name)
+        .filter((list) => !date || (list.date || '') === date);
+      const target = candidates.sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')))[0];
+      if (target) return saveMarket(target.id, market);
     }
+    return null;
   }
 
   function bind(form) {
     if (!form || form.dataset.v230MarketBound === '1') return;
     form.dataset.v230MarketBound = '1';
+    form.addEventListener('submit', async () => {
+      try {
+        const before = await listsSnapshot();
+        const market = document.getElementById(FIELD_ID)?.value || '';
+        const name = document.getElementById('lfName')?.value?.trim() || '';
+        const date = document.getElementById('lfDate')?.value || '';
+        const target = await persistSubmittedList(before, market, name, date);
+        if (target) setTimeout(() => window.location.reload(), 50);
+      } catch (error) {
+        console.error('Mercado da lista:', error);
+      }
+    }, true);
+  }
 
-    // O app.js instala o onsubmit depois que abre o modal. Portanto usamos
-    // um listener de submit + atraso curto para deixar o salvamento nativo
-    // terminar antes de normalizar o campo no mesmo registro da lista.
-    form.addEventListener('submit', () => {
-      const market = document.getElementById(FIELD_ID)?.value || '';
-      setTimeout(async () => {
-        try {
-          const db = await open();
-          const lists = await readAll(db, STORE);
-          db.close();
-          const name = document.getElementById('lfName')?.value?.trim() || '';
-          const date = document.getElementById('lfDate')?.value || '';
-          const target = lists
-            .filter((list) => list.name === name && (list.date || '') === date)
-            .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')))[0];
-          if (!target) return;
-          await normalizeListMarket(target.id, market);
-          refreshListUI(target.id);
-        } catch (error) {
-          console.error('Mercado da lista:', error);
-        }
-      }, 350);
-    });
+  async function decorateListCards() {
+    const container = document.getElementById('listsCards');
+    if (!container) return;
+    const cards = [...container.querySelectorAll('[data-action="open-list"]')];
+    if (!cards.length) return;
+    const db = await open();
+    try {
+      const lists = await readAll(db, STORE);
+      const byId = new Map(lists.map((list) => [list.id, list]));
+      for (const button of cards) {
+        const list = byId.get(button.dataset.id);
+        if (!list?.marketName) continue;
+        const card = button.closest('.card');
+        const title = card?.querySelector('.card-title');
+        if (!card || !title || card.querySelector('[data-v230-list-market-badge]')) continue;
+        const badge = document.createElement('div');
+        badge.className = 'meta';
+        badge.dataset.v230ListMarketBadge = '1';
+        badge.textContent = `🏪 ${list.marketName}`;
+        title.insertAdjacentElement('afterend', badge);
+      }
+    } finally {
+      db.close();
+    }
   }
 
   function scan() {
     inject().then(() => bind(listForm())).catch(console.error);
+    decorateListCards().catch(console.error);
   }
 
   function init() {
     scan();
     const observer = new MutationObserver(scan);
     observer.observe(document.body, { childList: true, subtree: true });
-
     document.addEventListener('click', (event) => {
       const trigger = event.target.closest('#newListBtn, [data-action="edit-list"]');
       if (!trigger) return;
@@ -167,9 +177,6 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
 })();
