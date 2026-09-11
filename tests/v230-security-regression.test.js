@@ -6,6 +6,7 @@ const share = fs.readFileSync('enhancements.js', 'utf8');
 const backup = fs.readFileSync('backup-v230.js', 'utf8');
 const inventory = fs.readFileSync('inventory.js', 'utf8');
 const list = fs.readFileSync('list-enhancements.js', 'utf8');
+const listMarket = fs.readFileSync('list-market-v230.js', 'utf8');
 const worker = fs.readFileSync('share-service/worker.js', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
 
@@ -42,6 +43,11 @@ assert(
   'formulário inválido não pode aplicar patch posterior'
 );
 
+assert(listMarket.includes('v230ListMarket'), 'mercado da lista deve possuir campo próprio');
+assert(listMarket.includes('marketName'), 'mercado da lista deve ser persistido em marketName');
+assert(listMarket.includes('MAX_MARKET'), 'mercado da lista deve possuir limite de tamanho');
+assert(!listMarket.includes('inventory'), 'mercado da lista não deve acessar estoque');
+
 assert(worker.includes('MAX_BODY_BYTES'), 'Worker deve limitar corpo recebido');
 assert(
   /expirationTtl\s*:\s*SHARE_TTL/.test(worker),
@@ -55,6 +61,7 @@ assert(
   sw.includes('db-integrity-v230.js') && sw.includes('db-migrations-v230.js'),
   'módulos de integridade/migração devem estar no SW'
 );
+assert(sw.includes('list-market-v230.js'), 'módulo de mercado da lista deve estar no SW');
 assert(sw.includes('minha-lista-v2-3-0'), 'cache V2.3.0 deve ser versionado');
 
 console.log('V2.3.0 security/regression source audit: OK');
