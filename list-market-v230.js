@@ -8,13 +8,10 @@
   const FIELD_ID = 'v230ListMarket';
   const FIELD_MARKER = 'data-v230-list-market';
   const MAX_MARKET = 160;
+  const snapshots = new WeakMap();
 
   const esc = (value) => String(value ?? '').replace(/[&<>\"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '\"': '&quot;',
-    "'": '&#39;'
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'
   })[char]);
 
   const open = () => new Promise((resolve, reject) => {
@@ -35,6 +32,11 @@
     request.onsuccess = resolve;
     request.onerror = () => reject(request.error || Error('Falha ao salvar mercado da lista'));
   });
+
+  async function snapshotLists() {
+    const db = await open();
+    try { return await readAll(db, STORE); } finally { db.close(); }
+  }
 
   function listForm() {
     return document.getElementById('modalBody')?.querySelector('#listForm') || null;
@@ -95,15 +97,15 @@
     }
   }
 
-  async function listsSnapshot() {
-    const db = await open();
-    try { return await readAll(db, STORE); } finally { db.close(); }
-  }
+  async function persistSubmittedList(form) {
+    const before = snapshots.get(form) || [];
+    const market = document.getElementById(FIELD_ID)?.value || '';
+    const name = document.getElementById('lfName')?.value?.trim() || '';
+    const date = document.getElementById('lfDate')?.value || '';
 
-  async function persistSubmittedList(before, market, name, date) {
-    for (let attempt = 0; attempt < 6; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 100 : 150));
-      const after = await listsSnapshot();
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 120 : 160));
+      const after = await snapshotLists();
       const beforeMap = new Map(before.map((list) => [list.id, JSON.stringify(list)]));
       const changed = after.filter((list) => beforeMap.get(list.id) !== JSON.stringify(list));
       const created = after.filter((list) => !beforeMap.has(list.id));
@@ -116,33 +118,31 @@
     return null;
   }
 
-  function bind(form) {
+  async function bind(form) {
     if (!form || form.dataset.v230MarketBound === '1') return;
     form.dataset.v230MarketBound = '1';
+    try { snapshots.set(form, await snapshotLists()); } catch (error) { console.error(error); }
+
     form.addEventListener('submit', async () => {
       try {
-        const before = await listsSnapshot();
-        const market = document.getElementById(FIELD_ID)?.value || '';
-        const name = document.getElementById('lfName')?.value?.trim() || '';
-        const date = document.getElementById('lfDate')?.value || '';
-        const target = await persistSubmittedList(before, market, name, date);
+        const target = await persistSubmittedList(form);
         if (target) setTimeout(() => window.location.reload(), 50);
       } catch (error) {
         console.error('Mercado da lista:', error);
       }
-    }, true);
+    });
   }
 
   async function decorateListCards() {
     const container = document.getElementById('listsCards');
     if (!container) return;
-    const cards = [...container.querySelectorAll('[data-action="open-list"]')];
-    if (!cards.length) return;
+    const buttons = [...container.querySelectorAll('[data-action="open-list"]')];
+    if (!buttons.length) return;
     const db = await open();
     try {
       const lists = await readAll(db, STORE);
       const byId = new Map(lists.map((list) => [list.id, list]));
-      for (const button of cards) {
+      for (const button of buttons) {
         const list = byId.get(button.dataset.id);
         if (!list?.marketName) continue;
         const card = button.closest('.card');
@@ -160,7 +160,8 @@
   }
 
   function scan() {
-    inject().then(() => bind(listForm())).catch(console.error);
+    const form = listForm();
+    if (form) inject().then(() => bind(form)).catch(console.error);
     decorateListCards().catch(console.error);
   }
 
