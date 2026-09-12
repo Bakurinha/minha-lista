@@ -2,7 +2,15 @@
   'use strict';
 
   const STYLE_ID = 'ml-v3-compact-controls';
-  const SEARCH_IDS = ['listSearch', 'catalogSearch', 'wishSearch'];
+  // Todos os campos de pesquisa que precisam do mesmo comportamento responsivo.
+  const SEARCH_IDS = [
+    'listSearch',
+    'catalogSearch',
+    'wishSearch',
+    'invSearch',
+    'historyItemSearch',
+    'historyMarketSearch',
+  ];
   const MAX_SEARCH_LINES = 5;
 
   function injectStyles() {
@@ -14,7 +22,10 @@
       /* Pesquisa: largura responsiva, sem limite artificial de caracteres. */
       #listSearch,
       #catalogSearch,
-      #wishSearch {
+      #wishSearch,
+      #invSearch,
+      #historyItemSearch,
+      #historyMarketSearch {
         flex: 1 1 360px;
         width: 100%;
         min-width: 0;
@@ -41,11 +52,13 @@
         max-width: 520px;
       }
 
-      /* No celular, a pesquisa começa compacta e cresce conforme o texto quebra. */
       @media (max-width: 620px) {
         #listSearch,
         #catalogSearch,
-        #wishSearch {
+        #wishSearch,
+        #invSearch,
+        #historyItemSearch,
+        #historyMarketSearch {
           flex: 1 1 100%;
           width: 100%;
           max-width: 100%;
@@ -113,7 +126,10 @@
       @media (max-width: 380px) {
         #listSearch,
         #catalogSearch,
-        #wishSearch {
+        #wishSearch,
+        #invSearch,
+        #historyItemSearch,
+        #historyMarketSearch {
           height: 34px;
           min-height: 34px;
           max-height: 102px;
@@ -168,10 +184,12 @@
   function makeSearchMultiline(field) {
     if (!field || field.dataset.mlSearchMultiline === '1') return;
 
-    // Mantém o mesmo id, valor e o handler oninput do núcleo antes de trocar input por textarea.
+    // O núcleo usa oninput; preservamos esse handler ao trocar input por textarea.
     if (field instanceof HTMLInputElement) {
       const area = document.createElement('textarea');
       const inputHandler = field.oninput;
+      const changeHandler = field.onchange;
+      const keydownHandler = field.onkeydown;
       for (const attr of field.attributes) {
         if (attr.name !== 'type' && attr.name !== 'value') area.setAttribute(attr.name, attr.value);
       }
@@ -181,6 +199,8 @@
       area.placeholder = field.placeholder;
       area.rows = 1;
       if (typeof inputHandler === 'function') area.oninput = inputHandler;
+      if (typeof changeHandler === 'function') area.onchange = changeHandler;
+      if (typeof keydownHandler === 'function') area.onkeydown = keydownHandler;
       field.replaceWith(area);
       field = area;
     }
@@ -199,7 +219,6 @@
   function init() {
     injectStyles();
     upgradeSearchFields();
-
     const observer = new MutationObserver(upgradeSearchFields);
     observer.observe(document.body, { childList: true, subtree: true });
   }
