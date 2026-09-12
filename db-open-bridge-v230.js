@@ -28,8 +28,14 @@
     nodes.forEach((node) => {
       node.nodeValue = String(node.nodeValue || '')
         .replace(LEGACY_VERSION, 'esta versão')
-        .replace(/esta versão não envia o conteúdo das listas para servidores/gi, 'esta versão só envia dados quando você solicita o compartilhamento')
-        .replace(/não possui Analytics, login, Firebase ou banco de usuários/gi, 'não usa login nem banco de usuários para o funcionamento local');
+        .replace(
+          /esta versão não envia o conteúdo das listas para servidores/gi,
+          'esta versão só envia dados quando você solicita o compartilhamento'
+        )
+        .replace(
+          /não possui Analytics, login, Firebase ou banco de usuários/gi,
+          'não usa login nem banco de usuários para o funcionamento local'
+        );
       LEGACY_VERSION.lastIndex = 0;
     });
   }
@@ -44,7 +50,10 @@
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === Node.TEXT_NODE) {
               if (LEGACY_VERSION.test(node.nodeValue || '')) {
-                node.nodeValue = String(node.nodeValue || '').replace(LEGACY_VERSION, 'esta versão');
+                node.nodeValue = String(node.nodeValue || '').replace(
+                  LEGACY_VERSION,
+                  'esta versão'
+                );
                 LEGACY_VERSION.lastIndex = 0;
               }
             } else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -56,7 +65,11 @@
         }
       }
     });
-    privacyObserver.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+    privacyObserver.observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+    });
     window.__mlLegacyPrivacyGuardV230 = true;
   }
 
