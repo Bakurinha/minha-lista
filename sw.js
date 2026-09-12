@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-4';
+const CACHE = 'minha-lista-v2-3-6';
 const CORE = [
   './',
   './index.html',
@@ -66,4 +66,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.5: cache version bumped for the hamburger auto-close layer.
+// V2.3.6: refresh mobile form/control sizing without changing responsive breakpoints.
