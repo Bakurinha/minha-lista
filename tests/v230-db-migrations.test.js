@@ -2,7 +2,7 @@ const fs=require('fs');
 const vm=require('vm');
 const assert=require('assert');
 const source=fs.readFileSync('db-migrations-v230.js','utf8');
-const context={window:{},Object,Array,Number,String,TypeError,Error,RangeError};
+const context={window:{},Object,Array,Number,String,TypeError,Error,RangeError,Promise};
 vm.createContext(context);
 vm.runInContext(source,context);
 const api=context.window.__mlDbMigrationsV230;
@@ -50,4 +50,25 @@ assert(partial.names.has('trash'));
 assert(partial.names.has('referenceProducts'));
 assert(partial.names.has('referenceMarkets'));
 
-console.log('V2.3.0 migration contract tests: OK');
+let opened=false;
+const fakeIndexedDB={
+  open(){
+    const request={result:null,onupgradeneeded:null,onsuccess:null,onerror:null,onblocked:null};
+    queueMicrotask(()=>{
+      const db=fakeDb();
+      request.result=db;
+      request.onupgradeneeded?.({oldVersion:0,newVersion:6});
+      opened=true;
+      request.onsuccess?.();
+    });
+    return request;
+  }
+};
+
+(async()=>{
+  const openedDb=await api.open({indexedDB:fakeIndexedDB});
+  assert(opened,'open() deve efetuar a abertura');
+  assert(openedDb.names.has('inventory'),'open() deve aplicar a cadeia incremental');
+  assert(openedDb.names.has('catalogs'));
+  console.log('V2.3.0 migration contract tests: OK');
+})().catch(err=>{console.error(err);process.exitCode=1});
