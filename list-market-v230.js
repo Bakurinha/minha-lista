@@ -246,6 +246,7 @@
   const MODULES = [
     './v3-icons.js',
     './v3-icon-force.js',
+    './v3-compact-controls.js',
     './share-config.js',
     './backup-v230.js',
     './share-optimized-v230.js',
