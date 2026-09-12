@@ -1,5 +1,15 @@
+/**
+ * Worker de compartilhamento público.
+ *
+ * Regra central: compartilhar apenas a lista/catalog items necessários para
+ * reconstrução da lista. Estoque e demais dados privados nunca entram no
+ * payload armazenado no serviço.
+ */
 const APP_ORIGIN = 'https://bakurinha.github.io';
 const APP_URL = 'https://bakurinha.github.io/minha-lista/';
+
+// Limites defensivos do endpoint: reduzem abuso e mantêm o payload compatível
+// com o uso esperado do compartilhamento público.
 const SHARE_TTL = 60 * 60 * 24 * 7,
   MAX_ITEMS = 2000,
   MAX_CATALOGS = 2500,
@@ -11,6 +21,7 @@ const CORS_HEADERS = {
   'Access-Control-Max-Age': '86400',
   Vary: 'Origin',
 };
+
 function headers(origin = '') {
   const h = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -22,20 +33,25 @@ function headers(origin = '') {
   if (origin === APP_ORIGIN) h['Access-Control-Allow-Origin'] = APP_ORIGIN;
   return h;
 }
+
 function json(data, status = 200, origin = '') {
   return new Response(JSON.stringify(data), { status, headers: headers(origin) });
 }
+
 function allowedOrigin(origin) {
   return !origin || origin === APP_ORIGIN;
 }
+
 function randomId() {
   const b = new Uint8Array(18);
   crypto.getRandomValues(b);
   return [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
 }
+
 function text(v, max) {
   return typeof v === 'string' && v.length <= max ? v : null;
 }
+
 function dateOrNull(v) {
   if (v === null || v === undefined || v === '') return null;
   if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
@@ -47,6 +63,7 @@ function dateOrNull(v) {
   }
   return undefined;
 }
+
 function finite(v, max) {
   return (
     v === null ||
@@ -55,6 +72,9 @@ function finite(v, max) {
     (typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= max)
   );
 }
+
+// Sanitiza catálogo e item antes de persistir. O Worker cria um objeto novo,
+// portanto campos inesperados enviados pelo cliente não são armazenados.
 function cleanCatalog(c) {
   if (!c || typeof c !== 'object') return null;
   const cid = text(c.id, 200),
@@ -71,6 +91,7 @@ function cleanCatalog(c) {
     ean,
   };
 }
+
 function cleanItem(i) {
   if (!i || typeof i !== 'object') return null;
   const iid = text(i.id, 200),
@@ -110,6 +131,9 @@ function cleanItem(i) {
     expiryDate,
   };
 }
+
+// A validação aceita V2 e V3 por compatibilidade, mas o formato e a versão
+// precisam permanecer coerentes entre si para impedir payloads híbridos.
 export function validatePayload(payload) {
   if (!payload || typeof payload !== 'object') return { ok: false, error: 'payload' };
   if (payload.app !== 'Minha Lista de Supermercado') return { ok: false, error: 'app' };
@@ -157,6 +181,9 @@ export function validatePayload(payload) {
     },
   };
 }
+
+// O limite é checado pelo header e novamente após leitura, pois nem todo
+// cliente/proxy envia Content-Length confiável.
 async function readJson(request) {
   const len = Number(request.headers.get('content-length') || 0);
   if (len && len > MAX_BODY_BYTES) throw Error('body-too-large');
@@ -164,6 +191,7 @@ async function readJson(request) {
   if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) throw Error('body-too-large');
   return JSON.parse(raw);
 }
+
 async function createShare(request, env, origin) {
   let payload;
   try {
@@ -185,12 +213,14 @@ async function createShare(request, env, origin) {
     origin
   );
 }
+
 async function getShare(id, env, origin) {
   if (!ID_RE.test(id)) return json({ error: 'not-found' }, 404, origin);
   const value = await env.SHARES.get(id);
   if (!value) return json({ error: 'not-found' }, 404, origin);
   return new Response(value, { status: 200, headers: headers(origin) });
 }
+
 function redirectShare(id) {
   const u = new URL(APP_URL);
   u.searchParams.set('shared', id);
@@ -204,9 +234,12 @@ function redirectShare(id) {
     },
   });
 }
+
 export async function handleRequest(request, env) {
   const u = new URL(request.url),
     origin = request.headers.get('Origin') || '';
+
+  // CORS é uma restrição adicional, não substituta da validação do payload.
   if (!allowedOrigin(origin))
     return new Response('Forbidden', {
       status: 403,
@@ -248,4 +281,5 @@ export async function handleRequest(request, env) {
   }
   return json({ service: 'minha-lista-share', status: 'ok' }, 200, origin);
 }
+
 export default { fetch: handleRequest };
