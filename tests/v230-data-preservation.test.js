@@ -35,12 +35,12 @@ assert.deepStrictEqual(legacy,legacyBefore,'migração legada não pode mutar a 
 assert.strictEqual(api.validate(legacyMigrated),null,'backup legado 2.2 deve migrar e continuar válido');
 assert.strictEqual(legacyMigrated.backupFormatVersion,2);
 assert.strictEqual(legacyMigrated.schemaVersion,6);
-assert.deepStrictEqual(legacyMigrated.inventory,[]);
+assert.strictEqual(JSON.stringify(legacyMigrated.inventory),JSON.stringify([]),'backup legado deve iniciar com estoque vazio');
 assert.strictEqual(legacyMigrated.catalogs[0].name,'Arroz Integral');
 assert.strictEqual(legacyMigrated.lists[0].items[0].mainItemId,'cat-001');
 
 const legacyRoundTrip=api.migrate(JSON.parse(JSON.stringify(legacyMigrated)));
-assert.deepStrictEqual(legacyRoundTrip,legacyMigrated,'backup legado migrado deve sobreviver ao round-trip');
+assert.strictEqual(JSON.stringify(legacyRoundTrip),JSON.stringify(legacyMigrated),'backup legado migrado deve sobreviver ao round-trip');
 
 const cases=[
   ['estoque órfão',()=>{const bad=JSON.parse(JSON.stringify(original));bad.inventory[0].mainItemId='missing-catalog';return api.validate(bad)}],
