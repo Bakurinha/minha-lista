@@ -23,11 +23,23 @@ assert(shell.includes('Escape'), 'Fechamento do menu por teclado ausente');
 assert(shell.includes('ICONS'), 'Sistema visual de ícones ausente');
 assert(shell.includes('data-view'), 'Reutilização da navegação existente ausente');
 assert(runtime.includes("'./v3-icons.js'"), 'Ícones não estão no bootstrap do runtime');
-assert(runtime.includes("'./v3-icon-force.js'"), 'Normalização de ícones não está no bootstrap do runtime');
-assert(runtime.includes("'./v3-compact-controls.js'"), 'Controles compactos não estão no bootstrap do runtime');
+assert(
+  runtime.includes("'./v3-icon-force.js'"),
+  'Normalização de ícones não está no bootstrap do runtime'
+);
+assert(
+  runtime.includes("'./v3-compact-controls.js'"),
+  'Controles compactos não estão no bootstrap do runtime'
+);
 assert(sw.includes("'./v3-icons.js'"), 'Ícones não estão no cache do Service Worker');
-assert(sw.includes("'./v3-icon-force.js'"), 'Normalização de ícones não está no cache do Service Worker');
-assert(sw.includes("'./v3-compact-controls.js'"), 'Controles compactos não estão no cache do Service Worker');
+assert(
+  sw.includes("'./v3-icon-force.js'"),
+  'Normalização de ícones não está no cache do Service Worker'
+);
+assert(
+  sw.includes("'./v3-compact-controls.js'"),
+  'Controles compactos não estão no cache do Service Worker'
+);
 assert(sw.includes('minha-lista-v2-3-4'), 'Cache PWA não está na versão atual');
 assert(icons.includes('const ICONS'), 'Mapa principal de ícones ausente');
 assert(iconForce.includes('Extended_Pictographic'), 'Fallback pictográfico ausente');
@@ -38,13 +50,32 @@ assert(compact.includes('max-width: 220px'), 'Pesquisa ainda não tem limite com
 assert(compact.includes('max-width: 180px'), 'Seleção ainda não tem limite compacto no mobile');
 assert(compact.includes('@media (max-width: 380px)'), 'Ajuste para telas pequenas ausente');
 assert(sharing.includes('openReady'), 'Compartilhamento não aguarda o banco ficar pronto');
-assert(sharing.includes('while (Date.now() - started < timeout)'), 'Compartilhamento não possui espera/repetição durante a inicialização do banco');
-assert(sharing.includes("objectStoreNames.contains('catalogs')") && sharing.includes("objectStoreNames.contains('lists')"), 'Compartilhamento não valida as stores necessárias');
+assert(
+  sharing.includes('while (Date.now() - started < timeout)'),
+  'Compartilhamento não possui espera/repetição durante a inicialização do banco'
+);
+assert(
+  sharing.includes("objectStoreNames.contains('catalogs')") &&
+    sharing.includes("objectStoreNames.contains('lists')"),
+  'Compartilhamento não valida as stores necessárias'
+);
 assert(sharing.includes("params.get('shared')"), 'Importação remota por shared ausente');
-assert(sharing.includes('id="mlShareCode"') && sharing.includes('maxlength="12"'), 'Importação por código não está configurada');
-assert(shareCompat.includes('sharedInput') && shareCompat.includes('sharedImportBtn'), 'Importação legada não é redirecionada para o código');
-assert(!shareCompat.includes('type="file"') && !shareCompat.includes('accept="application/json,.json"'), 'Fluxo de compatibilidade não deve abrir seletor de arquivos');
-assert(runtime.includes('navigator.serviceWorker.register'), 'Service Worker não está registrado pelo runtime');
+assert(
+  sharing.includes('id="mlShareCode"') && sharing.includes('maxlength="12"'),
+  'Importação por código não está configurada'
+);
+assert(
+  shareCompat.includes('sharedInput') && shareCompat.includes('sharedImportBtn'),
+  'Importação legada não é redirecionada para o código'
+);
+assert(
+  !shareCompat.includes('type="file"') && !shareCompat.includes('accept="application/json,.json"'),
+  'Fluxo de compatibilidade não deve abrir seletor de arquivos'
+);
+assert(
+  runtime.includes('navigator.serviceWorker.register'),
+  'Service Worker não está registrado pelo runtime'
+);
 assert(version.includes("script.src = './v3-shell.js'"), 'Shell não está ligado ao versionador');
 
 console.log('V2.3.4 UI/sharing contract: OK');
