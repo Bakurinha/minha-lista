@@ -132,19 +132,23 @@ function cleanItem(i) {
   };
 }
 
-// A validação aceita V2 e V3 por compatibilidade, mas o formato e a versão
-// precisam permanecer coerentes entre si para impedir payloads híbridos.
+// V2 e V3 permanecem aceitos para compatibilidade. O V3 compacto é o formato
+// produzido pelo compartilhamento offline otimizado e mantém a mesma estrutura
+// segura de lista/catálogo, sem estoque.
 export function validatePayload(payload) {
   if (!payload || typeof payload !== 'object') return { ok: false, error: 'payload' };
   if (payload.app !== 'Minha Lista de Supermercado') return { ok: false, error: 'app' };
   if (
-    !['shared-list-v2', 'shared-list-v3'].includes(payload.format) ||
+    !['shared-list-v2', 'shared-list-v3', 'shared-list-v3-compact'].includes(payload.format) ||
     ![2, 3].includes(payload.version)
   )
     return { ok: false, error: 'format' };
   if (payload.format === 'shared-list-v2' && payload.version !== 2)
     return { ok: false, error: 'format' };
-  if (payload.format === 'shared-list-v3' && payload.version !== 3)
+  if (
+    (payload.format === 'shared-list-v3' || payload.format === 'shared-list-v3-compact') &&
+    payload.version !== 3
+  )
     return { ok: false, error: 'format' };
   const list = payload.list;
   if (!list || typeof list !== 'object') return { ok: false, error: 'list' };
