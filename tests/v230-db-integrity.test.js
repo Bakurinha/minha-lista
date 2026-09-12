@@ -3,7 +3,6 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 
 const source = fs.readFileSync('db-integrity-v230.js', 'utf8');
-const normalized = source.replace(/\s+/g, '');
 
 assert(/const\s+STORES\s*=\s*\[\s*'catalogs'\s*,[\s\S]*'inventory'\s*\]/.test(source));
 assert(/const\s+KEY_PATHS\s*=\s*Object\.freeze\(\{/.test(source));
