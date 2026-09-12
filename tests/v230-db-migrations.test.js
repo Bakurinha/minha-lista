@@ -45,7 +45,7 @@ assert(v5.names.has('inventory'));
 assert.strictEqual(api.migrate(v5,6,6),0);
 
 const partial=fakeDb(['catalogs','lists','history','settings']);
-assert.strictEqual(api.migrate(partial,2,4),2,'o plano deve aplicar somente as versões 3 e 4');
+assert.strictEqual(api.migrate(partial,2,4),3,'o plano deve aplicar somente as versões 3 e 4');
 assert(partial.names.has('trash'));
 assert(partial.names.has('referenceProducts'));
 assert(partial.names.has('referenceMarkets'));
