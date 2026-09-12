@@ -28,8 +28,8 @@ jobs:
       - name: Core integrity checks
         shell: bash
         run: |
-          grep -q "DB_VERSION=6" app.js
-          grep -q "objectStoreNames.contains('inventory')" app.js
+          grep -Eq "DB_VERSION[[:space:]]*=[[:space:]]*6" app.js
+          grep -Eq "objectStoreNames\.contains\(['\"]inventory['\"]\)" app.js
           grep -q "referenceProducts" app.js
           grep -q "referenceMarkets" app.js
           grep -q "MinhaListaDB" app.js
