@@ -25,70 +25,40 @@ self.addEventListener('install', (event) =>
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((c) => c.addAll(CORE))
+      .then((cache) => cache.addAll(CORE))
       .then(() => self.skipWaiting())
-  )
-);
+  );
+});
+
 self.addEventListener('activate', (event) =>
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
-  )
-);
+  );
+});
+
+// O HTML é a fonte de composição da aplicação. O Service Worker cuida somente
+// de cache/offline; isso evita executar os mesmos módulos duas vezes.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then(async (r) => {
-          const type = r.headers.get('content-type') || '';
-          if (!type.includes('text/html')) return r;
-          let text = await r.text();
-          const scripts =
-            '<script src="./share-config.js"></script><script src="./db-migrations-v230.js"></script><script src="./backup-v230.js"></script><script src="./share-optimized-v230.js"></script><script src="./enhancements.js"></script><script src="./inventory.js"></script><script src="./reference-market-refresh.js"></script><script src="./reference-product-expansion-v230.js"></script><script src="./list-enhancements.js"></script><script src="./list-market-v230.js"></script><script src="./db-integrity-v230.js"></script><script src="./version-v230.js"></script><script src="./v3-shell.js"></script>';
-          if (!text.includes('src="./share-config.js"'))
-            text = text.replace('</body>', `${scripts}</body>`);
-          else if (!text.includes('src="./version-v230.js"'))
-            text = text.replace(
-              '</body>',
-              '<script src="./version-v230.js"></script><script src="./v3-shell.js"></script></body>'
-            );
-          else if (!text.includes('src="./share-optimized-v230.js"'))
-            text = text.replace(
-              '</body>',
-              '<script src="./share-optimized-v230.js"></script></body>'
-            );
-          else if (!text.includes('src="./v3-shell.js"'))
-            text = text.replace('</body>', '<script src="./v3-shell.js"></script></body>');
-          const out = new Response(text, {
-            status: r.status,
-            statusText: r.statusText,
-            headers: r.headers,
-          });
-          caches.open(CACHE).then((c) => c.put('./index.html', out.clone()));
-          return out;
-        })
-        .catch(() => caches.match('./index.html'))
-    );
-    return;
-  }
+
   event.respondWith(
     caches.match(event.request).then(
       (cached) =>
         cached ||
         fetch(event.request)
-          .then((r) => {
-            if (r.ok) {
-              const copy = r.clone();
-              caches.open(CACHE).then((c) => c.put(event.request, copy));
+          .then((response) => {
+            if (response.ok) {
+              const copy = response.clone();
+              caches.open(CACHE).then((cache) => cache.put(event.request, copy));
             }
-            return r;
+            return response;
           })
-          .catch(() => Response.error())
+          .catch(() => (event.request.mode === 'navigate' ? caches.match('./index.html') : Response.error()))
     )
   );
 });
