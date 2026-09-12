@@ -50,8 +50,8 @@ assert(compact.includes('max-width: 180px'), 'Seleção ainda não tem limite co
 assert(compact.includes('@media (max-width: 380px)'), 'Ajuste para telas pequenas ausente');
 assert(sharing.includes('openReady'), 'Compartilhamento não aguarda o banco ficar pronto');
 assert(
-  sharing.includes('indexedDB.databases') && sharing.includes('entry.name === DB'),
-  'Compartilhamento ainda pode criar um banco vazio antes do bootstrap principal'
+  sharing.includes('while (Date.now() - started < timeout)'),
+  'Compartilhamento não possui espera/repetição durante a inicialização do banco'
 );
 assert(
   sharing.includes("objectStoreNames.contains('catalogs')") &&
@@ -59,9 +59,12 @@ assert(
   'Compartilhamento não valida as stores necessárias'
 );
 assert(
-  runtime.includes('navigator.serviceWorker.register'),
-  'Service Worker não está registrado pelo runtime'
+  sharing.includes("location.hash.startsWith('#lista-gz=')") &&
+    sharing.includes("location.hash.startsWith('#lista=')"),
+  'Compatibilidade dos links locais de compartilhamento ausente'
 );
+assert(sharing.includes("params.get('shared')"), 'Importação remota por shared ausente');
+assert(runtime.includes('navigator.serviceWorker.register'), 'Service Worker não está registrado pelo runtime');
 assert(version.includes("script.src = './v3-shell.js'"), 'Shell não está ligado ao versionador');
 
 console.log('V2.3.1/V3 UI contract: OK');
