@@ -168,9 +168,10 @@
   function makeSearchMultiline(field) {
     if (!field || field.dataset.mlSearchMultiline === '1') return;
 
-    // Mantém o mesmo id, valor e eventos de input, mas permite acompanhar o texto em várias linhas.
+    // Mantém o mesmo id, valor e o handler oninput do núcleo antes de trocar input por textarea.
     if (field instanceof HTMLInputElement) {
       const area = document.createElement('textarea');
+      const inputHandler = field.oninput;
       for (const attr of field.attributes) {
         if (attr.name !== 'type' && attr.name !== 'value') area.setAttribute(attr.name, attr.value);
       }
@@ -179,6 +180,7 @@
       area.value = field.value;
       area.placeholder = field.placeholder;
       area.rows = 1;
+      if (typeof inputHandler === 'function') area.oninput = inputHandler;
       field.replaceWith(area);
       field = area;
     }
