@@ -77,8 +77,14 @@ assert(
   'Pesquisa visual não sincroniza com o listener original'
 );
 assert(compact.includes('flex: 0 1 420px'), 'Pesquisa desktop está sem limite de largura');
-assert(compact.includes('max-width: 420px'), 'Pesquisa desktop ainda pode ocupar largura excessiva');
-assert(compact.includes('align-self: flex-start'), 'Pesquisa pode esticar verticalmente com o container');
+assert(
+  compact.includes('max-width: 420px'),
+  'Pesquisa desktop ainda pode ocupar largura excessiva'
+);
+assert(
+  compact.includes('align-self: flex-start'),
+  'Pesquisa pode esticar verticalmente com o container'
+);
 assert(compact.includes('@media (max-width: 620px)'), 'Ajuste mobile ausente');
 assert(compact.includes('max-height: 102px'), 'Limite vertical mobile ausente');
 assert(
