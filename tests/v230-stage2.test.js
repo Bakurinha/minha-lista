@@ -51,8 +51,7 @@ assert(
   'legacy file import must be replaced by the code-sharing flow'
 );
 assert(
-  !shareCompat.includes('type="file"') &&
-    !shareCompat.includes('accept="application/json,.json"'),
+  !shareCompat.includes('type="file"') && !shareCompat.includes('accept="application/json,.json"'),
   'compatibility layer must not create or request JSON files'
 );
 assert(
