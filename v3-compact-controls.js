@@ -30,7 +30,7 @@
         max-width: 520px;
       }
 
-      /* No celular, os controles não devem ocupar toda a largura disponível. */
+      /* No celular, campos de texto e seleção ficam menores sem cortar o texto na vertical. */
       @media (max-width: 620px) {
         #listSearch,
         #catalogSearch,
@@ -43,6 +43,7 @@
           min-height: 36px;
           padding: 7px 10px;
           font-size: 14px;
+          line-height: 1.25;
         }
 
         #inventoryView select,
@@ -56,14 +57,43 @@
           min-height: 34px;
           padding: 6px 9px;
           font-size: 13px;
+          line-height: 1.25;
+        }
+
+        /* Inclui os campos "Lista" e de escrita dos formulários, não apenas a busca. */
+        .input,
+        .select {
+          height: 40px;
+          min-height: 40px;
+          padding: 8px 10px;
+          font-size: 14px;
+          line-height: 1.25;
+        }
+
+        .textarea {
+          min-height: 72px;
+          padding: 8px 10px;
+          font-size: 14px;
+          line-height: 1.3;
         }
 
         .sheet .field > .input,
-        .sheet .field > .select {
+        .sheet .field > .select,
+        .sheet .field > .textarea {
           width: 100%;
-          max-width: 280px;
+          max-width: 100%;
           min-width: 0;
           box-sizing: border-box;
+        }
+
+        .field,
+        .field.full {
+          min-width: 0;
+          max-width: 100%;
+        }
+
+        .form-grid {
+          min-width: 0;
         }
       }
 
@@ -87,6 +117,20 @@
           min-height: 32px;
           padding: 5px 8px;
           font-size: 12px;
+        }
+
+        .input,
+        .select {
+          height: 38px;
+          min-height: 38px;
+          padding: 7px 9px;
+          font-size: 13px;
+        }
+
+        .textarea {
+          min-height: 68px;
+          padding: 7px 9px;
+          font-size: 13px;
         }
       }
     `;
