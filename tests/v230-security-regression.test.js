@@ -26,7 +26,10 @@ assert(
   share.includes('shared-list-v3-compact'),
   'compartilhamento oficial deve suportar formato compacto'
 );
-assert(share.includes('/api/share'), 'compartilhamento oficial deve usar a API de compartilhamento');
+assert(
+  share.includes('/api/share'),
+  'compartilhamento oficial deve usar a API de compartilhamento'
+);
 assert(
   shareCompat.includes('__mlShareOptimizedLoaded'),
   'shim legado de compartilhamento deve permanecer inerte'
