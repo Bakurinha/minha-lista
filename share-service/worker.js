@@ -8,13 +8,13 @@
 const APP_ORIGIN = 'https://bakurinha.github.io';
 const APP_URL = 'https://bakurinha.github.io/minha-lista/';
 
-// Limites defensivos do endpoint: reduzem abuso e mantêm o payload compatível
-// com o uso esperado do compartilhamento público.
+// IDs curtos: 12 caracteres base64url = 72 bits de aleatoriedade.
+// O tamanho mantém a URL pequena sem sacrificar segurança prática contra colisões.
 const SHARE_TTL = 60 * 60 * 24 * 7,
   MAX_ITEMS = 2000,
   MAX_CATALOGS = 2500,
   MAX_BODY_BYTES = 900000;
-const ID_RE = /^[A-Za-z0-9_-]{36}$/;
+const ID_RE = /^[A-Za-z0-9_-]{12}$/;
 const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -43,9 +43,12 @@ function allowedOrigin(origin) {
 }
 
 function randomId() {
-  const b = new Uint8Array(18);
-  crypto.getRandomValues(b);
-  return [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  const bytes = new Uint8Array(9);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
 }
 
 function text(v, max) {
@@ -73,8 +76,6 @@ function finite(v, max) {
   );
 }
 
-// Sanitiza catálogo e item antes de persistir. O Worker cria um objeto novo,
-// portanto campos inesperados enviados pelo cliente não são armazenados.
 function cleanCatalog(c) {
   if (!c || typeof c !== 'object') return null;
   const cid = text(c.id, 200),
@@ -132,9 +133,6 @@ function cleanItem(i) {
   };
 }
 
-// V2 e V3 permanecem aceitos para compatibilidade. O V3 compacto é o formato
-// produzido pelo compartilhamento offline otimizado e mantém a mesma estrutura
-// segura de lista/catálogo, sem estoque.
 export function validatePayload(payload) {
   if (!payload || typeof payload !== 'object') return { ok: false, error: 'payload' };
   if (payload.app !== 'Minha Lista de Supermercado') return { ok: false, error: 'app' };
@@ -186,8 +184,6 @@ export function validatePayload(payload) {
   };
 }
 
-// O limite é checado pelo header e novamente após leitura, pois nem todo
-// cliente/proxy envia Content-Length confiável.
 async function readJson(request) {
   const len = Number(request.headers.get('content-length') || 0);
   if (len && len > MAX_BODY_BYTES) throw Error('body-too-large');
@@ -242,8 +238,6 @@ function redirectShare(id) {
 export async function handleRequest(request, env) {
   const u = new URL(request.url),
     origin = request.headers.get('Origin') || '';
-
-  // CORS é uma restrição adicional, não substituta da validação do payload.
   if (!allowedOrigin(origin))
     return new Response('Forbidden', {
       status: 403,
