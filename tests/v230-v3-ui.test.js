@@ -64,7 +64,10 @@ assert(
   'Compatibilidade dos links locais de compartilhamento ausente'
 );
 assert(sharing.includes("params.get('shared')"), 'Importação remota por shared ausente');
-assert(runtime.includes('navigator.serviceWorker.register'), 'Service Worker não está registrado pelo runtime');
+assert(
+  runtime.includes('navigator.serviceWorker.register'),
+  'Service Worker não está registrado pelo runtime'
+);
 assert(version.includes("script.src = './v3-shell.js'"), 'Shell não está ligado ao versionador');
 
 console.log('V2.3.1/V3 UI contract: OK');
