@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-4';
+const CACHE = 'minha-lista-v2-3-7';
 const CORE = [
   './',
   './index.html',
@@ -66,4 +66,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.7: responsive multiline search fields with autosize.
+// V2.3.7: version synchronization and responsive multiline search fields.
