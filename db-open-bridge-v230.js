@@ -5,11 +5,60 @@
  * do MinhaListaDB passa primeiro pelo contrato oficial de migrações.
  * Nenhum outro banco do navegador é afetado.
  *
- * O Proxy intercepta somente `open()`; os demais membros da API nativa são
- * encaminhados sem alteração. A ponte também é instalada no máximo uma vez.
+ * Também normaliza conteúdo legado de privacidade antes que a interface seja
+ * exibida. Isso evita que instalações/caches antigos exponham a versão 2.2.2
+ * ou uma descrição de compartilhamento que não corresponde ao fluxo atual.
  */
 (() => {
   'use strict';
+
+  const LEGACY_VERSION = /\bV?2\.2\.2\b/gi;
+
+  function normalizeLegacyPrivacy(root = document) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      const parent = node.parentElement;
+      if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION'].includes(parent.tagName)) continue;
+      if (LEGACY_VERSION.test(node.nodeValue || '')) nodes.push(node);
+      LEGACY_VERSION.lastIndex = 0;
+    }
+
+    nodes.forEach((node) => {
+      node.nodeValue = String(node.nodeValue || '')
+        .replace(LEGACY_VERSION, 'esta versão')
+        .replace(/esta versão não envia o conteúdo das listas para servidores/gi, 'esta versão só envia dados quando você solicita o compartilhamento')
+        .replace(/não possui Analytics, login, Firebase ou banco de usuários/gi, 'não usa login nem banco de usuários para o funcionamento local');
+      LEGACY_VERSION.lastIndex = 0;
+    });
+  }
+
+  // Instala antes do app.js, pois este arquivo é carregado diretamente no HTML.
+  // O observer também cobre modais criados dinamicamente pelo núcleo legado.
+  if (typeof document !== 'undefined' && typeof MutationObserver !== 'undefined') {
+    normalizeLegacyPrivacy();
+    const privacyObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.TEXT_NODE) {
+              if (LEGACY_VERSION.test(node.nodeValue || '')) {
+                node.nodeValue = String(node.nodeValue || '').replace(LEGACY_VERSION, 'esta versão');
+                LEGACY_VERSION.lastIndex = 0;
+              }
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+              normalizeLegacyPrivacy(node);
+            }
+          });
+        } else if (mutation.type === 'characterData') {
+          normalizeLegacyPrivacy(mutation.target.parentElement || document);
+        }
+      }
+    });
+    privacyObserver.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+    window.__mlLegacyPrivacyGuardV230 = true;
+  }
 
   const migrations = window.__mlDbMigrationsV230;
   const nativeIndexedDB = window.indexedDB;
@@ -25,7 +74,6 @@
       if (property === 'open') {
         return (name, version) => {
           const request = nativeOpen(name, version);
-          // Só o banco e a versão da aplicação usam a cadeia de migração V2.3.0.
           if (name === migrations.DB_NAME && version === migrations.LATEST) {
             request.addEventListener(
               'upgradeneeded',
@@ -43,7 +91,6 @@
     },
   });
 
-  // A referência global permanece compatível com o núcleo legado.
   window.indexedDB = facade;
   window.__mlDbOpenBridgeV230 = { DB_NAME: migrations.DB_NAME, LATEST: migrations.LATEST };
 })();
