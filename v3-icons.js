@@ -2,6 +2,7 @@
   'use strict';
 
   const ACCENT = '#16a34a';
+  const INFO_ICON = '<circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/>';
   const ICONS = Object.freeze({
     '🛒': '<path d="M3 4h2l2.1 10.1A2 2 0 0 0 9.1 16H18a2 2 0 0 0 1.9-1.4L22 7H6"/><path d="M9 20h.01M18 20h.01"/>',
     '📝': '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H20v16H5.5A1.5 1.5 0 0 1 4 18.5v-13Z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
@@ -18,13 +19,13 @@
     '⬆️': '<path d="M12 20V8M8 12l4-4 4 4M5 5h14"/>',
     '🔐': '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
     '🧹': '<path d="m4 20 9-9M13 11l4-4 3 3-4 4M6 18l-2 2M14 4l6 6"/>',
-    ℹ: '<circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/>',
     '📱': '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M10 6h4M11 18h2"/>',
     '🏪': '<path d="M4 10h16M5 10v10h14V10M3 10l1.5-6h15L21 10M8 20v-6h8v6"/>',
     '⚠️': '<path d="m12 3 9 17H3L12 3Z"/><path d="M12 9v5M12 17h.01"/>',
     '×': '<path d="m6 6 12 12M18 6 6 18"/>',
     '+': '<path d="M12 5v14M5 12h14"/>',
   });
+  const INFO_KEY = String.fromCodePoint(0x2139);
 
   const STYLE = `
     :root { --v3-accent:${ACCENT}; --v3-accent-strong:#15803d; --v3-accent-soft:rgba(22,163,74,.10); --v3-accent-border:rgba(22,163,74,.20); --v3-focus:0 0 0 3px rgba(22,163,74,.16); }
@@ -60,7 +61,8 @@
     span.className = 'ml-v3-icon';
     span.setAttribute('aria-hidden', 'true');
     span.dataset.v3Icon = emoji;
-    span.innerHTML = `<svg viewBox="0 0 24 24">${ICONS[emoji]}</svg>`;
+    const markup = emoji === INFO_KEY ? INFO_ICON : ICONS[emoji];
+    span.innerHTML = `<svg viewBox="0 0 24 24">${markup}</svg>`;
     return span;
   }
 
@@ -69,20 +71,15 @@
     const parent = node.parentElement;
     if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION'].includes(parent.tagName)) return;
     const source = node.nodeValue;
-    const pattern = new RegExp(
-      Object.keys(ICONS)
-        .map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-        .join('|'),
-      'gu'
-    );
+    const keys = [...Object.keys(ICONS), INFO_KEY];
+    const pattern = new RegExp(keys.map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gu');
     if (!pattern.test(source)) return;
     pattern.lastIndex = 0;
     const fragment = document.createDocumentFragment();
     let last = 0;
     let match;
     while ((match = pattern.exec(source))) {
-      if (match.index > last)
-        fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
+      if (match.index > last) fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
       fragment.appendChild(iconSpan(match[0]));
       last = match.index + match[0].length;
     }
@@ -108,15 +105,13 @@
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.TEXT_NODE) replaceTextNode(node);
-          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon'))
-            scan(node);
+          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon')) scan(node);
         });
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState === 'loading')
-    document.addEventListener('DOMContentLoaded', install, { once: true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
 })();
