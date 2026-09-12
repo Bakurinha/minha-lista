@@ -3,6 +3,10 @@
  *
  * Cada versão possui um passo explícito e idempotente. Os passos somente
  * criam stores ausentes: nunca apagam, limpam ou reescrevem dados existentes.
+ *
+ * Regra importante: a versão do banco representa o schema físico. Dados de
+ * usuário são tratados pelos módulos de backup/migração e não devem ser
+ * descartados durante onupgradeneeded.
  */
 (() => {
   'use strict';
@@ -10,6 +14,8 @@
   const DB_NAME = 'MinhaListaDB';
   const LATEST = 6;
 
+  // O mapa é a fonte única da sequência de criação das stores.
+  // Manter versões, mesmo vazias, torna a evolução futura previsível.
   const MIGRATIONS = Object.freeze({
     1: Object.freeze(['catalogs', 'lists', 'history', 'settings']),
     2: Object.freeze(['wishlist']),
@@ -19,8 +25,11 @@
     6: Object.freeze(['inventory']),
   });
 
+  // Todas as stores usam ID como chave primária, exceto settings, que usa
+  // a própria chave de configuração para evitar registros duplicados.
   const keyPath = (store) => (store === 'settings' ? 'key' : 'id');
 
+  // Criação idempotente: abrir um banco já atualizado não altera seus dados.
   function ensureStore(db, store) {
     if (!db?.objectStoreNames?.contains(store)) {
       db.createObjectStore(store, { keyPath: keyPath(store) });
@@ -29,6 +38,8 @@
     return false;
   }
 
+  // Executa exatamente um passo da sequência e informa quantas stores foram
+  // realmente criadas. O retorno é útil para testes e diagnóstico.
   function applyVersion(db, version) {
     if (!Number.isInteger(version) || version < 1 || version > LATEST) {
       throw new RangeError(`Versão de migração inválida: ${version}`);
@@ -41,6 +52,8 @@
     return created;
   }
 
+  // Percorre todos os passos intermediários. Isso evita caminhos especiais
+  // como "2 -> 6" que poderiam esquecer uma alteração de versão anterior.
   function migrate(db, oldVersion, newVersion = LATEST) {
     if (!Number.isInteger(oldVersion) || oldVersion < 0) {
       throw new TypeError('oldVersion inválida');
@@ -59,6 +72,8 @@
     return created;
   }
 
+  // Gera apenas o plano lógico da migração. Não toca no banco e é utilizado
+  // pelos testes para verificar a sequência antes de uma alteração real.
   function plan(oldVersion, newVersion = LATEST) {
     if (!Number.isInteger(oldVersion) || oldVersion < 0) {
       throw new TypeError('oldVersion inválida');
