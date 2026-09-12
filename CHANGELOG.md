@@ -1,5 +1,55 @@
 # CHANGELOG — Minha Lista de Supermercado
 
+## V2.3.0 — 11/09/2026
+
+### Confiabilidade e dados
+
+- Corrigida a navegação dentro da lista e o comportamento de edição/cancelamento.
+- Importação e migração de JSON legado reforçadas com validação automatizada.
+- Adicionadas verificações somente leitura de integridade do IndexedDB.
+- Adicionado teste completo de preservação de listas, catálogos, histórico, desejos, lixeira, configurações e estoque.
+- Migrações do IndexedDB formalizadas da V1 à V6 sem operações destrutivas.
+- Auditoria de segurança/regressão mantida no CI.
+
+### Organização técnica
+
+- Código formatado e padronizado com Prettier.
+- Comentários técnicos adicionados aos pontos críticos de migração, integridade, abertura do banco e compartilhamento.
+- Contratos TypeScript adicionados de forma incremental, sem reescrever o JavaScript existente.
+- TypeScript passa a ser validado no CI sem gerar arquivos para produção.
+
+### Interface V3
+
+- Limite responsivo do conteúdo consolidado para telas grandes.
+- Novo shell visual reutilizável com menu hambúrguer.
+- Navegação lateral reutiliza os botões existentes e preserva a lógica do aplicativo.
+- Ícones vetoriais padronizados para a navegação.
+- Foco visível, Escape para fechar o menu e suporte a movimento reduzido.
+
+### Compartilhamento
+
+- Adicionado formato local compacto com GZIP para reduzir o tamanho dos links.
+- Estoque permanece fora de qualquer payload compartilhado.
+- Compartilhamento remoto continua compatível com o Worker atual.
+- Formatos legados continuam sendo aceitos pelo fluxo existente.
+
+### Versionamento
+
+- `package.json` tornou-se a fonte de versão do aplicativo.
+- Comandos `version:sync`, `version:patch`, `version:minor` e `version:major` adicionados.
+- Service Worker, versão visual e manifest são sincronizados automaticamente.
+- Versão do aplicativo permanece separada da versão do IndexedDB.
+
+### Offline
+
+- Service Worker atualizado para incluir o shell V3 e o compartilhamento compacto.
+- Cache versionado conforme a versão do aplicativo.
+
+### Auditoria
+
+- Suítes V2.2.3, fundação V2.3.0, Stage 2, preservação, migração, integridade, segurança, versão, TypeScript, UI V3 e compartilhamento são executadas pelo CI.
+- E2E completo em navegador real continua explicitamente não declarado como aprovado neste ambiente.
+
 ## V2.2.2 — 08/09/2026
 
 ### Corrigido
