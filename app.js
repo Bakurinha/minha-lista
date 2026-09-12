@@ -606,73 +606,63 @@
   }
 
   function normalizeData() {
-    catalogs = catalogs
-      .filter(Boolean)
-      .map((c) => ({
-        ...c,
-        id: validId(c.id) ? c.id : uid(),
-        ean: normalizeEan(c.ean),
-        brand: String(c.brand || ''),
-        unit: String(c.unit || 'un'),
-        category: String(c.category || 'Outros'),
-        notes: String(c.notes || ''),
-      }));
-    lists = lists
-      .filter(Boolean)
-      .map((l) => ({
-        ...l,
-        items: Array.isArray(l.items)
-          ? l.items.map((i) => ({
-              ...i,
-              done: !!i.done,
-              quantity: i.quantity ?? null,
-              date: i.date || null,
-              value: i.value ?? null,
-              marketName: String(i.marketName || ''),
-              comments: String(i.comments || ''),
-            }))
-          : [],
-        purchaseType: l.purchaseType === 'virtual' ? 'virtual' : 'local',
-        archived: !!l.archived,
-        comments: String(l.comments || ''),
-      }));
-    history = history
-      .filter(Boolean)
-      .map((h) => ({
-        ...h,
-        mainItemId: h.mainItemId || null,
-        itemName: String(h.itemName || ''),
-        brand: String(h.brand || ''),
-        unit: String(h.unit || ''),
-        marketName: String(h.marketName || ''),
-        origin: String(h.origin || 'legacy-local'),
-      }));
-    wishlist = wishlist
-      .filter(Boolean)
-      .map((w) => ({
-        ...w,
-        brand: String(w.brand || ''),
-        unit: String(w.unit || 'un'),
-        notes: String(w.notes || ''),
-      }));
-    trash = trash
-      .filter(Boolean)
-      .map((t) =>
-        t.type === 'catalog'
-          ? {
-              ...t,
-              data: t.data
-                ? {
-                    ...t.data,
-                    brand: String(t.data.brand || ''),
-                    unit: String(t.data.unit || 'un'),
-                    category: String(t.data.category || 'Outros'),
-                    notes: String(t.data.notes || ''),
-                  }
-                : t.data,
-            }
-          : t
-      );
+    catalogs = catalogs.filter(Boolean).map((c) => ({
+      ...c,
+      id: validId(c.id) ? c.id : uid(),
+      ean: normalizeEan(c.ean),
+      brand: String(c.brand || ''),
+      unit: String(c.unit || 'un'),
+      category: String(c.category || 'Outros'),
+      notes: String(c.notes || ''),
+    }));
+    lists = lists.filter(Boolean).map((l) => ({
+      ...l,
+      items: Array.isArray(l.items)
+        ? l.items.map((i) => ({
+            ...i,
+            done: !!i.done,
+            quantity: i.quantity ?? null,
+            date: i.date || null,
+            value: i.value ?? null,
+            marketName: String(i.marketName || ''),
+            comments: String(i.comments || ''),
+          }))
+        : [],
+      purchaseType: l.purchaseType === 'virtual' ? 'virtual' : 'local',
+      archived: !!l.archived,
+      comments: String(l.comments || ''),
+    }));
+    history = history.filter(Boolean).map((h) => ({
+      ...h,
+      mainItemId: h.mainItemId || null,
+      itemName: String(h.itemName || ''),
+      brand: String(h.brand || ''),
+      unit: String(h.unit || ''),
+      marketName: String(h.marketName || ''),
+      origin: String(h.origin || 'legacy-local'),
+    }));
+    wishlist = wishlist.filter(Boolean).map((w) => ({
+      ...w,
+      brand: String(w.brand || ''),
+      unit: String(w.unit || 'un'),
+      notes: String(w.notes || ''),
+    }));
+    trash = trash.filter(Boolean).map((t) =>
+      t.type === 'catalog'
+        ? {
+            ...t,
+            data: t.data
+              ? {
+                  ...t.data,
+                  brand: String(t.data.brand || ''),
+                  unit: String(t.data.unit || 'un'),
+                  category: String(t.data.category || 'Outros'),
+                  notes: String(t.data.notes || ''),
+                }
+              : t.data,
+          }
+        : t
+    );
   }
   async function load() {
     const [c, l, h, w, t, s, rp, rm] = await Promise.all(
