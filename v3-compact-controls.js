@@ -155,8 +155,10 @@
     field.style.height = 'auto';
     const computed = getComputedStyle(field);
     const lineHeight = parseFloat(computed.lineHeight) || 19;
-    const padding = (parseFloat(computed.paddingTop) || 0) + (parseFloat(computed.paddingBottom) || 0);
-    const border = (parseFloat(computed.borderTopWidth) || 0) + (parseFloat(computed.borderBottomWidth) || 0);
+    const padding =
+      (parseFloat(computed.paddingTop) || 0) + (parseFloat(computed.paddingBottom) || 0);
+    const border =
+      (parseFloat(computed.borderTopWidth) || 0) + (parseFloat(computed.borderBottomWidth) || 0);
     const minHeight = parseFloat(computed.minHeight) || lineHeight + padding + border;
     const maxHeight = lineHeight * MAX_SEARCH_LINES + padding + border;
     field.style.height = `${Math.min(Math.max(field.scrollHeight, minHeight), maxHeight)}px`;
