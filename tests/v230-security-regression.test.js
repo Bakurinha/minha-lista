@@ -11,7 +11,6 @@ const worker = fs.readFileSync('share-service/worker.js', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
 
 assert(app.includes('const esc'), 'escape centralizado ausente');
-assert(app.includes('String(s ??').includes ? false : true, 'escape centralizado ausente');
 assert(app.includes('textContent'), 'renderização textual segura deve existir');
 assert(!app.includes('navigator.sendBeacon'), 'sendBeacon não deve existir');
 assert(!app.includes('WebSocket'), 'WebSocket não deve existir');
