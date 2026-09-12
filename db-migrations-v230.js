@@ -1,10 +1,10 @@
 /**
- * Contrato técnico das migrações do IndexedDB da V2.3.0.
+ * Migrações incrementais do IndexedDB da V2.3.0.
  *
- * Este módulo descreve quais object stores cada versão introduz e oferece
- * funções pequenas para planejar/aplicar essas mudanças. O núcleo legado
- * continua responsável pelo fluxo de abertura do banco para preservar a
- * compatibilidade já existente.
+ * Cada versão possui um passo explícito e idempotente. Os passos somente
+ * criam stores ausentes: nunca apagam, limpam ou reescrevem dados existentes.
+ * O fluxo legado de abertura do banco pode usar migrate() diretamente dentro
+ * do evento onupgradeneeded.
  */
 (() => {
   'use strict';
@@ -12,7 +12,7 @@
   const DB_NAME = 'MinhaListaDB';
   const LATEST = 6;
 
-  // V1-V6 representam o histórico de stores, não versões de interface.
+  // Histórico declarativo das stores introduzidas em cada versão do banco.
   const MIGRATIONS = Object.freeze({
     1: Object.freeze(['catalogs', 'lists', 'history', 'settings']),
     2: Object.freeze(['wishlist']),
@@ -26,38 +26,57 @@
   const keyPath = (store) => (store === 'settings' ? 'key' : 'id');
 
   function ensureStore(db, store) {
-    if (!db.objectStoreNames.contains(store)) {
+    if (!db?.objectStoreNames?.contains(store)) {
       db.createObjectStore(store, { keyPath: keyPath(store) });
+      return true;
     }
+    return false;
   }
 
-  // Aplica somente a criação de stores ausentes; não apaga nem reescreve dados.
+  // Um passo de migração é deliberadamente pequeno e idempotente.
+  function applyVersion(db, version) {
+    if (!Number.isInteger(version) || version < 1 || version > LATEST) {
+      throw new RangeError(`Versão de migração inválida: ${version}`);
+    }
+
+    let created = 0;
+    for (const store of MIGRATIONS[version] || []) {
+      if (ensureStore(db, store)) created += 1;
+    }
+    return created;
+  }
+
+  // Aplica todos os passos entre duas versões sem apagar nem reescrever dados.
   function migrate(db, oldVersion, newVersion = LATEST) {
+    if (!Number.isInteger(oldVersion) || oldVersion < 0) {
+      throw new TypeError('oldVersion inválida');
+    }
+    if (!Number.isInteger(newVersion) || newVersion < 1) {
+      throw new TypeError('newVersion inválida');
+    }
     if (oldVersion > newVersion) {
       throw new Error(`Versão antiga ${oldVersion} maior que a versão alvo ${newVersion}`);
     }
 
+    let created = 0;
     for (
       let version = Math.max(1, oldVersion + 1);
       version <= newVersion;
       version += 1
     ) {
-      for (const store of MIGRATIONS[version] || []) {
-        ensureStore(db, store);
-      }
+      created += applyVersion(db, version);
     }
+    return created;
   }
 
-  // Retorna apenas o plano de stores que seriam criadas entre duas versões.
+  // Retorna somente as stores que seriam introduzidas no intervalo solicitado.
   function plan(oldVersion, newVersion = LATEST) {
     if (!Number.isInteger(oldVersion) || oldVersion < 0) {
       throw new TypeError('oldVersion inválida');
     }
-
     if (!Number.isInteger(newVersion) || newVersion < 1) {
       throw new TypeError('newVersion inválida');
     }
-
     if (oldVersion > newVersion) {
       throw new Error('oldVersion não pode ser maior que newVersion');
     }
@@ -76,6 +95,7 @@
     MIGRATIONS,
     keyPath,
     ensureStore,
+    applyVersion,
     migrate,
     plan
   };
