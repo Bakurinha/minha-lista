@@ -9,7 +9,8 @@
     document.addEventListener(
       'click',
       (event) => {
-        const button = event.target instanceof Element ? event.target.closest('.nav button[data-view]') : null;
+        const button =
+          event.target instanceof Element ? event.target.closest('.nav button[data-view]') : null;
         if (!button) return;
 
         // Não usa preventDefault/stopPropagation: o handler original continua responsável pela troca de tela.
@@ -24,6 +25,7 @@
     );
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
 })();
