@@ -55,7 +55,7 @@ const searchIds = [
 ];
 for (const id of searchIds) {
   assert(compact.includes(`'${id}'`), `Pesquisa ${id} não está configurada`);
-  assert(index.includes(`id=\\"${id}\\"`), `Campo ${id} não está presente na interface`);
+  assert(index.includes(`id="${id}"`), `Campo ${id} não está presente na interface`);
 }
 assert(compact.includes('MAX_SEARCH_LINES = 5'), 'Pesquisa não possui limite vertical responsivo');
 assert(compact.includes('autosizeSearch'), 'Pesquisa não possui autosize por linha');
