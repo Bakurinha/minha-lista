@@ -24,7 +24,8 @@
     let last = 0;
     let match;
     while ((match = pattern.exec(source))) {
-      if (match.index > last) fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
+      if (match.index > last)
+        fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
       fragment.appendChild(iconNode(match[0]));
       last = match.index + match[0].length;
     }
@@ -77,7 +78,8 @@
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.TEXT_NODE) replaceUnsupported(node);
-          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon')) scan(node);
+          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon'))
+            scan(node);
         });
       }
       normalizeMenuToggle();
@@ -85,6 +87,7 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
 })();
