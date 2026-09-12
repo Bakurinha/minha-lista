@@ -11,7 +11,6 @@ on:
       - '.prettierrc.json'
       - '.prettierignore'
       - 'package.json'
-      - 'package-lock.json'
   workflow_dispatch:
 
 permissions:
@@ -32,7 +31,7 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts
+        run: npm install --ignore-scripts
 
       - name: Format source files
         run: npx prettier --write .
