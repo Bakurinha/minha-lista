@@ -30,3 +30,4 @@ jobs:
 # Second validation pass: execute against the formatted repository state.
 # Final validation pass: verify the formatted security audit on current main.
 # Verification pass: no application data migration is performed by these checks.
+# Final runtime pass: verify optimized sharing against the formatted current state.
