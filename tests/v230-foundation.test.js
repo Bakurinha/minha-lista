@@ -59,8 +59,14 @@ assert(
 );
 assert(legacyShare.includes('__mlShareLegacyWaiting'), 'legacy sharing shim missing');
 assert(dbBridge.includes('normalizeLegacyPrivacy'), 'legacy privacy normalization is missing');
-assert(dbBridge.includes('MutationObserver'), 'legacy privacy guard must cover dynamic first-run modal');
-assert(dbBridge.includes('esta versão só envia dados quando você solicita o compartilhamento'), 'privacy text must reflect explicit sharing');
+assert(
+  dbBridge.includes('MutationObserver'),
+  'legacy privacy guard must cover dynamic first-run modal'
+);
+assert(
+  dbBridge.includes('esta versão só envia dados quando você solicita o compartilhamento'),
+  'privacy text must reflect explicit sharing'
+);
 assert(sw.includes('./backup-v230.js'), 'Service Worker must cache backup-v230.js');
 assert(sw.includes('./list-enhancements.js'), 'Service Worker must cache list-enhancements.js');
 assert(sw.includes('./list-market-v230.js'), 'Service Worker must cache list-market-v230.js');
