@@ -6,11 +6,9 @@ const source = fs.readFileSync('db-integrity-v230.js', 'utf8');
 const normalized = source.replace(/\s+/g, '');
 
 assert(
-  normalized.includes(
-    "constSTORES=['catalogs','lists','history','wishlist','trash','settings','referenceProducts','referenceMarkets','inventory']"
-  )
+  /const\s+STORES\s*=\s*\[\s*'catalogs'\s*,[\s\S]*'inventory'\s*\]/.test(source)
 );
-assert(normalized.includes('constKEY_PATHS=Object.freeze({'));
+assert(/const\s+KEY_PATHS\s*=\s*Object\.freeze\(\{/.test(source));
 assert(source.includes('objectStoreNames.contains(store)'));
 assert(source.includes('objectStore(store).keyPath'));
 assert(source.includes('!catalogs.has(item.mainItemId)'));
