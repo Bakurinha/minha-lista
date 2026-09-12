@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-5';
+const CACHE = 'minha-lista-v2-3-0';
 const CORE = [
   './',
   './index.html',
@@ -53,9 +53,15 @@ self.addEventListener('fetch', (event) => {
           if (!text.includes('src="./share-config.js"'))
             text = text.replace('</body>', `${scripts}</body>`);
           else if (!text.includes('src="./version-v230.js"'))
-            text = text.replace('</body>', '<script src="./version-v230.js"></script><script src="./v3-shell.js"></script></body>');
+            text = text.replace(
+              '</body>',
+              '<script src="./version-v230.js"></script><script src="./v3-shell.js"></script></body>'
+            );
           else if (!text.includes('src="./share-optimized-v230.js"'))
-            text = text.replace('</body>', '<script src="./share-optimized-v230.js"></script></body>');
+            text = text.replace(
+              '</body>',
+              '<script src="./share-optimized-v230.js"></script></body>'
+            );
           else if (!text.includes('src="./v3-shell.js"'))
             text = text.replace('</body>', '<script src="./v3-shell.js"></script></body>');
           const out = new Response(text, {

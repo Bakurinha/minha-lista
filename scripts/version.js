@@ -46,7 +46,10 @@ function syncVersion(version) {
   fs.writeFileSync(SW, sw);
 
   let versionSource = fs.readFileSync(VERSION_FILE, 'utf8');
-  versionSource = versionSource.replace(/const VERSION = 'v[^']+';/, `const VERSION = 'v${version}';`);
+  versionSource = versionSource.replace(
+    /const VERSION = 'v[^']+';/,
+    `const VERSION = 'v${version}';`
+  );
   fs.writeFileSync(VERSION_FILE, versionSource);
 
   const manifest = readJson(MANIFEST);
@@ -59,7 +62,8 @@ function syncVersion(version) {
 function bumpVersion(kind) {
   const pkg = readJson(PACKAGE);
   const parts = pkg.version.split('.').map(Number);
-  if (parts.length !== 3 || parts.some(Number.isNaN)) throw new Error(`Versão atual inválida: ${pkg.version}`);
+  if (parts.length !== 3 || parts.some(Number.isNaN))
+    throw new Error(`Versão atual inválida: ${pkg.version}`);
 
   if (kind === 'major') {
     parts[0] += 1;

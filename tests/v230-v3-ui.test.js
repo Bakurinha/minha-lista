@@ -17,7 +17,7 @@ assert(shell.includes('Escape'), 'Fechamento do menu por teclado ausente');
 assert(shell.includes('ICONS'), 'Sistema visual de ícones ausente');
 assert(shell.includes('data-view'), 'Reutilização da navegação existente ausente');
 assert(sw.includes("'./v3-shell.js'"), 'Shell não está no cache do Service Worker');
-assert(sw.includes("src=\"./v3-shell.js\""), 'Shell não está na injeção offline do Service Worker');
+assert(sw.includes('src="./v3-shell.js"'), 'Shell não está na injeção offline do Service Worker');
 assert(version.includes("script.src = './v3-shell.js'"), 'Shell não está ligado ao versionador');
 
 console.log('V2.3.0/V3 UI contract: OK');

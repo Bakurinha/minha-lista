@@ -4,7 +4,9 @@
   const DB = 'MinhaListaDB';
   const MAX_LINK = 12000;
   const SHARE_ID_RE = /^[A-Za-z0-9_-]{36}$/;
-  const API = String(globalThis.MINHA_LISTA_SHARE_API || '').trim().replace(/\/+$/, '');
+  const API = String(globalThis.MINHA_LISTA_SHARE_API || '')
+    .trim()
+    .replace(/\/+$/, '');
 
   const norm = (value) =>
     String(value ?? '')
@@ -100,7 +102,9 @@
           return copy;
         }),
       },
-      catalogs: catalogs.filter((catalog) => used.has(catalog.id)).map((catalog) => ({ ...catalog })),
+      catalogs: catalogs
+        .filter((catalog) => used.has(catalog.id))
+        .map((catalog) => ({ ...catalog })),
     };
   }
 
@@ -221,7 +225,9 @@
         unit: String(catalog.unit || 'un').slice(0, 60),
         category: String(catalog.category || 'Outros').slice(0, 80),
         notes: String(catalog.notes || '').slice(0, 2000),
-        ean: String(catalog.ean || '').replace(/\D/g, '').slice(0, 14),
+        ean: String(catalog.ean || '')
+          .replace(/\D/g, '')
+          .slice(0, 14),
       };
       newCatalogs.push(created);
       map.set(catalog.id, created.id);
@@ -298,14 +304,22 @@
     body.innerHTML = `<div class="field"><label for="shareSelect">Escolha a lista</label><select id="shareSelect" class="select">${active
       .map(
         (list) =>
-          `<option value="${String(list.id).replace(/"/g, '&quot;')}">${String(list.name || 'Lista').replace(/[&<>\"]/g, (char) => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-          })[char])}</option>`
+          `<option value="${String(list.id).replace(/"/g, '&quot;')}">${String(
+            list.name || 'Lista'
+          ).replace(
+            /[&<>\"]/g,
+            (char) =>
+              ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+              })[char]
+          )}</option>`
       )
-      .join('')}</select></div><div class="subcard" style="margin-top:10px"><strong>🔗 Compartilhamento compacto</strong><div class="hint">O estoque não entra no payload. Links locais usam GZIP para reduzir o tamanho.</div><div class="row stack-mobile" style="margin-top:9px"><button class="btn primary" type="button" id="mlCompactCopy">🔗 Copiar link</button><button class="btn ghost" type="button" id="mlCompactShare">📱 Compartilhar</button></div></div>`;
+      .join(
+        ''
+      )}</select></div><div class="subcard" style="margin-top:10px"><strong>🔗 Compartilhamento compacto</strong><div class="hint">O estoque não entra no payload. Links locais usam GZIP para reduzir o tamanho.</div><div class="row stack-mobile" style="margin-top:9px"><button class="btn primary" type="button" id="mlCompactCopy">🔗 Copiar link</button><button class="btn ghost" type="button" id="mlCompactShare">📱 Compartilhar</button></div></div>`;
     title.textContent = 'Compartilhar lista';
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';

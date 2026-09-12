@@ -13,7 +13,10 @@ assert(source.includes('shared-list-v3-compact'), 'Formato compacto ausente');
 assert(source.includes('delete copy.inventory'), 'Estoque não é removido do payload');
 assert(source.includes('delete copy.stock'), 'Stock não é removido do payload');
 assert(source.includes('stopImmediatePropagation'), 'Interceptação segura do botão ausente');
-assert(sw.indexOf("'./share-optimized-v230.js'") < sw.indexOf("'./enhancements.js'"), 'Otimizador deve carregar antes do compartilhamento legado');
+assert(
+  sw.indexOf("'./share-optimized-v230.js'") < sw.indexOf("'./enhancements.js'"),
+  'Otimizador deve carregar antes do compartilhamento legado'
+);
 assert(sw.includes('src="./share-optimized-v230.js"'), 'Otimizador ausente na injeção do SW');
 
 console.log('V2.3.0 optimized sharing contract: OK');
