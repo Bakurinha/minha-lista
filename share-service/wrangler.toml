@@ -1,4 +1,4 @@
-name = "minha-lista-share"
+name = "minha-lista"
 main = "worker.js"
 compatibility_date = "2026-09-12"
 
