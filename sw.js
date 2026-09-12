@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-1';
+const CACHE = 'minha-lista-v2-3-2';
 const CORE = [
   './',
   './index.html',
@@ -44,8 +44,6 @@ self.addEventListener('activate', (event) =>
   )
 );
 
-// A página nova precisa conseguir buscar os arquivos novos mesmo quando uma versão
-// anterior estava em cache. Em caso de offline, o cache continua sendo o fallback.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
@@ -72,4 +70,4 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// V2.3.1: rede de atualização online com fallback completo para uso offline.
+// V2.3.2: novo cache + skipWaiting/clients.claim para atualização imediata sem tocar no IndexedDB.
