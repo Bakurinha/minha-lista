@@ -275,3 +275,51 @@
     document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
 })();
+
+// Bootstrap V2.3.0: a aplicação já carrega este arquivo, então ele também inicia
+// os módulos que antes dependiam de uma transformação feita pelo Service Worker.
+(() => {
+  'use strict';
+
+  const MODULES = [
+    './share-config.js',
+    './backup-v230.js',
+    './share-optimized-v230.js',
+    './enhancements.js',
+    './inventory.js',
+    './reference-market-refresh.js',
+    './reference-product-expansion-v230.js',
+    './list-enhancements.js',
+    './db-integrity-v230.js',
+    './version-v230.js',
+    './v3-shell.js',
+  ];
+
+  function loadSequentially(index = 0) {
+    if (index >= MODULES.length) return registerServiceWorker();
+    const src = MODULES[index];
+    if (document.querySelector(`script[data-v230-runtime="${src}"]`)) {
+      loadSequentially(index + 1);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.dataset.v230Runtime = src;
+    script.onload = () => loadSequentially(index + 1);
+    script.onerror = () => console.error(`V2.3.0: falha ao carregar ${src}`);
+    document.head.appendChild(script);
+  }
+
+  function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch((error) => {
+      console.error('Service Worker: registro indisponível.', error);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => loadSequentially(), { once: true });
+  } else {
+    loadSequentially();
+  }
+})();
