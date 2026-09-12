@@ -8,7 +8,8 @@ const inv = fs.readFileSync('inventory.js', 'utf8');
 const list = fs.readFileSync('list-enhancements.js', 'utf8');
 const listMarket = fs.readFileSync('list-market-v230.js', 'utf8');
 const listMarketCore = listMarket.split('\n// Bootstrap V2.3.0')[0];
-const share = fs.readFileSync('share-optimized-v230.js', 'utf8');
+const share = fs.readFileSync('share-config.js', 'utf8');
+const shareCompat = fs.readFileSync('share-optimized-v230.js', 'utf8');
 const backup = fs.readFileSync('backup-v230.js', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
 const worker = fs.readFileSync('share-service/worker.js', 'utf8');
@@ -20,7 +21,10 @@ assert(!app.includes('WebSocket'), 'não deve usar WebSocket');
 assert(!app.includes('firebase'), 'não deve depender de Firebase');
 assert(!app.includes('supabase'), 'não deve depender de Supabase');
 
-assert(share.includes('shared-list-v3'), 'compartilhamento deve suportar V3');
+assert(share.includes('shared-list-v3'), 'compartilhamento oficial deve suportar V3');
+assert(share.includes('shared-list-v3-compact'), 'compartilhamento oficial deve suportar formato compacto');
+assert(share.includes('/api/share'), 'compartilhamento oficial deve usar a API de compartilhamento');
+assert(shareCompat.includes('__mlShareOptimizedLoaded'), 'shim legado de compartilhamento deve permanecer inerte');
 assert(backup.includes('backupFormatVersion: 2'), 'backup deve usar formato V2');
 assert(backup.includes('inventory'), 'backup deve preservar inventário');
 assert(
@@ -54,6 +58,7 @@ assert(
 
 assert(sw.includes("'./v3-shell.js'"), 'Service Worker deve cachear o shell V3');
 assert(sw.includes("'./version-v230.js'"), 'Service Worker deve cachear o versionador');
+assert(sw.includes("minha-lista-v2-3-7"), 'Service Worker deve usar o cache da versão atual');
 assert(!sw.includes('src="./v3-shell.js"'), 'Service Worker não deve injetar scripts no HTML');
 assert(index.includes('list-market-v230.js'), 'HTML deve carregar a entrada do runtime');
 
