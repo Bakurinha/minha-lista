@@ -2,7 +2,6 @@
   'use strict';
 
   const STYLE_ID = 'ml-v3-compact-controls';
-  // Todos os campos de pesquisa que precisam do mesmo comportamento responsivo.
   const SEARCH_IDS = [
     'listSearch',
     'catalogSearch',
@@ -19,24 +18,59 @@
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `
-      /* Pesquisa: largura responsiva, sem limite artificial de caracteres. */
-      #listSearch,
-      #catalogSearch,
-      #wishSearch,
-      #invSearch,
-      #historyItemSearch,
-      #historyMarketSearch {
+      /*
+       * Pesquisa responsiva: o input original permanece no DOM para preservar
+       * todos os listeners do app. A textarea visual cresce com o texto e
+       * sincroniza o valor de volta para o input original.
+       */
+      .ml-search-multiline-wrap {
+        display: flex;
         flex: 1 1 360px;
+        min-width: 0;
+        width: 100%;
+        align-self: stretch;
+      }
+
+      .ml-search-multiline {
+        display: block;
+        flex: 1 1 auto;
         width: 100%;
         min-width: 0;
         box-sizing: border-box;
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        padding: 12px 13px;
+        font: inherit;
+        font-size: 16px;
+        line-height: 1.35;
+        background: var(--card);
+        color: var(--text);
+        outline: none;
         resize: none;
         overflow-x: hidden;
-        overflow-y: auto;
+        overflow-y: hidden;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
         word-break: break-word;
-        line-height: 1.35;
+      }
+
+      .ml-search-multiline:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+      }
+
+      .ml-search-original-hidden {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
       }
 
       #inventoryView select,
@@ -53,17 +87,17 @@
       }
 
       @media (max-width: 620px) {
-        #listSearch,
-        #catalogSearch,
-        #wishSearch,
-        #invSearch,
-        #historyItemSearch,
-        #historyMarketSearch {
+        .ml-search-multiline-wrap {
           flex: 1 1 100%;
           width: 100%;
           max-width: 100%;
           min-width: 0;
-          height: 36px;
+        }
+
+        .ml-search-multiline {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
           min-height: 36px;
           max-height: 112px;
           padding: 7px 10px;
@@ -124,13 +158,7 @@
       }
 
       @media (max-width: 380px) {
-        #listSearch,
-        #catalogSearch,
-        #wishSearch,
-        #invSearch,
-        #historyItemSearch,
-        #historyMarketSearch {
-          height: 34px;
+        .ml-search-multiline {
           min-height: 34px;
           max-height: 102px;
           padding: 6px 9px;
@@ -168,6 +196,7 @@
 
   function autosizeSearch(field) {
     if (!(field instanceof HTMLTextAreaElement)) return;
+
     field.style.height = 'auto';
     const computed = getComputedStyle(field);
     const lineHeight = parseFloat(computed.lineHeight) || 19;
@@ -175,41 +204,64 @@
       (parseFloat(computed.paddingTop) || 0) + (parseFloat(computed.paddingBottom) || 0);
     const border =
       (parseFloat(computed.borderTopWidth) || 0) + (parseFloat(computed.borderBottomWidth) || 0);
-    const minHeight = parseFloat(computed.minHeight) || lineHeight + padding + border;
+    const minHeight = lineHeight + padding + border;
     const maxHeight = lineHeight * MAX_SEARCH_LINES + padding + border;
-    field.style.height = `${Math.min(Math.max(field.scrollHeight, minHeight), maxHeight)}px`;
+    const nextHeight = Math.min(Math.max(field.scrollHeight, minHeight), maxHeight);
+
+    field.style.height = `${nextHeight}px`;
     field.style.overflowY = field.scrollHeight > maxHeight ? 'auto' : 'hidden';
   }
 
-  function makeSearchMultiline(field) {
-    if (!field || field.dataset.mlSearchMultiline === '1') return;
+  function syncVisualToOriginal(visual, original) {
+    const value = visual.value;
+    if (original.value === value) return;
 
-    // O núcleo usa oninput; preservamos esse handler ao trocar input por textarea.
-    if (field instanceof HTMLInputElement) {
-      const area = document.createElement('textarea');
-      const inputHandler = field.oninput;
-      const changeHandler = field.onchange;
-      const keydownHandler = field.onkeydown;
-      for (const attr of field.attributes) {
-        if (attr.name !== 'type' && attr.name !== 'value') area.setAttribute(attr.name, attr.value);
-      }
-      area.id = field.id;
-      area.className = field.className;
-      area.value = field.value;
-      area.placeholder = field.placeholder;
-      area.rows = 1;
-      if (typeof inputHandler === 'function') area.oninput = inputHandler;
-      if (typeof changeHandler === 'function') area.onchange = changeHandler;
-      if (typeof keydownHandler === 'function') area.onkeydown = keydownHandler;
-      field.replaceWith(area);
-      field = area;
-    }
+    original.value = value;
+    original.dispatchEvent(new Event('input', { bubbles: true }));
+  }
 
-    field.dataset.mlSearchMultiline = '1';
-    field.removeAttribute('maxlength');
-    field.setAttribute('rows', '1');
-    field.addEventListener('input', () => autosizeSearch(field));
-    autosizeSearch(field);
+  function syncOriginalToVisual(original, visual) {
+    if (visual.value !== original.value) visual.value = original.value;
+    autosizeSearch(visual);
+  }
+
+  function makeSearchMultiline(original) {
+    if (!(original instanceof HTMLInputElement)) return;
+    if (original.dataset.mlSearchMultiline === '1') return;
+
+    original.dataset.mlSearchMultiline = '1';
+    original.removeAttribute('maxlength');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'ml-search-multiline-wrap';
+    wrap.dataset.mlSearchWrap = original.id;
+
+    const visual = document.createElement('textarea');
+    visual.className = 'ml-search-multiline';
+    visual.id = `${original.id}Multiline`;
+    visual.rows = 1;
+    visual.value = original.value;
+    visual.placeholder = original.placeholder;
+    visual.setAttribute('aria-label', original.getAttribute('aria-label') || 'Pesquisar');
+    visual.autocomplete = original.autocomplete || 'off';
+
+    original.classList.add('ml-search-original-hidden');
+    original.setAttribute('aria-hidden', 'true');
+    original.tabIndex = -1;
+
+    original.parentNode.insertBefore(wrap, original);
+    wrap.appendChild(visual);
+    wrap.appendChild(original);
+
+    visual.addEventListener('input', () => {
+      syncVisualToOriginal(visual, original);
+      autosizeSearch(visual);
+    });
+
+    original.addEventListener('input', () => syncOriginalToVisual(original, visual));
+    original.addEventListener('change', () => syncOriginalToVisual(original, visual));
+
+    autosizeSearch(visual);
   }
 
   function upgradeSearchFields() {
@@ -219,6 +271,7 @@
   function init() {
     injectStyles();
     upgradeSearchFields();
+
     const observer = new MutationObserver(upgradeSearchFields);
     observer.observe(document.body, { childList: true, subtree: true });
   }
