@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 'v2.3.3';
+  const VERSION = 'v2.3.2';
   const VERSION_PATTERN = /v\d+\.\d+\.\d+/gi;
 
   function updateVisibleVersion() {
