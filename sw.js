@@ -1,8 +1,9 @@
-const CACHE = 'minha-lista-v2-3-4';
+const CACHE = 'minha-lista-v2-3-5';
 const CORE = [
   './',
   './index.html',
   './app.js',
+  './share-optimized-v230.js',
   './enhancements.js',
   './inventory.js',
   './reference-market-refresh.js',
@@ -48,11 +49,13 @@ self.addEventListener('fetch', (event) => {
           if (!type.includes('text/html')) return r;
           let text = await r.text();
           const scripts =
-            '<script src="./share-config.js"></script><script src="./db-migrations-v230.js"></script><script src="./backup-v230.js"></script><script src="./enhancements.js"></script><script src="./inventory.js"></script><script src="./reference-market-refresh.js"></script><script src="./reference-product-expansion-v230.js"></script><script src="./list-enhancements.js"></script><script src="./list-market-v230.js"></script><script src="./db-integrity-v230.js"></script><script src="./version-v230.js"></script><script src="./v3-shell.js"></script>';
+            '<script src="./share-config.js"></script><script src="./db-migrations-v230.js"></script><script src="./backup-v230.js"></script><script src="./share-optimized-v230.js"></script><script src="./enhancements.js"></script><script src="./inventory.js"></script><script src="./reference-market-refresh.js"></script><script src="./reference-product-expansion-v230.js"></script><script src="./list-enhancements.js"></script><script src="./list-market-v230.js"></script><script src="./db-integrity-v230.js"></script><script src="./version-v230.js"></script><script src="./v3-shell.js"></script>';
           if (!text.includes('src="./share-config.js"'))
             text = text.replace('</body>', `${scripts}</body>`);
           else if (!text.includes('src="./version-v230.js"'))
             text = text.replace('</body>', '<script src="./version-v230.js"></script><script src="./v3-shell.js"></script></body>');
+          else if (!text.includes('src="./share-optimized-v230.js"'))
+            text = text.replace('</body>', '<script src="./share-optimized-v230.js"></script></body>');
           else if (!text.includes('src="./v3-shell.js"'))
             text = text.replace('</body>', '<script src="./v3-shell.js"></script></body>');
           const out = new Response(text, {
