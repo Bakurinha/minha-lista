@@ -48,12 +48,21 @@ assert(compact.includes('#catalogSearch'), 'Pesquisa de catálogo não está con
 assert(compact.includes('#wishSearch'), 'Pesquisa de desejos não está configurada');
 assert(compact.includes('MAX_SEARCH_LINES = 5'), 'Pesquisa não possui limite vertical responsivo');
 assert(compact.includes('autosizeSearch'), 'Pesquisa não possui autosize por linha');
-assert(compact.includes('removeAttribute(\'maxlength\')'), 'Pesquisa ainda possui limite artificial de caracteres');
+assert(
+  compact.includes("removeAttribute('maxlength')"),
+  'Pesquisa ainda possui limite artificial de caracteres'
+);
 assert(compact.includes('white-space: pre-wrap'), 'Pesquisa não permite quebra de linha');
-assert(compact.includes('overflow-wrap: anywhere'), 'Pesquisa não trata textos longos responsivamente');
+assert(
+  compact.includes('overflow-wrap: anywhere'),
+  'Pesquisa não trata textos longos responsivamente'
+);
 assert(compact.includes('@media (max-width: 620px)'), 'Ajuste mobile ausente');
 assert(compact.includes('max-height: 112px'), 'Limite vertical mobile ausente');
-assert(compact.includes('max-width: 180px'), 'Seleção ainda não possui limite responsivo no mobile');
+assert(
+  compact.includes('max-width: 180px'),
+  'Seleção ainda não possui limite responsivo no mobile'
+);
 assert(compact.includes('@media (max-width: 380px)'), 'Ajuste para telas pequenas ausente');
 assert(sharing.includes('openReady'), 'Compartilhamento não aguarda o banco ficar pronto');
 assert(
