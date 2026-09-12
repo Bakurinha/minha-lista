@@ -3,7 +3,8 @@ const assert = require('assert');
 
 const read = (path) => fs.readFileSync(path, 'utf8');
 const sw = read('sw.js');
-const share = read('share-optimized-v230.js');
+const shareConfig = read('share-config.js');
+const shareCompat = read('share-optimized-v230.js');
 const legacyShare = read('enhancements.js');
 
 assert(
@@ -20,24 +21,39 @@ assert(
   'existing Stage 2 scripts must remain injected'
 );
 assert(
-  /format:\s*['"]shared-list-v3-compact['"]/.test(share) &&
-    share.includes('delete copy.inventory') &&
-    share.includes('delete copy.stock'),
+  shareConfig.includes("format: 'shared-list-v3-compact'") &&
+    shareConfig.includes('delete copy.inventory') &&
+    shareConfig.includes('delete copy.stock'),
   'V3 sharing must exclude inventory/stock'
 );
 assert(
-  share.includes('shared-list-v2') &&
-    share.includes('shared-list-v3') &&
-    share.includes('shared-list-v3-compact'),
+  shareConfig.includes('shared-list-v2') &&
+    shareConfig.includes('shared-list-v3') &&
+    shareConfig.includes('shared-list-v3-compact'),
   'V2/V3 import compatibility must remain'
 );
 assert(
-  share.includes('history.replaceState'),
+  shareConfig.includes('history.replaceState'),
   'share cancel/import URL handling must avoid forced navigation'
 );
 assert(
-  share.includes('__mlShareOptimizedLoaded = true'),
-  'optimized sharing module must be the authoritative implementation'
+  shareConfig.includes('id="mlShareCode"') &&
+    shareConfig.includes('maxlength="12"') &&
+    shareConfig.includes('data-import'),
+  'shared-list import must use the 12-character code UI'
+);
+assert(
+  shareCompat.includes('__mlShareOptimizedLegacyDisabled = true') &&
+    shareCompat.includes('sharedInput') &&
+    shareCompat.includes('sharedImportBtn') &&
+    shareCompat.includes('shareListBtn') &&
+    shareCompat.includes('stopImmediatePropagation'),
+  'legacy file import must be replaced by the code-sharing flow'
+);
+assert(
+  !shareCompat.includes('type="file"') &&
+    !shareCompat.includes('accept="application/json,.json"'),
+  'compatibility layer must not create or request JSON files'
 );
 assert(
   legacyShare.includes('__mlShareLegacyWaiting') && !legacyShare.includes('shareListBtn'),
