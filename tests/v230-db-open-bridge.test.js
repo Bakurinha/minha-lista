@@ -8,13 +8,10 @@ const bridgeSource=fs.readFileSync('db-open-bridge-v230.js','utf8');
 const calls=[];
 const names=new Set();
 const db={objectStoreNames:{contains:(name)=>names.has(name)}};
-let upgradeHandler=null;
 let upgradeListener=null;
 const request={
   result:db,
-  addEventListener(type,fn){if(type==='upgradeneeded')upgradeListener=fn},
-  set onupgradeneeded(fn){upgradeHandler=fn},
-  get onupgradeneeded(){return upgradeHandler}
+  addEventListener(type,fn){if(type==='upgradeneeded')upgradeListener=fn}
 };
 const nativeIndexedDB={
   open(name,version){calls.push({name,version});return request}
@@ -25,8 +22,8 @@ vm.createContext(context);
 vm.runInContext(migrationSource,context);
 vm.runInContext(bridgeSource,context);
 
-assert(context.__mlDbMigrationsV230);
-assert(context.__mlDbOpenBridgeV230);
+assert(context.window.__mlDbMigrationsV230);
+assert(context.window.__mlDbOpenBridgeV230);
 assert.notStrictEqual(context.window.indexedDB,nativeIndexedDB,'a página deve usar a fachada da IndexedDB');
 
 const opened=context.window.indexedDB.open('MinhaListaDB',6);
