@@ -9,6 +9,8 @@ const version = fs.readFileSync('version-v230.js', 'utf8');
 const runtime = fs.readFileSync('list-market-v230.js', 'utf8');
 const icons = fs.readFileSync('v3-icons.js', 'utf8');
 const iconForce = fs.readFileSync('v3-icon-force.js', 'utf8');
+const compact = fs.readFileSync('v3-compact-controls.js', 'utf8');
+const sharing = fs.readFileSync('share-optimized-v230.js', 'utf8');
 
 assert(shell.includes('v3-menu-toggle'), 'Botão hamburger ausente');
 assert(shell.includes('v3-menu-overlay'), 'Overlay do menu ausente');
@@ -24,6 +26,10 @@ assert(
   runtime.includes("'./v3-icon-force.js'"),
   'Normalização de ícones não está no bootstrap do runtime'
 );
+assert(
+  runtime.includes("'./v3-compact-controls.js'"),
+  'Controles compactos não estão no bootstrap do runtime'
+);
 assert(sw.includes("'./v3-icons.js'"), 'Ícones não estão no cache do Service Worker');
 assert(
   sw.includes("'./v3-icon-force.js'"),
@@ -32,6 +38,14 @@ assert(
 assert(sw.includes('minha-lista-v2-3-1'), 'Cache PWA não está na versão atual');
 assert(icons.includes('const ICONS'), 'Mapa principal de ícones ausente');
 assert(iconForce.includes('Extended_Pictographic'), 'Fallback pictográfico ausente');
+assert(compact.includes('#listSearch'), 'Pesquisa de listas não está compactada');
+assert(compact.includes('#inventoryView select'), 'Seleções do estoque não estão compactadas');
+assert(sharing.includes('openReady'), 'Compartilhamento não aguarda o banco ficar pronto');
+assert(
+  sharing.includes("objectStoreNames.contains('catalogs')") &&
+    sharing.includes("objectStoreNames.contains('lists')"),
+  'Compartilhamento não valida as stores necessárias'
+);
 assert(
   runtime.includes('navigator.serviceWorker.register'),
   'Service Worker não está registrado pelo runtime'
