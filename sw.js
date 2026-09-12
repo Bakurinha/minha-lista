@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-2';
+const CACHE = 'minha-lista-v2-3-3';
 const CORE = [
   './',
   './index.html',
@@ -70,4 +70,4 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// V2.3.2: novo cache + skipWaiting/clients.claim para atualização imediata sem tocar no IndexedDB.
+// V2.3.3: invalida o cache anterior após remover o antigo fluxo de compartilhamento por JSON.
