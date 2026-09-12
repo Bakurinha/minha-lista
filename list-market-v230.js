@@ -196,7 +196,17 @@
     decorateListCards().catch(console.error);
   }
 
+  function ensureIntegrityDiagnostics() {
+    if (window.__mlDbIntegrityV230 || document.querySelector('script[data-v230-integrity]')) return;
+    const script = document.createElement('script');
+    script.src = './db-integrity-v230.js';
+    script.async = false;
+    script.dataset.v230Integrity = '1';
+    document.head.appendChild(script);
+  }
+
   function init() {
+    ensureIntegrityDiagnostics();
     scan();
     const observer = new MutationObserver(scan);
     observer.observe(document.body, { childList: true, subtree: true });
