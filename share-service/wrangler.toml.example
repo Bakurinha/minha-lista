@@ -1,0 +1,37 @@
+name = "minha-lista-share"
+main = "worker.js"
+compatibility_date = "2026-09-12"
+
+# Crie o namespace KV e substitua o ID abaixo pelo ID real do namespace.
+[[kv_namespaces]]
+binding = "SHARES"
+id = "COLOQUE_O_ID_DO_KV_AQUI"
+
+# Proteções nativas do Cloudflare Rate Limiting API.
+# Os namespace_id abaixo são exemplos: use números exclusivos na sua conta.
+# Limite de criação: 10 chamadas por minuto por chave (IP).
+[[ratelimits]]
+name = "SHARE_CREATE_LIMITER"
+namespace_id = "1001"
+
+[ratelimits.simple]
+limit = 10
+period = 60
+
+# Limite de leitura da API: 100 chamadas por minuto por IP.
+[[ratelimits]]
+name = "SHARE_READ_LIMITER"
+namespace_id = "1002"
+
+[ratelimits.simple]
+limit = 100
+period = 60
+
+# Limite do endpoint curto /s/:id: 100 chamadas por minuto por IP.
+[[ratelimits]]
+name = "SHARE_REDIRECT_LIMITER"
+namespace_id = "1003"
+
+[ratelimits.simple]
+limit = 100
+period = 60
