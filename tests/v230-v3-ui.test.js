@@ -20,9 +20,15 @@ assert(shell.includes('Escape'), 'Fechamento do menu por teclado ausente');
 assert(shell.includes('ICONS'), 'Sistema visual de ícones ausente');
 assert(shell.includes('data-view'), 'Reutilização da navegação existente ausente');
 assert(runtime.includes("'./v3-icons.js'"), 'Ícones não estão no bootstrap do runtime');
-assert(runtime.includes("'./v3-icon-force.js'"), 'Normalização de ícones não está no bootstrap do runtime');
+assert(
+  runtime.includes("'./v3-icon-force.js'"),
+  'Normalização de ícones não está no bootstrap do runtime'
+);
 assert(sw.includes("'./v3-icons.js'"), 'Ícones não estão no cache do Service Worker');
-assert(sw.includes("'./v3-icon-force.js'"), 'Normalização de ícones não está no cache do Service Worker');
+assert(
+  sw.includes("'./v3-icon-force.js'"),
+  'Normalização de ícones não está no cache do Service Worker'
+);
 assert(sw.includes('minha-lista-v2-3-1'), 'Cache PWA não está na versão atual');
 assert(icons.includes('const ICONS'), 'Mapa principal de ícones ausente');
 assert(iconForce.includes('Extended_Pictographic'), 'Fallback pictográfico ausente');
