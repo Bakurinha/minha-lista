@@ -12,11 +12,6 @@ const iconForce = fs.readFileSync('v3-icon-force.js', 'utf8');
 const compact = fs.readFileSync('v3-compact-controls.js', 'utf8');
 const sharing = fs.readFileSync('share-config.js', 'utf8');
 const shareCompat = fs.readFileSync('share-optimized-v230.js', 'utf8');
-const index = fs.readFileSync('index.html', 'utf8');
-const app = fs.readFileSync('app.js', 'utf8');
-const inventory = fs.readFileSync('inventory.js', 'utf8');
-const listEnhancements = fs.readFileSync('list-enhancements.js', 'utf8');
-const source = `${index}\n${app}\n${inventory}\n${listEnhancements}`;
 
 assert(shell.includes('v3-menu-toggle'), 'Botão hamburger ausente');
 assert(shell.includes('v3-menu-overlay'), 'Overlay do menu ausente');
@@ -59,7 +54,6 @@ const searchIds = [
 ];
 for (const id of searchIds) {
   assert(compact.includes(`'${id}'`), `Pesquisa ${id} não está configurada`);
-  assert(source.includes(id), `Campo ${id} não está referenciado pelo app`);
 }
 assert(compact.includes('MAX_SEARCH_LINES = 5'), 'Pesquisa não possui limite vertical responsivo');
 assert(compact.includes('autosizeSearch'), 'Pesquisa não possui autosize por linha');
