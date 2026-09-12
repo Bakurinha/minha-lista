@@ -18,7 +18,13 @@ assert(
   sw.indexOf("'./share-optimized-v230.js'") < sw.indexOf("'./enhancements.js'"),
   'Otimizador deve carregar antes do compartilhamento legado'
 );
-assert(runtime.indexOf("'./share-optimized-v230.js'") < runtime.indexOf("'./enhancements.js'"), 'Otimizador deve carregar antes do compartilhamento legado no runtime');
-assert(!sw.includes('src="./share-optimized-v230.js"'), 'Service Worker não deve injetar o otimizador');
+assert(
+  runtime.indexOf("'./share-optimized-v230.js'") < runtime.indexOf("'./enhancements.js'"),
+  'Otimizador deve carregar antes do compartilhamento legado no runtime'
+);
+assert(
+  !sw.includes('src="./share-optimized-v230.js"'),
+  'Service Worker não deve injetar o otimizador'
+);
 
 console.log('V2.3.0 optimized sharing contract: OK');
