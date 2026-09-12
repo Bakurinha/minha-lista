@@ -35,9 +35,7 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(
-          keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))
-        )
+        Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
       )
       .then(() => self.clients.claim())
   );
@@ -63,9 +61,7 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() =>
-            event.request.mode === 'navigate'
-              ? caches.match('./index.html')
-              : Response.error()
+            event.request.mode === 'navigate' ? caches.match('./index.html') : Response.error()
           )
     )
   );
