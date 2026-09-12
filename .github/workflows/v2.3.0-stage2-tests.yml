@@ -34,11 +34,15 @@ jobs:
           node --check db-migrations-v230.js
           node --check db-open-bridge-v230.js
           node --check version-v230.js
+          node --check v3-shell.js
+          node --check share-optimized-v230.js
           node --check tests/v230-data-preservation.test.js
           node --check tests/v230-db-migrations.test.js
           node --check tests/v230-db-open-bridge.test.js
           node --check tests/v230-security-regression.test.js
           node --check tests/v230-version.test.js
+          node --check tests/v230-v3-ui.test.js
+          node --check tests/v230-share-optimized.test.js
           node --check share-service/worker.js
           node --check share-service/test/worker.test.js
           node --check sw.js
@@ -56,6 +60,10 @@ jobs:
         run: node tests/v230-security-regression.test.js
       - name: Visible version contract
         run: node tests/v230-version.test.js
+      - name: V3 UI contract
+        run: node tests/v230-v3-ui.test.js
+      - name: Optimized sharing contract
+        run: node tests/v230-share-optimized.test.js
       - name: Worker validation tests
         run: node --test share-service/test/worker.test.js
       - name: Foundation checks
