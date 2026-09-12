@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { handleRequest } from '../worker.js';
 
 const APP_ORIGIN = 'https://bakurinha.github.io';
+const SHARE_ID_LENGTH = 12;
 const catalog = {
   id: 'c1',
   name: 'Arroz',
@@ -76,7 +77,7 @@ test('POST cria compartilhamento com TTL e link', async () => {
     );
   assert.equal(r.status, 201);
   const data = await r.json();
-  assert.match(data.id, /^[A-Za-z0-9_-]{36}$/);
+  assert.match(data.id, new RegExp(`^[A-Za-z0-9_-]{${SHARE_ID_LENGTH}}$`));
   assert.equal(data.expiresIn, 604800);
   assert.equal(e.map.size, 1);
   assert.equal(e.map.get(data.id).o.expirationTtl, 604800);
@@ -84,9 +85,9 @@ test('POST cria compartilhamento com TTL e link', async () => {
 });
 test('GET recupera compartilhamento', async () => {
   const e = env();
-  e.map.set('a'.repeat(36), { v: JSON.stringify(payload) });
+  e.map.set('a'.repeat(SHARE_ID_LENGTH), { v: JSON.stringify(payload) });
   const r = await handleRequest(
-    req(`https://share.example/api/share/${'a'.repeat(36)} `.trim()),
+    req(`https://share.example/api/share/${'a'.repeat(SHARE_ID_LENGTH)} `.trim()),
     e
   );
   assert.equal(r.status, 200);
@@ -95,12 +96,12 @@ test('GET recupera compartilhamento', async () => {
 });
 test('GET inexistente retorna 404', async () => {
   const e = env(),
-    r = await handleRequest(req(`https://share.example/api/share/${'b'.repeat(36)}`), e);
+    r = await handleRequest(req(`https://share.example/api/share/${'b'.repeat(SHARE_ID_LENGTH)}`), e);
   assert.equal(r.status, 404);
 });
 test('GET /s/:id redireciona somente se existir', async () => {
   const e = env(),
-    sid = 'c'.repeat(36);
+    sid = 'c'.repeat(SHARE_ID_LENGTH);
   e.map.set(sid, { v: JSON.stringify(payload) });
   const r = await handleRequest(req(`https://share.example/s/${sid}`), e);
   assert.equal(r.status, 302);
