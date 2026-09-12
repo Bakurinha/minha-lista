@@ -1,0 +1,8 @@
+{
+  "name": "minha-lista",
+  "private": true,
+  "version": "2.3.0",
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}
