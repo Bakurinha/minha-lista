@@ -6,7 +6,11 @@ const inv = fs.readFileSync('inventory.js', 'utf8');
 const share = fs.readFileSync('enhancements.js', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
 
-assert.match(app, /DB_NAME='MinhaListaDB', DB_VERSION=6/, 'app.js must use IndexedDB V6');
+assert.match(
+  app,
+  /DB_NAME\s*=\s*['"]MinhaListaDB['"][\s\S]*?DB_VERSION\s*=\s*6/,
+  'app.js must use IndexedDB V6'
+);
 assert.match(
   app,
   /objectStoreNames\.contains\('inventory'\)/,
@@ -14,15 +18,15 @@ assert.match(
 );
 assert.match(
   inv,
-  /const DB='MinhaListaDB', VERSION=6, STORE='inventory'/,
+  /const\s+DB\s*=\s*['"]MinhaListaDB['"],[\s\S]*?VERSION\s*=\s*6,[\s\S]*?STORE\s*=\s*['"]inventory['"]/,
   'inventory module must target V6'
 );
-assert.match(inv, /const PRODUCTS=\[/, 'reference product seed missing');
-assert.match(inv, /const MARKET_NAMES=\[/, 'reference market seed missing');
+assert.match(inv, /const PRODUCTS\s*=\s*\[/, 'reference product seed missing');
+assert.match(inv, /const MARKET_NAMES\s*=\s*\[/, 'reference market seed missing');
 
-const productsExpr = inv.match(/const PRODUCTS=(\[[\s\S]*?\n\]);\nconst UNITS=/)?.[1];
-const unitsExpr = inv.match(/const UNITS=(\{[\s\S]*?\});\nconst MARKET_NAMES=/)?.[1];
-const marketsExpr = inv.match(/const MARKET_NAMES=(\[[\s\S]*?\]);\nfunction referenceSeed/)?.[1];
+const productsExpr = inv.match(/const PRODUCTS\s*=\s*(\[[\s\S]*?\n\]);\nconst UNITS\s*=/)?.[1];
+const unitsExpr = inv.match(/const UNITS\s*=\s*(\{[\s\S]*?\});\nconst MARKET_NAMES\s*=/)?.[1];
+const marketsExpr = inv.match(/const MARKET_NAMES\s*=\s*(\[[\s\S]*?\]);\nfunction referenceSeed/)?.[1];
 
 assert(productsExpr && unitsExpr && marketsExpr, 'reference seed structure changed');
 
@@ -42,6 +46,4 @@ assert(sw.includes('./list-enhancements.js'), 'Service Worker must cache list-en
 assert(sw.includes('./list-market-v230.js'), 'Service Worker must cache list-market-v230.js');
 assert(/minha-lista-v2-3-\d+/.test(sw), 'Service Worker must use a V2.3.x cache');
 
-console.log(
-  `V2.3.0 foundation OK: ${productCount} products, ${new Set(markets).size} markets, DB V6/inventory upgrade present.`
-);
+console.log('V2.3.0 foundation source invariants OK');
