@@ -2,14 +2,7 @@
   'use strict';
 
   const STYLE_ID = 'ml-v3-compact-controls';
-  const SEARCH_IDS = [
-    'listSearch',
-    'catalogSearch',
-    'wishSearch',
-    'invSearch',
-    'historyItemSearch',
-    'historyMarketSearch',
-  ];
+  const SEARCH_IDS = ['catalogSearch', 'wishSearch'];
   const MAX_SEARCH_LINES = 5;
 
   function injectStyles() {
@@ -18,17 +11,13 @@
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `
-      /*
-       * Pesquisa responsiva: o input original permanece no DOM para preservar
-       * todos os listeners do app. A textarea visual cresce com o texto e
-       * sincroniza o valor de volta para o input original.
-       */
+      /* Correção exclusiva da área de pesquisa de Itens Cadastrados e Lista de desejos. */
       .ml-search-multiline-wrap {
         display: flex;
-        flex: 0 1 420px;
-        width: min(100%, 420px);
+        flex: 0 1 320px;
+        width: min(100%, 320px);
         min-width: 0;
-        max-width: 420px;
+        max-width: 320px;
         align-self: flex-start;
       }
 
@@ -76,19 +65,6 @@
         pointer-events: none !important;
       }
 
-      #inventoryView select,
-      #inventoryView .select,
-      #shareSelect {
-        width: auto;
-        min-width: 120px;
-        max-width: 300px;
-      }
-
-      .sheet .field > .input,
-      .sheet .field > .select {
-        max-width: 520px;
-      }
-
       @media (max-width: 620px) {
         .ml-search-multiline-wrap {
           flex: 0 1 100%;
@@ -106,57 +82,6 @@
           font-size: 14px;
           line-height: 1.35;
         }
-
-        #inventoryView select,
-        #inventoryView .select,
-        #shareSelect {
-          flex: 0 1 auto;
-          width: auto;
-          min-width: 0;
-          max-width: 180px;
-          height: 34px;
-          min-height: 34px;
-          padding: 6px 9px;
-          font-size: 13px;
-          line-height: 1.25;
-        }
-
-        .input,
-        .select {
-          min-width: 0;
-          max-width: 100%;
-          height: 40px;
-          min-height: 40px;
-          padding: 8px 10px;
-          font-size: 14px;
-          line-height: 1.25;
-        }
-
-        .textarea {
-          min-width: 0;
-          max-width: 100%;
-          min-height: 72px;
-          max-height: 180px;
-          padding: 8px 10px;
-          font-size: 14px;
-          line-height: 1.3;
-        }
-
-        .sheet .field > .input,
-        .sheet .field > .select,
-        .sheet .field > .textarea {
-          width: 100%;
-          max-width: 100%;
-          min-width: 0;
-          box-sizing: border-box;
-        }
-
-        .field,
-        .field.full,
-        .form-grid {
-          min-width: 0;
-          max-width: 100%;
-        }
       }
 
       @media (max-width: 380px) {
@@ -164,31 +89,6 @@
           min-height: 34px;
           max-height: 92px;
           padding: 6px 9px;
-          font-size: 13px;
-        }
-
-        #inventoryView select,
-        #inventoryView .select,
-        #shareSelect {
-          max-width: 155px;
-          height: 32px;
-          min-height: 32px;
-          padding: 5px 8px;
-          font-size: 12px;
-        }
-
-        .input,
-        .select {
-          height: 38px;
-          min-height: 38px;
-          padding: 7px 9px;
-          font-size: 13px;
-        }
-
-        .textarea {
-          min-height: 68px;
-          max-height: 160px;
-          padding: 7px 9px;
           font-size: 13px;
         }
       }
@@ -237,6 +137,9 @@
     const wrap = document.createElement('div');
     wrap.className = 'ml-search-multiline-wrap';
     wrap.dataset.mlSearchWrap = original.id;
+
+    if (original.id === 'catalogSearch') wrap.classList.add('ml-search-catalog');
+    if (original.id === 'wishSearch') wrap.classList.add('ml-search-wishlist');
 
     const visual = document.createElement('textarea');
     visual.className = 'ml-search-multiline';
