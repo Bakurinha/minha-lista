@@ -246,6 +246,8 @@
     visual.placeholder = original.placeholder;
     visual.setAttribute('aria-label', original.getAttribute('aria-label') || 'Pesquisar');
     visual.autocomplete = original.autocomplete || 'off';
+    visual.inputMode = 'search';
+    visual.enterKeyHint = 'search';
 
     original.classList.add('ml-search-original-hidden');
     original.setAttribute('aria-hidden', 'true');
