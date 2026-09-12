@@ -39,7 +39,8 @@
         request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
         request.onsuccess = () => {
           const db = request.result;
-          const ready = db.objectStoreNames.contains('catalogs') && db.objectStoreNames.contains('lists');
+          const ready =
+            db.objectStoreNames.contains('catalogs') && db.objectStoreNames.contains('lists');
           if (ready) {
             resolve(db);
             return;
