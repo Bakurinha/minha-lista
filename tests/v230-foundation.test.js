@@ -25,13 +25,13 @@ assert.match(inv, /const\s+PRODUCTS\s*=\s*\[/, 'reference product seed missing')
 assert.match(inv, /const\s+MARKET_NAMES\s*=\s*\[/, 'reference market seed missing');
 
 const productsExpr = inv.match(
-  /const\s+PRODUCTS\s*=\s*(\[[\s\S]*?\])\s*;\s*const\s+UNITS\s*=/
+  /const\s+PRODUCTS\s*=\s*(\[[\s\S]*?\n\s*\]);\s*const\s+UNITS\s*=/
 )?.[1];
 const unitsExpr = inv.match(
-  /const\s+UNITS\s*=\s*(\{[\s\S]*?\})\s*;\s*const\s+MARKET_NAMES\s*=/
+  /const\s+UNITS\s*=\s*(\{[\s\S]*?\n\s*\});\s*const\s+MARKET_NAMES\s*=/
 )?.[1];
 const marketsExpr = inv.match(
-  /const\s+MARKET_NAMES\s*=\s*(\[[\s\S]*?\])\s*;\s*function\s+referenceSeed/
+  /const\s+MARKET_NAMES\s*=\s*(\[[\s\S]*?\n\s*\]);\s*function\s+referenceSeed/
 )?.[1];
 
 assert(productsExpr && unitsExpr && marketsExpr, 'reference seed structure changed');
