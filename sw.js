@@ -27,8 +27,8 @@ self.addEventListener('install', (event) =>
       .open(CACHE)
       .then((cache) => cache.addAll(CORE))
       .then(() => self.skipWaiting())
-  );
-});
+  )
+);
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
