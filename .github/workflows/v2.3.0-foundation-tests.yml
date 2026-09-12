@@ -26,4 +26,3 @@ jobs:
         run: node tests/v230-foundation.test.js
       - name: V3 UI contract
         run: node tests/v230-v3-ui.test.js
-# Final verification trigger for the synchronized v2.3.0 repository state.
