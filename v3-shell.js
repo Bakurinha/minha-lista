@@ -149,7 +149,8 @@
     close.className = 'v3-drawer-close';
     close.type = 'button';
     close.setAttribute('aria-label', 'Fechar menu');
-    close.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+    close.innerHTML =
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
     close.addEventListener('click', closeMenu, true);
     drawerTitle.appendChild(close);
     nav.appendChild(drawerTitle);
