@@ -2,6 +2,8 @@
   'use strict';
 
   const STYLE_ID = 'ml-v3-compact-controls';
+  const SEARCH_IDS = ['listSearch', 'catalogSearch', 'wishSearch'];
+  const MAX_SEARCH_LINES = 5;
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -9,12 +11,21 @@
     const style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent = `
-      /* Controles de consulta/seleção ficam compactos sem alterar os breakpoints. */
+      /* Pesquisa: largura responsiva, sem limite artificial de caracteres. */
       #listSearch,
       #catalogSearch,
       #wishSearch {
-        flex: 0 1 360px;
-        width: min(360px, 100%);
+        flex: 1 1 360px;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        resize: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.35;
       }
 
       #inventoryView select,
@@ -30,20 +41,21 @@
         max-width: 520px;
       }
 
-      /* No celular, campos de texto e seleção ficam menores sem cortar o texto na vertical. */
+      /* No celular, a pesquisa começa compacta e cresce conforme o texto quebra. */
       @media (max-width: 620px) {
         #listSearch,
         #catalogSearch,
         #wishSearch {
-          flex: 0 1 220px;
-          width: 220px;
-          max-width: 220px;
+          flex: 1 1 100%;
+          width: 100%;
+          max-width: 100%;
           min-width: 0;
           height: 36px;
           min-height: 36px;
+          max-height: 112px;
           padding: 7px 10px;
           font-size: 14px;
-          line-height: 1.25;
+          line-height: 1.35;
         }
 
         #inventoryView select,
@@ -60,9 +72,10 @@
           line-height: 1.25;
         }
 
-        /* Inclui os campos "Lista" e de escrita dos formulários, não apenas a busca. */
         .input,
         .select {
+          min-width: 0;
+          max-width: 100%;
           height: 40px;
           min-height: 40px;
           padding: 8px 10px;
@@ -71,7 +84,10 @@
         }
 
         .textarea {
+          min-width: 0;
+          max-width: 100%;
           min-height: 72px;
+          max-height: 180px;
           padding: 8px 10px;
           font-size: 14px;
           line-height: 1.3;
@@ -87,13 +103,10 @@
         }
 
         .field,
-        .field.full {
-          min-width: 0;
-          max-width: 100%;
-        }
-
+        .field.full,
         .form-grid {
           min-width: 0;
+          max-width: 100%;
         }
       }
 
@@ -101,10 +114,9 @@
         #listSearch,
         #catalogSearch,
         #wishSearch {
-          width: 180px;
-          max-width: 180px;
           height: 34px;
           min-height: 34px;
+          max-height: 102px;
           padding: 6px 9px;
           font-size: 13px;
         }
@@ -129,6 +141,7 @@
 
         .textarea {
           min-height: 68px;
+          max-height: 160px;
           padding: 7px 9px;
           font-size: 13px;
         }
@@ -137,8 +150,54 @@
     document.head.appendChild(style);
   }
 
+  function autosizeSearch(field) {
+    if (!(field instanceof HTMLTextAreaElement)) return;
+    field.style.height = 'auto';
+    const computed = getComputedStyle(field);
+    const lineHeight = parseFloat(computed.lineHeight) || 19;
+    const padding = (parseFloat(computed.paddingTop) || 0) + (parseFloat(computed.paddingBottom) || 0);
+    const border = (parseFloat(computed.borderTopWidth) || 0) + (parseFloat(computed.borderBottomWidth) || 0);
+    const minHeight = parseFloat(computed.minHeight) || lineHeight + padding + border;
+    const maxHeight = lineHeight * MAX_SEARCH_LINES + padding + border;
+    field.style.height = `${Math.min(Math.max(field.scrollHeight, minHeight), maxHeight)}px`;
+    field.style.overflowY = field.scrollHeight > maxHeight ? 'auto' : 'hidden';
+  }
+
+  function makeSearchMultiline(field) {
+    if (!field || field.dataset.mlSearchMultiline === '1') return;
+
+    // Mantém o mesmo id, valor e eventos de input, mas permite acompanhar o texto em várias linhas.
+    if (field instanceof HTMLInputElement) {
+      const area = document.createElement('textarea');
+      for (const attr of field.attributes) {
+        if (attr.name !== 'type' && attr.name !== 'value') area.setAttribute(attr.name, attr.value);
+      }
+      area.id = field.id;
+      area.className = field.className;
+      area.value = field.value;
+      area.placeholder = field.placeholder;
+      area.rows = 1;
+      field.replaceWith(area);
+      field = area;
+    }
+
+    field.dataset.mlSearchMultiline = '1';
+    field.removeAttribute('maxlength');
+    field.setAttribute('rows', '1');
+    field.addEventListener('input', () => autosizeSearch(field));
+    autosizeSearch(field);
+  }
+
+  function upgradeSearchFields() {
+    for (const id of SEARCH_IDS) makeSearchMultiline(document.getElementById(id));
+  }
+
   function init() {
     injectStyles();
+    upgradeSearchFields();
+
+    const observer = new MutationObserver(upgradeSearchFields);
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   if (document.readyState === 'loading') {
