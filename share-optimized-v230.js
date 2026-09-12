@@ -31,47 +31,59 @@
     }
   };
 
-  const readAll = (store) =>
+  const openReady = (timeout = 10000) =>
     new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB);
-      request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
-      request.onsuccess = () => {
-        const db = request.result;
-        try {
-          const tx = db.transaction(store, 'readonly');
-          const query = tx.objectStore(store).getAll();
-          query.onsuccess = () => resolve(query.result || []);
-          query.onerror = () => reject(query.error || Error('Falha na leitura'));
-          tx.oncomplete = () => db.close();
-          tx.onerror = () => {
-            db.close();
-            reject(tx.error || Error('Falha IndexedDB'));
-          };
-        } catch (error) {
+      const started = Date.now();
+      const attempt = () => {
+        const request = indexedDB.open(DB);
+        request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
+        request.onsuccess = () => {
+          const db = request.result;
+          const ready = db.objectStoreNames.contains('catalogs') && db.objectStoreNames.contains('lists');
+          if (ready) {
+            resolve(db);
+            return;
+          }
           db.close();
-          reject(error);
-        }
+          if (Date.now() - started >= timeout) {
+            reject(Error('Banco de dados ainda não está pronto'));
+            return;
+          }
+          setTimeout(attempt, 250);
+        };
       };
+      attempt();
     });
 
-  const write = (fn) =>
-    new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB);
-      request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
-      request.onsuccess = () => {
-        const db = request.result;
-        let tx;
+  const readAll = async (store) => {
+    const db = await openReady();
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const finish = (fn, value) => {
+        if (settled) return;
+        settled = true;
         try {
-          tx = db.transaction(['catalogs', 'lists'], 'readwrite');
-          fn(tx);
-        } catch (error) {
-          try {
-            tx?.abort();
-          } catch {}
           db.close();
-          reject(error);
-          return;
-        }
+        } catch {}
+        fn(value);
+      };
+      try {
+        const query = db.transaction(store, 'readonly').objectStore(store).getAll();
+        query.onsuccess = () => finish(resolve, query.result || []);
+        query.onerror = () => finish(reject, query.error || Error('Falha na leitura'));
+      } catch (error) {
+        finish(reject, error);
+      }
+    });
+  };
+
+  const write = (fn) =>
+    new Promise(async (resolve, reject) => {
+      let db;
+      try {
+        db = await openReady();
+        const tx = db.transaction(['catalogs', 'lists'], 'readwrite');
+        fn(tx);
         tx.oncomplete = () => {
           db.close();
           resolve();
@@ -84,7 +96,12 @@
           db.close();
           reject(tx.error || Error('Transação cancelada'));
         };
-      };
+      } catch (error) {
+        try {
+          db?.close();
+        } catch {}
+        reject(error);
+      }
     });
 
   function cleanPayload(list, catalogs) {
@@ -379,7 +396,6 @@
   }
 
   function init() {
-    // O listener usa captura e é registrado antes do módulo legado de compartilhamento.
     bind();
     setTimeout(bind, 250);
     setTimeout(() => importCompressedHash(), 300);
