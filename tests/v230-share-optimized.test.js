@@ -5,6 +5,7 @@ const assert = require('assert');
 
 const source = fs.readFileSync('share-optimized-v230.js', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
+const runtime = fs.readFileSync('list-market-v230.js', 'utf8');
 
 assert(source.includes("CompressionStream('gzip')"), 'Compressão GZIP ausente');
 assert(source.includes("DecompressionStream('gzip')"), 'Descompressão GZIP ausente');
@@ -17,6 +18,7 @@ assert(
   sw.indexOf("'./share-optimized-v230.js'") < sw.indexOf("'./enhancements.js'"),
   'Otimizador deve carregar antes do compartilhamento legado'
 );
-assert(sw.includes('src="./share-optimized-v230.js"'), 'Otimizador ausente na injeção do SW');
+assert(runtime.indexOf("'./share-optimized-v230.js'") < runtime.indexOf("'./enhancements.js'"), 'Otimizador deve carregar antes do compartilhamento legado no runtime');
+assert(!sw.includes('src="./share-optimized-v230.js"'), 'Service Worker não deve injetar o otimizador');
 
 console.log('V2.3.0 optimized sharing contract: OK');
