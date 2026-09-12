@@ -25,10 +25,11 @@
        */
       .ml-search-multiline-wrap {
         display: flex;
-        flex: 1 1 360px;
+        flex: 0 1 420px;
+        width: min(100%, 420px);
         min-width: 0;
-        width: 100%;
-        align-self: stretch;
+        max-width: 420px;
+        align-self: flex-start;
       }
 
       .ml-search-multiline {
@@ -36,12 +37,14 @@
         flex: 1 1 auto;
         width: 100%;
         min-width: 0;
+        max-width: 100%;
+        min-height: 36px;
         box-sizing: border-box;
         border: 1px solid var(--border);
         border-radius: 13px;
-        padding: 12px 13px;
+        padding: 7px 10px;
         font: inherit;
-        font-size: 16px;
+        font-size: 14px;
         line-height: 1.35;
         background: var(--card);
         color: var(--text);
@@ -88,10 +91,9 @@
 
       @media (max-width: 620px) {
         .ml-search-multiline-wrap {
-          flex: 1 1 100%;
+          flex: 0 1 100%;
           width: 100%;
           max-width: 100%;
-          min-width: 0;
         }
 
         .ml-search-multiline {
@@ -99,7 +101,7 @@
           max-width: 100%;
           min-width: 0;
           min-height: 36px;
-          max-height: 112px;
+          max-height: 102px;
           padding: 7px 10px;
           font-size: 14px;
           line-height: 1.35;
@@ -160,7 +162,7 @@
       @media (max-width: 380px) {
         .ml-search-multiline {
           min-height: 34px;
-          max-height: 102px;
+          max-height: 92px;
           padding: 6px 9px;
           font-size: 13px;
         }
