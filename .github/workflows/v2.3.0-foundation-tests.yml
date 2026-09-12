@@ -27,3 +27,4 @@ jobs:
       - name: V3 UI contract
         run: node tests/v230-v3-ui.test.js
 # Validation trigger: keep foundation checks tied to the current main branch.
+# Second validation pass: execute against the formatted repository state.
