@@ -72,14 +72,18 @@
     if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION'].includes(parent.tagName)) return;
     const source = node.nodeValue;
     const keys = [...Object.keys(ICONS), INFO_KEY];
-    const pattern = new RegExp(keys.map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gu');
+    const pattern = new RegExp(
+      keys.map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'),
+      'gu'
+    );
     if (!pattern.test(source)) return;
     pattern.lastIndex = 0;
     const fragment = document.createDocumentFragment();
     let last = 0;
     let match;
     while ((match = pattern.exec(source))) {
-      if (match.index > last) fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
+      if (match.index > last)
+        fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
       fragment.appendChild(iconSpan(match[0]));
       last = match.index + match[0].length;
     }
@@ -105,13 +109,15 @@
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.TEXT_NODE) replaceTextNode(node);
-          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon')) scan(node);
+          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon'))
+            scan(node);
         });
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
 })();
