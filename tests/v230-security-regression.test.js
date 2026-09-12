@@ -23,16 +23,34 @@ assert(!app.includes('supabase'), 'não deve depender de Supabase');
 assert(share.includes('shared-list-v3'), 'compartilhamento deve suportar V3');
 assert(backup.includes('backupFormatVersion: 2'), 'backup deve usar formato V2');
 assert(backup.includes('inventory'), 'backup deve preservar inventário');
-assert(list.includes('Mercado antigo do item é preservado'), 'mercado legado deve ser explicitamente preservado');
-assert(!/delete\s+item\.marketName/.test(list), 'mercado antigo dos itens não deve ser apagado durante a atualização');
+assert(
+  list.includes('Mercado antigo do item é preservado'),
+  'mercado legado deve ser explicitamente preservado'
+);
+assert(
+  !/delete\s+item\.marketName/.test(list),
+  'mercado antigo dos itens não deve ser apagado durante a atualização'
+);
 
 assert(listMarket.includes('v230ListMarket'), 'mercado da lista deve possuir campo próprio');
 assert(listMarket.includes('marketName'), 'mercado da lista deve ser persistido em marketName');
 assert(listMarket.includes('MAX_MARKET'), 'mercado da lista deve possuir limite de tamanho');
-assert(!listMarketCore.includes('inventory'), 'implementação do mercado da lista não deve acessar estoque');
-assert(listMarket.includes('O mercado será exibido na lista e ficará associado a ela.'), 'mercado da lista deve ser apresentado como dado da própria lista');
-assert(listMarket.includes('FALLBACK_MARKETS'), 'seletor deve possuir fallback local para não depender da leitura do banco para aparecer');
-assert(!/delete\s+next\.marketName/.test(listMarketCore), 'mercado antigo dos itens não deve ser removido ao salvar o mercado da lista');
+assert(
+  !listMarketCore.includes('inventory'),
+  'implementação do mercado da lista não deve acessar estoque'
+);
+assert(
+  listMarket.includes('O mercado será exibido na lista e ficará associado a ela.'),
+  'mercado da lista deve ser apresentado como dado da própria lista'
+);
+assert(
+  listMarket.includes('FALLBACK_MARKETS'),
+  'seletor deve possuir fallback local para não depender da leitura do banco para aparecer'
+);
+assert(
+  !/delete\s+next\.marketName/.test(listMarketCore),
+  'mercado antigo dos itens não deve ser removido ao salvar o mercado da lista'
+);
 
 assert(sw.includes("'./v3-shell.js'"), 'Service Worker deve cachear o shell V3');
 assert(sw.includes("'./version-v230.js'"), 'Service Worker deve cachear o versionador');
