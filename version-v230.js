@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 'v2.3.0';
+  const VERSION = 'v2.3.1';
   const VERSION_PATTERN = /v\d+\.\d+\.\d+/gi;
 
   function updateVisibleVersion() {
@@ -29,7 +29,6 @@
   }
 
   function loadV3Shell() {
-    // O shell visual é carregado depois do núcleo para reutilizar sua navegação já ligada.
     if (document.querySelector('script[data-v3-shell]')) return;
     const script = document.createElement('script');
     script.src = './v3-shell.js';
