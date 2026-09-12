@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-0';
+const CACHE = 'minha-lista-v2-3-1';
 const CORE = [
   './',
   './index.html',
@@ -15,6 +15,8 @@ const CORE = [
   './db-migrations-v230.js',
   './version-v230.js',
   './v3-shell.js',
+  './v3-icons.js',
+  './v3-icon-force.js',
   './share-config.js',
   './manifest.json',
   './icon-192.png',
@@ -30,7 +32,7 @@ self.addEventListener('install', (event) =>
   )
 );
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', (event) =>
   event.waitUntil(
     caches
       .keys()
@@ -38,33 +40,35 @@ self.addEventListener('activate', (event) => {
         Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
       )
       .then(() => self.clients.claim())
-  );
-});
+  )
+);
 
-// O HTML é a fonte de composição da aplicação. O Service Worker cuida somente
-// de cache/offline; isso evita executar os mesmos módulos duas vezes.
+// A página nova precisa conseguir buscar os arquivos novos mesmo quando uma versão
+// anterior estava em cache. Em caso de offline, o cache continua sendo o fallback.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(event.request).then(
-      (cached) =>
-        cached ||
-        fetch(event.request)
-          .then((response) => {
-            if (response.ok) {
-              const copy = response.clone();
-              caches.open(CACHE).then((cache) => cache.put(event.request, copy));
-            }
-            return response;
-          })
-          .catch(() =>
-            event.request.mode === 'navigate' ? caches.match('./index.html') : Response.error()
-          )
-    )
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      })
+      .catch(() =>
+        caches.match(event.request).then(
+          (cached) =>
+            cached ||
+            (event.request.mode === 'navigate'
+              ? caches.match('./index.html')
+              : Response.error())
+        )
+      )
   );
 });
 
-// V2.3.0: cache-only service worker; runtime modules are bootstrapped by the page.
+// V2.3.1: rede de atualização online com fallback completo para uso offline.
