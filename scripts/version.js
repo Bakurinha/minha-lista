@@ -9,6 +9,7 @@ const LOCK = path.join(ROOT, 'package-lock.json');
 const SW = path.join(ROOT, 'sw.js');
 const VERSION_FILE = path.join(ROOT, 'version-v230.js');
 const MANIFEST = path.join(ROOT, 'manifest.json');
+const INDEX = path.join(ROOT, 'index.html');
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -51,6 +52,13 @@ function syncVersion(version) {
     `const VERSION = 'v${version}';`
   );
   fs.writeFileSync(VERSION_FILE, versionSource);
+
+  let index = fs.readFileSync(INDEX, 'utf8');
+  index = index.replace(
+    /(class="sub">Supermercado • offline • )v\d+\.\d+\.\d+(<\/div>)/,
+    `$1v${version}$2`
+  );
+  fs.writeFileSync(INDEX, index);
 
   const manifest = readJson(MANIFEST);
   manifest.app_version = version;
