@@ -4,8 +4,7 @@ compatibility_date = "2026-09-12"
 
 [[kv_namespaces]]
 binding = "SHARES"
-id = "COLOQUE_O_ID_DA_KV_AQUI"
-preview_id = "COLOQUE_O_ID_DA_KV_PREVIEW_AQUI"
+id = "e6a309f5b29c4c9eb9f9c840833ead1c"
 
 [vars]
 APP_ORIGIN = "https://bakurinha.github.io"
