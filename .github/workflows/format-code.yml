@@ -11,6 +11,7 @@ on:
       - '.prettierrc.json'
       - '.prettierignore'
       - 'package.json'
+      - '.github/workflows/format-code.yml'
   workflow_dispatch:
 
 permissions:
