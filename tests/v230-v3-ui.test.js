@@ -35,12 +35,22 @@ assert(
   sw.includes("'./v3-icon-force.js'"),
   'Normalização de ícones não está no cache do Service Worker'
 );
+assert(sw.includes("'./v3-compact-controls.js'"), 'Controles compactos não estão no cache do Service Worker');
 assert(sw.includes('minha-lista-v2-3-1'), 'Cache PWA não está na versão atual');
 assert(icons.includes('const ICONS'), 'Mapa principal de ícones ausente');
 assert(iconForce.includes('Extended_Pictographic'), 'Fallback pictográfico ausente');
 assert(compact.includes('#listSearch'), 'Pesquisa de listas não está compactada');
 assert(compact.includes('#inventoryView select'), 'Seleções do estoque não estão compactadas');
+assert(compact.includes('@media (max-width: 620px)'), 'Ajuste mobile ausente');
+assert(compact.includes('max-width: 220px'), 'Pesquisa ainda não tem limite compacto no mobile');
+assert(compact.includes('max-width: 180px'), 'Seleção ainda não tem limite compacto no mobile');
+assert(compact.includes('@media (max-width: 380px)'), 'Ajuste para telas pequenas ausente');
 assert(sharing.includes('openReady'), 'Compartilhamento não aguarda o banco ficar pronto');
+assert(
+  sharing.includes("indexedDB.databases") &&
+    sharing.includes("entry.name === DB"),
+  'Compartilhamento ainda pode criar um banco vazio antes do bootstrap principal'
+);
 assert(
   sharing.includes("objectStoreNames.contains('catalogs')") &&
     sharing.includes("objectStoreNames.contains('lists')"),
