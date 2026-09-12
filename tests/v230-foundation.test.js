@@ -3,7 +3,8 @@ const assert = require('assert');
 
 const app = fs.readFileSync('app.js', 'utf8');
 const inv = fs.readFileSync('inventory.js', 'utf8');
-const share = fs.readFileSync('share-optimized-v230.js', 'utf8');
+const share = fs.readFileSync('share-config.js', 'utf8');
+const shareCompat = fs.readFileSync('share-optimized-v230.js', 'utf8');
 const legacyShare = fs.readFileSync('enhancements.js', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
 
@@ -49,10 +50,13 @@ assert(productCount >= 1000, `reference products: ${productCount}`);
 assert(new Set(markets).size >= 50, `reference markets: ${new Set(markets).size}`);
 assert.match(share, /shared-list-v3(?:-compact)?/, 'sharing layer must support V3');
 assert(share.includes('shared-list-v2'), 'sharing layer must retain V2 compatibility');
+assert(share.includes('id="mlShareCode"'), 'sharing layer must expose code import');
+assert(share.includes('maxlength="12"'), 'sharing code must be 12 characters');
+assert(shareCompat.includes('__mlShareOptimizedLegacyDisabled = true'), 'compatibility shim must be disabled');
 assert(legacyShare.includes('__mlShareLegacyWaiting'), 'legacy sharing shim missing');
 assert(sw.includes('./backup-v230.js'), 'Service Worker must cache backup-v230.js');
 assert(sw.includes('./list-enhancements.js'), 'Service Worker must cache list-enhancements.js');
 assert(sw.includes('./list-market-v230.js'), 'Service Worker must cache list-market-v230.js');
 assert(/minha-lista-v2-3-\d+/.test(sw), 'Service Worker must use a V2.3.x cache');
 
-console.log('V2.3.0 foundation source invariants OK');
+console.log('V2.3.4 foundation source invariants OK');
