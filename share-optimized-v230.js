@@ -34,25 +34,48 @@
   const openReady = (timeout = 10000) =>
     new Promise((resolve, reject) => {
       const started = Date.now();
+      let lastError = null;
+
       const attempt = () => {
-        const request = indexedDB.open(DB);
-        request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
-        request.onsuccess = () => {
-          const db = request.result;
-          const ready =
-            db.objectStoreNames.contains('catalogs') && db.objectStoreNames.contains('lists');
-          if (ready) {
-            resolve(db);
-            return;
-          }
-          db.close();
-          if (Date.now() - started >= timeout) {
-            reject(Error('Banco de dados ainda não está pronto'));
-            return;
-          }
-          setTimeout(attempt, 250);
+        if (Date.now() - started >= timeout) {
+          reject(lastError || Error('Banco de dados ainda não está pronto'));
+          return;
+        }
+
+        const open = () => {
+          const request = indexedDB.open(DB);
+          request.onerror = () => {
+            lastError = request.error || Error('IndexedDB indisponível');
+            setTimeout(attempt, 250);
+          };
+          request.onsuccess = () => {
+            const db = request.result;
+            const ready =
+              db.objectStoreNames.contains('catalogs') && db.objectStoreNames.contains('lists');
+            if (ready) {
+              resolve(db);
+              return;
+            }
+            db.close();
+            lastError = Error('Banco de dados ainda não está pronto');
+            setTimeout(attempt, 250);
+          };
         };
+
+        // Evita criar um banco vazio no primeiro carregamento antes do bootstrap principal.
+        if (typeof indexedDB.databases === 'function') {
+          indexedDB
+            .databases()
+            .then((databases) => {
+              if (databases.some((entry) => entry.name === DB)) open();
+              else setTimeout(attempt, 250);
+            })
+            .catch(() => open());
+        } else {
+          open();
+        }
       };
+
       attempt();
     });
 
@@ -285,7 +308,7 @@
       const payload = await compressedDecode(encoded);
       if (
         !confirm(
-          `Importar a lista "${String(payload?.list?.name || 'Lista compartilhada').slice(0, 120)}"?\n\nEla será adicionada como uma nova lista.`
+          `Importar a lista \"${String(payload?.list?.name || 'Lista compartilhada').slice(0, 120)}\"?\n\nEla será adicionada como uma nova lista.`
         )
       )
         return true;
