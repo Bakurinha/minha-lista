@@ -4,6 +4,9 @@
  * A página continua usando indexedDB.open() pelo núcleo legado, mas a abertura
  * do MinhaListaDB passa primeiro pelo contrato oficial de migrações.
  * Nenhum outro banco do navegador é afetado.
+ *
+ * O Proxy intercepta somente `open()`; os demais membros da API nativa são
+ * encaminhados sem alteração. A ponte também é instalada no máximo uma vez.
  */
 (() => {
   'use strict';
@@ -22,6 +25,7 @@
       if (property === 'open') {
         return (name, version) => {
           const request = nativeOpen(name, version);
+          // Só o banco e a versão da aplicação usam a cadeia de migração V2.3.0.
           if (name === migrations.DB_NAME && version === migrations.LATEST) {
             request.addEventListener(
               'upgradeneeded',
@@ -39,6 +43,7 @@
     },
   });
 
+  // A referência global permanece compatível com o núcleo legado.
   window.indexedDB = facade;
   window.__mlDbOpenBridgeV230 = { DB_NAME: migrations.DB_NAME, LATEST: migrations.LATEST };
 })();
