@@ -31,11 +31,14 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
           request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
           request.onsuccess = () => resolve(request.result);
         });
-        if (db.objectStoreNames.contains('catalogs') && db.objectStoreNames.contains('lists')) return db;
+        if (db.objectStoreNames.contains('catalogs') && db.objectStoreNames.contains('lists'))
+          return db;
         db.close();
         lastError = Error('Banco de dados ainda não está pronto');
       } catch (error) {
-        try { db?.close(); } catch {}
+        try {
+          db?.close();
+        } catch {}
         lastError = error;
       }
       await sleep(200);
@@ -47,12 +50,23 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
     const db = await openReady();
     return new Promise((resolve, reject) => {
       const request = db.transaction(store, 'readonly').objectStore(store).getAll();
-      request.onsuccess = () => { db.close(); resolve(request.result || []); };
-      request.onerror = () => { db.close(); reject(request.error); };
+      request.onsuccess = () => {
+        db.close();
+        resolve(request.result || []);
+      };
+      request.onerror = () => {
+        db.close();
+        reject(request.error);
+      };
     });
   }
 
-  const norm = (value) => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('pt-BR');
+  const norm = (value) =>
+    String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLocaleLowerCase('pt-BR');
 
   function cleanPayload(list, catalogs) {
     const used = new Set((list.items || []).map((item) => item.mainItemId).filter(Boolean));
@@ -69,7 +83,9 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
           return copy;
         }),
       },
-      catalogs: catalogs.filter((catalog) => used.has(catalog.id)).map((catalog) => ({ ...catalog })),
+      catalogs: catalogs
+        .filter((catalog) => used.has(catalog.id))
+        .map((catalog) => ({ ...catalog })),
     };
   }
 
@@ -105,8 +121,15 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
 
   function showLink(list, link) {
     if (navigator.share) {
-      navigator.share({ title: `Minha Lista — ${list.name}`, text: `Lista compartilhada: ${list.name}`, url: link })
-        .catch((error) => { if (error?.name !== 'AbortError') showLinkModal(list, link); });
+      navigator
+        .share({
+          title: `Minha Lista — ${list.name}`,
+          text: `Lista compartilhada: ${list.name}`,
+          url: link,
+        })
+        .catch((error) => {
+          if (error?.name !== 'AbortError') showLinkModal(list, link);
+        });
       return;
     }
     showLinkModal(list, link);
@@ -119,7 +142,12 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
     document.body.appendChild(modal);
     modal.querySelector('[data-close]').onclick = () => closeModal(modal);
     modal.querySelector('[data-copy]').onclick = async () => {
-      try { await copy(link); notify('Link copiado.'); } catch { notify('Não foi possível copiar o link.'); }
+      try {
+        await copy(link);
+        notify('Link copiado.');
+      } catch {
+        notify('Não foi possível copiar o link.');
+      }
     };
   }
 
@@ -158,17 +186,22 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
     if (!button || button.dataset.mlShareConfigBound === '1') return;
     button.dataset.mlShareConfigBound = '1';
     button.type = 'button';
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      openShareChooser().catch((error) => {
-        console.error(error);
-        notify('Não foi possível abrir o compartilhamento.');
-      });
-    }, true);
+    button.addEventListener(
+      'click',
+      (event) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        openShareChooser().catch((error) => {
+          console.error(error);
+          notify('Não foi possível abrir o compartilhamento.');
+        });
+      },
+      true
+    );
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind, { once: true });
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', bind, { once: true });
   else bind();
   new MutationObserver(bind).observe(document.documentElement, { childList: true, subtree: true });
 })();
