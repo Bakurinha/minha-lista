@@ -28,9 +28,24 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', updateVisibleVersion, { once: true });
-  } else {
+  function loadV3Shell() {
+    // O shell visual é carregado depois do núcleo para reutilizar sua navegação já ligada.
+    if (document.querySelector('script[data-v3-shell]')) return;
+    const script = document.createElement('script');
+    script.src = './v3-shell.js';
+    script.defer = true;
+    script.dataset.v3Shell = '1';
+    document.head.appendChild(script);
+  }
+
+  function init() {
     updateVisibleVersion();
+    loadV3Shell();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
   }
 })();
