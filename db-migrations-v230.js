@@ -3,8 +3,6 @@
  *
  * Cada versão possui um passo explícito e idempotente. Os passos somente
  * criam stores ausentes: nunca apagam, limpam ou reescrevem dados existentes.
- * O fluxo legado de abertura do banco pode usar migrate() diretamente dentro
- * do evento onupgradeneeded.
  */
 (() => {
   'use strict';
@@ -12,7 +10,6 @@
   const DB_NAME = 'MinhaListaDB';
   const LATEST = 6;
 
-  // Histórico declarativo das stores introduzidas em cada versão do banco.
   const MIGRATIONS = Object.freeze({
     1: Object.freeze(['catalogs', 'lists', 'history', 'settings']),
     2: Object.freeze(['wishlist']),
@@ -22,7 +19,6 @@
     6: Object.freeze(['inventory'])
   });
 
-  // Todas as stores usam id, exceto settings, que usa key.
   const keyPath = (store) => (store === 'settings' ? 'key' : 'id');
 
   function ensureStore(db, store) {
@@ -33,7 +29,6 @@
     return false;
   }
 
-  // Um passo de migração é deliberadamente pequeno e idempotente.
   function applyVersion(db, version) {
     if (!Number.isInteger(version) || version < 1 || version > LATEST) {
       throw new RangeError(`Versão de migração inválida: ${version}`);
@@ -46,7 +41,6 @@
     return created;
   }
 
-  // Aplica todos os passos entre duas versões sem apagar nem reescrever dados.
   function migrate(db, oldVersion, newVersion = LATEST) {
     if (!Number.isInteger(oldVersion) || oldVersion < 0) {
       throw new TypeError('oldVersion inválida');
@@ -69,7 +63,6 @@
     return created;
   }
 
-  // Retorna somente as stores que seriam introduzidas no intervalo solicitado.
   function plan(oldVersion, newVersion = LATEST) {
     if (!Number.isInteger(oldVersion) || oldVersion < 0) {
       throw new TypeError('oldVersion inválida');
@@ -89,6 +82,33 @@
     );
   }
 
+  // Abre o banco usando a mesma cadeia incremental usada nos testes.
+  // O callback opcional recebe o IDBOpenDBRequest e pode complementar
+  // comportamentos de abertura sem duplicar a criação de stores.
+  function open(options = {}) {
+    const indexedDBApi = options.indexedDB || window.indexedDB;
+    const name = options.name || DB_NAME;
+    const version = options.version || LATEST;
+    if (!indexedDBApi || typeof indexedDBApi.open !== 'function') {
+      return Promise.reject(new Error('IndexedDB indisponível'));
+    }
+    return new Promise((resolve, reject) => {
+      const request = indexedDBApi.open(name, version);
+      request.onupgradeneeded = (event) => {
+        const db = request.result;
+        migrate(db, event.oldVersion, event.newVersion || version);
+        if (typeof options.onupgradeneeded === 'function') {
+          options.onupgradeneeded(event, db, request);
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || new Error('Falha ao abrir IndexedDB'));
+      request.onblocked = () => {
+        if (typeof options.onblocked === 'function') options.onblocked(request);
+      };
+    });
+  }
+
   window.__mlDbMigrationsV230 = {
     DB_NAME,
     LATEST,
@@ -97,6 +117,7 @@
     ensureStore,
     applyVersion,
     migrate,
-    plan
+    plan,
+    open
   };
 })();
