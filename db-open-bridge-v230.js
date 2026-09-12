@@ -106,4 +106,5 @@
 
   window.indexedDB = facade;
   window.__mlDbOpenBridgeV230 = { DB_NAME: migrations.DB_NAME, LATEST: migrations.LATEST };
+  // V2.3.4: the guard intentionally remains active for dynamically-created modals.
 })();
