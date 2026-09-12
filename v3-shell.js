@@ -119,14 +119,18 @@
       toggle.type = 'button';
       toggle.setAttribute('aria-label', 'Abrir menu');
       toggle.setAttribute('aria-expanded', 'false');
-      toggle.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        const open = !document.body.classList.contains('v3-menu-open');
-        document.body.classList.toggle('v3-menu-open', open);
-        toggle.setAttribute('aria-expanded', String(open));
-        toggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
-      }, true);
+      toggle.addEventListener(
+        'click',
+        (event) => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          const open = !document.body.classList.contains('v3-menu-open');
+          document.body.classList.toggle('v3-menu-open', open);
+          toggle.setAttribute('aria-expanded', String(open));
+          toggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+        },
+        true
+      );
       titleWrap.prepend(toggle);
     }
 
@@ -152,11 +156,16 @@
     const observer = new MutationObserver(() => syncNavButtons(navInner));
     observer.observe(navInner, { childList: true, subtree: true });
 
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeMenu(event);
-    }, true);
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key === 'Escape') closeMenu(event);
+      },
+      true
+    );
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
 })();
