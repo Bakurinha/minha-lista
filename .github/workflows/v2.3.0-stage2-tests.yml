@@ -17,6 +17,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install formatting dependency
+        run: npm install --ignore-scripts
+      - name: Formatting check
+        run: npm run format:check
       - name: Syntax checks
         run: |
           node --check app.js
