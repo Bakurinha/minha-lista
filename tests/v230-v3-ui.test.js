@@ -19,7 +19,10 @@ assert(shell.includes('ICONS'), 'Sistema visual de ícones ausente');
 assert(shell.includes('data-view'), 'Reutilização da navegação existente ausente');
 assert(sw.includes("'./v3-shell.js'"), 'Shell não está no cache do Service Worker');
 assert(runtime.includes("'./v3-shell.js'"), 'Shell não está no bootstrap do runtime');
-assert(runtime.includes('navigator.serviceWorker.register'), 'Service Worker não está registrado pelo runtime');
+assert(
+  runtime.includes('navigator.serviceWorker.register'),
+  'Service Worker não está registrado pelo runtime'
+);
 assert(version.includes("script.src = './v3-shell.js'"), 'Shell não está ligado ao versionador');
 
 console.log('V2.3.0/V3 UI contract: OK');
