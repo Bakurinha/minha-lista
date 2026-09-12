@@ -41,6 +41,7 @@ const payload = {
   },
   catalogs: [catalog],
 };
+
 function env() {
   const map = new Map();
   return {
@@ -55,26 +56,31 @@ function env() {
     },
   };
 }
+
 function req(url, init = {}) {
-  return new Request(url, { ...init, headers: { Origin: APP_ORIGIN, ...(init.headers || {}) } });
+  return new Request(url, {
+    ...init,
+    headers: { Origin: APP_ORIGIN, ...(init.headers || {}) },
+  });
 }
 
 test('OPTIONS retorna CORS somente para a origem da aplicação', async () => {
-  const e = env(),
-    r = await handleRequest(req('https://share.example/api/share', { method: 'OPTIONS' }), e);
+  const e = env();
+  const r = await handleRequest(req('https://share.example/api/share', { method: 'OPTIONS' }), e);
   assert.equal(r.status, 204);
   assert.equal(r.headers.get('Access-Control-Allow-Origin'), APP_ORIGIN);
 });
+
 test('POST cria compartilhamento com TTL e link', async () => {
-  const e = env(),
-    r = await handleRequest(
-      req('https://share.example/api/share', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }),
-      e
-    );
+  const e = env();
+  const r = await handleRequest(
+    req('https://share.example/api/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+    e
+  );
   assert.equal(r.status, 201);
   const data = await r.json();
   assert.match(data.id, new RegExp(`^[A-Za-z0-9_-]{${SHARE_ID_LENGTH}}$`));
@@ -83,6 +89,7 @@ test('POST cria compartilhamento com TTL e link', async () => {
   assert.equal(e.map.get(data.id).o.expirationTtl, 604800);
   assert.equal(data.url, `https://share.example/s/${data.id}`);
 });
+
 test('GET recupera compartilhamento', async () => {
   const e = env();
   e.map.set('a'.repeat(SHARE_ID_LENGTH), { v: JSON.stringify(payload) });
@@ -94,54 +101,56 @@ test('GET recupera compartilhamento', async () => {
   assert.equal((await r.json()).format, 'shared-list-v2');
   assert.equal(r.headers.get('Cache-Control'), 'no-store');
 });
+
 test('GET inexistente retorna 404', async () => {
-  const e = env(),
-    r = await handleRequest(
-      req(`https://share.example/api/share/${'b'.repeat(SHARE_ID_LENGTH)}`),
-      e
-    );
+  const e = env();
+  const r = await handleRequest(req(`https://share.example/api/share/${'b'.repeat(SHARE_ID_LENGTH)}`), e);
   assert.equal(r.status, 404);
 });
+
 test('GET /s/:id redireciona somente se existir', async () => {
-  const e = env(),
-    sid = 'c'.repeat(SHARE_ID_LENGTH);
+  const e = env();
+  const sid = 'c'.repeat(SHARE_ID_LENGTH);
   e.map.set(sid, { v: JSON.stringify(payload) });
   const r = await handleRequest(req(`https://share.example/s/${sid}`), e);
   assert.equal(r.status, 302);
   assert.equal(r.headers.get('Location'), `https://bakurinha.github.io/minha-lista/?shared=${sid}`);
 });
+
 test('origem externa é recusada', async () => {
-  const e = env(),
-    r = await handleRequest(
-      new Request('https://share.example/api/share', {
-        method: 'POST',
-        headers: { Origin: 'https://evil.example', 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }),
-      e
-    );
+  const e = env();
+  const r = await handleRequest(
+    new Request('https://share.example/api/share', {
+      method: 'POST',
+      headers: { Origin: 'https://evil.example', 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+    e
+  );
   assert.equal(r.status, 403);
   assert.equal(e.map.size, 0);
 });
+
 test('JSON inválido é recusado', async () => {
-  const e = env(),
-    r = await handleRequest(
-      req('https://share.example/api/share', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: '{',
-      }),
-      e
-    );
+  const e = env();
+  const r = await handleRequest(
+    req('https://share.example/api/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{',
+    }),
+    e
+  );
   assert.equal(r.status, 400);
   assert.equal(e.map.size, 0);
 });
+
 test('método não permitido não cria compartilhamento', async () => {
-  const e = env(),
-    r = await handleRequest(
-      req('https://share.example/api/share', { method: 'PUT', body: JSON.stringify(payload) }),
-      e
-    );
+  const e = env();
+  const r = await handleRequest(
+    req('https://share.example/api/share', { method: 'PUT', body: JSON.stringify(payload) }),
+    e
+  );
   assert.equal(r.status, 200);
   assert.equal(e.map.size, 0);
 });
