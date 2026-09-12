@@ -18,16 +18,20 @@ assert.match(
 );
 assert.match(
   inv,
-  /const\s+DB\s*=\s*['"]MinhaListaDB['"],[\s\S]*?VERSION\s*=\s*6,[\s\S]*?STORE\s*=\s*['"]inventory['"]/,
+  /const\s+DB\s*=\s*['"]MinhaListaDB['"][\s\S]*?VERSION\s*=\s*6,[\s\S]*?STORE\s*=\s*['"]inventory['"]/,
   'inventory module must target V6'
 );
-assert.match(inv, /const PRODUCTS\s*=\s*\[/, 'reference product seed missing');
-assert.match(inv, /const MARKET_NAMES\s*=\s*\[/, 'reference market seed missing');
+assert.match(inv, /const\s+PRODUCTS\s*=\s*\[/, 'reference product seed missing');
+assert.match(inv, /const\s+MARKET_NAMES\s*=\s*\[/, 'reference market seed missing');
 
-const productsExpr = inv.match(/const PRODUCTS\s*=\s*(\[[\s\S]*?\n\]);\nconst UNITS\s*=/)?.[1];
-const unitsExpr = inv.match(/const UNITS\s*=\s*(\{[\s\S]*?\});\nconst MARKET_NAMES\s*=/)?.[1];
+const productsExpr = inv.match(
+  /const\s+PRODUCTS\s*=\s*(\[[\s\S]*?\])\s*;\s*const\s+UNITS\s*=/
+)?.[1];
+const unitsExpr = inv.match(
+  /const\s+UNITS\s*=\s*(\{[\s\S]*?\})\s*;\s*const\s+MARKET_NAMES\s*=/
+)?.[1];
 const marketsExpr = inv.match(
-  /const MARKET_NAMES\s*=\s*(\[[\s\S]*?\]);\nfunction referenceSeed/
+  /const\s+MARKET_NAMES\s*=\s*(\[[\s\S]*?\])\s*;\s*function\s+referenceSeed/
 )?.[1];
 
 assert(productsExpr && unitsExpr && marketsExpr, 'reference seed structure changed');
