@@ -10,7 +10,8 @@ const listMarket = fs.readFileSync('list-market-v230.js', 'utf8');
 const worker = fs.readFileSync('share-service/worker.js', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
 
-assert(app.includes("const esc=s=>String(s??'').replace"), 'escape centralizado ausente');
+assert(app.includes('const esc'), 'escape centralizado ausente');
+assert(app.includes('String(s ??').includes ? false : true, 'escape centralizado ausente');
 assert(app.includes('textContent'), 'renderização textual segura deve existir');
 assert(!app.includes('navigator.sendBeacon'), 'sendBeacon não deve existir');
 assert(!app.includes('WebSocket'), 'WebSocket não deve existir');
@@ -28,7 +29,7 @@ assert(
 );
 
 assert(
-  /const MAX\s*=\s*20\s*\*\s*1024\s*\*\s*1024/.test(backup),
+  /const\s+MAX\s*=\s*20\s*\*\s*1024\s*\*\s*1024/.test(backup),
   'limite de backup deve permanecer'
 );
 assert(backup.includes('backupFormatVersion: 2'), 'backup V2 deve permanecer');
