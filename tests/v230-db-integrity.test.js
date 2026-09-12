@@ -8,7 +8,7 @@ const normalized = source.replace(/\s+/g, '');
 assert(
   normalized.includes("constSTORES=['catalogs','lists','history','wishlist','trash','settings','referenceProducts','referenceMarkets','inventory']")
 );
-assert(source.includes("constKEY_PATHS=Object.freeze({"));
+assert(normalized.includes("constKEY_PATHS=Object.freeze({"));
 assert(source.includes('objectStoreNames.contains(store)'));
 assert(source.includes('objectStore(store).keyPath'));
 assert(source.includes('!catalogs.has(item.mainItemId)'));
