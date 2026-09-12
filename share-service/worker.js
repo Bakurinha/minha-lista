@@ -38,8 +38,33 @@ function json(data, status = 200, origin = '') {
   return new Response(JSON.stringify(data), { status, headers: headers(origin) });
 }
 
+function forbidden() {
+  return new Response('Forbidden', {
+    status: 403,
+    headers: { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' },
+  });
+}
+
 function allowedOrigin(origin) {
   return !origin || origin === APP_ORIGIN;
+}
+
+function clientKey(request) {
+  // cf-connecting-ip is supplied by Cloudflare at the edge. The fallback keeps
+  // local development/tests deterministic without trusting arbitrary forwarded IPs.
+  return request.headers.get('CF-Connecting-IP') || 'anonymous';
+}
+
+async function enforceRateLimit(env, bindingName, key) {
+  const limiter = env[bindingName];
+  if (!limiter || typeof limiter.limit !== 'function') return true;
+  const result = await limiter.limit({ key });
+  return result.success;
+}
+
+async function rateLimitedResponse(env, bindingName, key, origin) {
+  const allowed = await enforceRateLimit(env, bindingName, key);
+  return allowed ? null : json({ error: 'rate-limit-exceeded' }, 429, origin);
 }
 
 function randomId() {
@@ -237,12 +262,9 @@ function redirectShare(id) {
 
 export async function handleRequest(request, env) {
   const u = new URL(request.url),
-    origin = request.headers.get('Origin') || '';
-  if (!allowedOrigin(origin))
-    return new Response('Forbidden', {
-      status: 403,
-      headers: { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' },
-    });
+    origin = request.headers.get('Origin') || '',
+    ip = clientKey(request);
+  if (!allowedOrigin(origin)) return forbidden();
   if (request.method === 'OPTIONS')
     return new Response(null, {
       status: 204,
@@ -251,19 +273,24 @@ export async function handleRequest(request, env) {
         ...(origin === APP_ORIGIN ? { 'Access-Control-Allow-Origin': APP_ORIGIN } : {}),
       },
     });
+
   if (u.pathname === '/api/share' && request.method === 'POST') {
-    if (origin !== APP_ORIGIN)
-      return new Response('Forbidden', {
-        status: 403,
-        headers: { 'X-Content-Type-Options': 'nosniff' },
-      });
+    if (origin !== APP_ORIGIN) return forbidden();
+    const limited = await rateLimitedResponse(env, 'SHARE_CREATE_LIMITER', ip, origin);
+    if (limited) return limited;
     return createShare(request, env, origin);
   }
+
   if (u.pathname.startsWith('/api/share/') && request.method === 'GET') {
-    if (origin && origin !== APP_ORIGIN) return new Response('Forbidden', { status: 403 });
+    if (origin && origin !== APP_ORIGIN) return forbidden();
+    const limited = await rateLimitedResponse(env, 'SHARE_READ_LIMITER', ip, origin);
+    if (limited) return limited;
     return getShare(u.pathname.slice('/api/share/'.length), env, origin);
   }
+
   if (u.pathname.startsWith('/s/') && request.method === 'GET') {
+    const limited = await rateLimitedResponse(env, 'SHARE_REDIRECT_LIMITER', ip, '');
+    if (limited) return limited;
     const id = u.pathname.slice(3);
     if (!ID_RE.test(id) || !(await env.SHARES.get(id)))
       return new Response('Compartilhamento não encontrado ou expirado.', {
