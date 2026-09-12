@@ -96,7 +96,10 @@ test('GET recupera compartilhamento', async () => {
 });
 test('GET inexistente retorna 404', async () => {
   const e = env(),
-    r = await handleRequest(req(`https://share.example/api/share/${'b'.repeat(SHARE_ID_LENGTH)}`), e);
+    r = await handleRequest(
+      req(`https://share.example/api/share/${'b'.repeat(SHARE_ID_LENGTH)}`),
+      e
+    );
   assert.equal(r.status, 404);
 });
 test('GET /s/:id redireciona somente se existir', async () => {
