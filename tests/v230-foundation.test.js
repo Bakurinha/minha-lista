@@ -52,7 +52,10 @@ assert.match(share, /shared-list-v3(?:-compact)?/, 'sharing layer must support V
 assert(share.includes('shared-list-v2'), 'sharing layer must retain V2 compatibility');
 assert(share.includes('id="mlShareCode"'), 'sharing layer must expose code import');
 assert(share.includes('maxlength="12"'), 'sharing code must be 12 characters');
-assert(shareCompat.includes('__mlShareOptimizedLegacyDisabled = true'), 'compatibility shim must be disabled');
+assert(
+  shareCompat.includes('__mlShareOptimizedLegacyDisabled = true'),
+  'compatibility shim must be disabled'
+);
 assert(legacyShare.includes('__mlShareLegacyWaiting'), 'legacy sharing shim missing');
 assert(sw.includes('./backup-v230.js'), 'Service Worker must cache backup-v230.js');
 assert(sw.includes('./list-enhancements.js'), 'Service Worker must cache list-enhancements.js');
