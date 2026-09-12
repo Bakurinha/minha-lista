@@ -12,6 +12,7 @@ const iconForce = fs.readFileSync('v3-icon-force.js', 'utf8');
 const compact = fs.readFileSync('v3-compact-controls.js', 'utf8');
 const sharing = fs.readFileSync('share-config.js', 'utf8');
 const shareCompat = fs.readFileSync('share-optimized-v230.js', 'utf8');
+const index = fs.readFileSync('index.html', 'utf8');
 
 assert(shell.includes('v3-menu-toggle'), 'Botão hamburger ausente');
 assert(shell.includes('v3-menu-overlay'), 'Overlay do menu ausente');
@@ -43,9 +44,19 @@ assert(
 assert(sw.includes('minha-lista-v2-3-7'), 'Cache PWA não está na versão atual');
 assert(icons.includes('const ICONS'), 'Mapa principal de ícones ausente');
 assert(iconForce.includes('Extended_Pictographic'), 'Fallback pictográfico ausente');
-assert(compact.includes('#listSearch'), 'Pesquisa de listas não está configurada');
-assert(compact.includes('#catalogSearch'), 'Pesquisa de catálogo não está configurada');
-assert(compact.includes('#wishSearch'), 'Pesquisa de desejos não está configurada');
+
+const searchIds = [
+  'listSearch',
+  'catalogSearch',
+  'wishSearch',
+  'invSearch',
+  'historyItemSearch',
+  'historyMarketSearch',
+];
+for (const id of searchIds) {
+  assert(compact.includes(`'${id}'`), `Pesquisa ${id} não está configurada`);
+  assert(index.includes(`id=\\"${id}\\"`), `Campo ${id} não está presente na interface`);
+}
 assert(compact.includes('MAX_SEARCH_LINES = 5'), 'Pesquisa não possui limite vertical responsivo');
 assert(compact.includes('autosizeSearch'), 'Pesquisa não possui autosize por linha');
 assert(
@@ -57,6 +68,16 @@ assert(
   compact.includes('overflow-wrap: anywhere'),
   'Pesquisa não trata textos longos responsivamente'
 );
+assert(compact.includes('ml-search-multiline-wrap'), 'Pesquisa não possui contêiner responsivo');
+assert(compact.includes('ml-search-multiline'), 'Pesquisa não possui campo visual multilinha');
+assert(
+  compact.includes('ml-search-original-hidden'),
+  'Input original não é preservado de forma compatível'
+);
+assert(
+  compact.includes("dispatchEvent(new Event('input', { bubbles: true }))"),
+  'Pesquisa visual não sincroniza com o listener original'
+);
 assert(compact.includes('@media (max-width: 620px)'), 'Ajuste mobile ausente');
 assert(compact.includes('max-height: 112px'), 'Limite vertical mobile ausente');
 assert(
@@ -64,6 +85,7 @@ assert(
   'Seleção ainda não possui limite responsivo no mobile'
 );
 assert(compact.includes('@media (max-width: 380px)'), 'Ajuste para telas pequenas ausente');
+
 assert(sharing.includes('openReady'), 'Compartilhamento não aguarda o banco ficar pronto');
 assert(
   sharing.includes('while (Date.now() - started < timeout)'),
