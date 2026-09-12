@@ -23,20 +23,20 @@
         return (name, version) => {
           const request = nativeOpen(name, version);
           if (name === migrations.DB_NAME && version === migrations.LATEST) {
-            request.addEventListener('upgradeneeded', (event) => {
-              migrations.migrate(
-                request.result,
-                event.oldVersion,
-                event.newVersion || version
-              );
-            }, { once: true });
+            request.addEventListener(
+              'upgradeneeded',
+              (event) => {
+                migrations.migrate(request.result, event.oldVersion, event.newVersion || version);
+              },
+              { once: true }
+            );
           }
           return request;
         };
       }
       const value = Reflect.get(target, property, target);
       return typeof value === 'function' ? value.bind(target) : value;
-    }
+    },
   });
 
   window.indexedDB = facade;

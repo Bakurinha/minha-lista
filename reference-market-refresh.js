@@ -61,16 +61,14 @@
     'São Luiz',
     'Davo Supermercados',
     'Confiança Supermercados',
-    'Koch Hipermercado'
+    'Koch Hipermercado',
   ];
 
   function open() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB, VERSION);
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(
-        request.error || Error('IndexedDB indisponível')
-      );
+      request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
     });
   }
 
@@ -80,10 +78,7 @@
     for (let attempt = 0; attempt < 20; attempt += 1) {
       try {
         const db = await open();
-        const request = db
-          .transaction('settings', 'readonly')
-          .objectStore('settings')
-          .get(MARKER);
+        const request = db.transaction('settings', 'readonly').objectStore('settings').get(MARKER);
 
         const version = await new Promise((resolve, reject) => {
           request.onsuccess = () => resolve(request.result?.value || 0);
@@ -97,10 +92,7 @@
         }
 
         await new Promise((resolve, reject) => {
-          const transaction = db.transaction(
-            ['referenceMarkets', 'settings'],
-            'readwrite'
-          );
+          const transaction = db.transaction(['referenceMarkets', 'settings'], 'readwrite');
           const markets = transaction.objectStore(STORE);
           const settings = transaction.objectStore('settings');
 
@@ -111,12 +103,9 @@
           settings.put({ key: MARKER, value: 3 });
 
           transaction.oncomplete = resolve;
-          transaction.onerror = () => reject(
-            transaction.error || Error('Falha ao atualizar mercados')
-          );
-          transaction.onabort = () => reject(
-            transaction.error || Error('Atualização cancelada')
-          );
+          transaction.onerror = () =>
+            reject(transaction.error || Error('Falha ao atualizar mercados'));
+          transaction.onabort = () => reject(transaction.error || Error('Atualização cancelada'));
         });
 
         db.close();

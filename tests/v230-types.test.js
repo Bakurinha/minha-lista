@@ -16,12 +16,12 @@ for (const name of [
   'SettingItem',
   'BackupV2',
   'SharedListV3',
-  'DbMigrationContract'
+  'DbMigrationContract',
 ]) {
   assert(source.includes(`interface ${name}`), `Contrato ausente: ${name}`);
 }
 
-assert(source.includes("export type ISODate"), 'ISODate ausente');
+assert(source.includes('export type ISODate'), 'ISODate ausente');
 assert(source.includes("export type TrashType = 'catalog' | 'list'"), 'TrashType inválido');
 assert(source.includes('packageQuantity?: number'), 'packageQuantity ausente');
 assert(source.includes('packageUnit?: string'), 'packageUnit ausente');

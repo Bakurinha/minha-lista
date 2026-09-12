@@ -12,14 +12,14 @@ const sw = fs.readFileSync('sw.js', 'utf8');
 const context = {
   document: {
     readyState: 'loading',
-    addEventListener() {}
+    addEventListener() {},
   },
   window: null,
   console,
   alert() {},
   URL,
   Blob,
-  TextEncoder
+  TextEncoder,
 };
 
 context.window = context;
@@ -35,8 +35,8 @@ function baseBackup(version = 2) {
     catalogs: [
       {
         id: 'c1',
-        name: 'Arroz'
-      }
+        name: 'Arroz',
+      },
     ],
     lists: [
       {
@@ -55,18 +55,18 @@ function baseBackup(version = 2) {
             packageQuantity: 5,
             packageUnit: 'kg',
             marketName: '',
-            comments: ''
-          }
-        ]
-      }
+            comments: '',
+          },
+        ],
+      },
     ],
     history: [],
     wishlist: [],
     trash: [],
     settings: {
-      theme: 'system'
+      theme: 'system',
     },
-    inventory: []
+    inventory: [],
   };
 }
 
@@ -74,16 +74,8 @@ const v2 = baseBackup(2);
 assert.equal(validate(v2), null, 'V2 backup must validate');
 
 const migrated = migrate(baseBackup(1));
-assert.equal(
-  Array.isArray(migrated.inventory),
-  true,
-  'V1 migration must create inventory array'
-);
-assert.equal(
-  migrated.inventory.length,
-  0,
-  'V1 migration must create empty inventory'
-);
+assert.equal(Array.isArray(migrated.inventory), true, 'V1 migration must create inventory array');
+assert.equal(migrated.inventory.length, 0, 'V1 migration must create empty inventory');
 
 const validInventory = {
   id: 's1',
@@ -96,19 +88,15 @@ const validInventory = {
   packageUnit: 'un',
   marketName: 'Atakarejo',
   location: 'A1',
-  notes: ''
+  notes: '',
 };
 
-assert.equal(
-  validate({ ...v2, inventory: [validInventory] }),
-  null,
-  'V2 inventory must validate'
-);
+assert.equal(validate({ ...v2, inventory: [validInventory] }), null, 'V2 inventory must validate');
 assert.equal(
   validate({
     ...v2,
     referenceProducts: [{ id: 'rp', name: 'private' }],
-    referenceMarkets: [{ id: 'rm', name: 'private' }]
+    referenceMarkets: [{ id: 'rm', name: 'private' }],
   }),
   null,
   'reference fields must not affect import validation'
@@ -116,7 +104,7 @@ assert.equal(
 assert.notEqual(
   validate({
     ...v2,
-    inventory: [{ ...validInventory, mainItemId: 'missing' }]
+    inventory: [{ ...validInventory, mainItemId: 'missing' }],
   }),
   null,
   'invalid inventory reference must fail'
@@ -129,9 +117,9 @@ assert.notEqual(
         id: 'l1',
         name: 'Compra',
         date: '2026-02-31',
-        items: []
-      }
-    ]
+        items: [],
+      },
+    ],
   }),
   null,
   'impossible list date must fail'
@@ -157,8 +145,7 @@ assert(
   'V3 sharing must exclude inventory/stock'
 );
 assert(
-  share.includes('shared-list-v2') &&
-    share.includes('shared-list-v3'),
+  share.includes('shared-list-v2') && share.includes('shared-list-v3'),
   'V2/V3 import compatibility must remain'
 );
 assert(
@@ -181,13 +168,9 @@ assert(
   app.includes("const esc=s=>String(s??'').replace"),
   'app must retain centralized HTML escaping'
 );
+assert(worker.includes('if(!iid||!mainItemId'), 'worker must reject missing item IDs');
 assert(
-  worker.includes('if(!iid||!mainItemId'),
-  'worker must reject missing item IDs'
-);
-assert(
-  worker.includes('MAX_BODY_BYTES') &&
-    worker.includes('expirationTtl:SHARE_TTL'),
+  worker.includes('MAX_BODY_BYTES') && worker.includes('expirationTtl:SHARE_TTL'),
   'worker payload limit and TTL must remain enforced'
 );
 

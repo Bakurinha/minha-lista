@@ -1,29 +1,383 @@
-(()=>{
-'use strict';
-const DB='MinhaListaDB',MAX=12000,SHARE_ID_RE=/^[A-Za-z0-9_-]{36}$/;
-const API=String(globalThis.MINHA_LISTA_SHARE_API||'').trim().replace(/\/+$/,'');
-const norm=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLocaleLowerCase('pt-BR');
-const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-const notify=m=>{const t=document.getElementById('toast');if(t){t.textContent=m;t.classList.add('show');clearTimeout(t._mlt);t._mlt=setTimeout(()=>t.classList.remove('show'),2800)}else alert(m)};
-const copy=async text=>{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);return}const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px';document.body.appendChild(ta);ta.select();if(!document.execCommand('copy'))throw Error('copy-failed');ta.remove()};
-const readStore=store=>new Promise((resolve,reject)=>{const r=indexedDB.open(DB);r.onerror=()=>reject(r.error||Error('IndexedDB indisponível'));r.onsuccess=()=>{const d=r.result;try{const t=d.transaction(store,'readonly'),q=t.objectStore(store).getAll();q.onsuccess=()=>resolve(q.result||[]);q.onerror=()=>reject(q.error||Error('Falha na leitura'));t.oncomplete=()=>d.close();t.onerror=()=>{d.close();reject(t.error||Error('Falha IndexedDB'))}}catch(e){d.close();reject(e)}}});
-const write=(stores,fn)=>new Promise((resolve,reject)=>{const r=indexedDB.open(DB);r.onerror=()=>reject(r.error||Error('IndexedDB indisponível'));r.onsuccess=()=>{const d=r.result;let t;try{t=d.transaction(stores,'readwrite');fn(t)}catch(e){try{t?.abort()}catch{}d.close();reject(e);return}t.oncomplete=()=>{d.close();resolve()};t.onerror=()=>{d.close();reject(t.error||Error('Falha IndexedDB'))};t.onabort=()=>{d.close();reject(t.error||Error('Transação cancelada'))}}});
-function encode(obj){const b=new TextEncoder().encode(JSON.stringify(obj));let s='';for(let i=0;i<b.length;i+=32768)s+=String.fromCharCode(...b.subarray(i,i+32768));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
-function decode(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const b=atob(s),bytes=Uint8Array.from(b,c=>c.charCodeAt(0));return JSON.parse(new TextDecoder().decode(bytes))}
-async function payload(list){const cats=await readStore('catalogs'),used=new Set((list.items||[]).map(i=>i.mainItemId).filter(Boolean));return{app:'Minha Lista de Supermercado',format:'shared-list-v3',version:3,list:{...list,items:(list.items||[]).map(i=>{const x={...i};delete x.inventory;delete x.stock;return x})},catalogs:cats.filter(c=>used.has(c.id)).map(c=>({...c}))}}
-async function selectedList(){const s=document.getElementById('shareSelect');return s?.value?(await readStore('lists')).find(l=>l.id===s.value)||null:null}
-async function remoteShare(p){if(!API)throw Error('share-api-disabled');const r=await fetch(`${API}/api/share`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p),cache:'no-store'});if(!r.ok)throw Error(`share-http-${r.status}`);const d=await r.json();if(!d?.url||!SHARE_ID_RE.test(String(d.id||'')))throw Error('share-response');return d.url}
-const localLink=p=>{const x=location.href.split('#')[0]+'#lista='+encode(p);if(x.length>MAX)throw Error('local-link-too-large');return x};
-async function makeShareLink(l){const p=await payload(l);if(API)try{return{url:await remoteShare(p),remote:true}}catch(e){console.warn('Compartilhamento remoto indisponível:',e)}return{url:localLink(p),remote:false}}
-function showShareModal(lists){const m=document.getElementById('modal'),title=document.getElementById('modalTitle'),body=document.getElementById('modalBody');if(!m||!title||!body)return notify('Interface de compartilhamento indisponível.');const active=lists.filter(l=>!l.archived);if(!active.length)return notify('Crie uma lista primeiro.');body.innerHTML=`<div class="field"><label for="shareSelect">Escolha a lista</label><select id="shareSelect" class="select">${active.map(l=>`<option value="${String(l.id).replace(/"/g,'&quot;')}">${String(l.name||'Lista').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}</option>`).join('')}</select></div><div class="subcard" style="margin-top:10px"><strong>🔗 Compartilhar</strong><div class="hint">O estoque nunca é incluído no compartilhamento.</div><div class="row stack-mobile" style="margin-top:9px"><button class="btn primary" type="button" id="mlCopyLink">🔗 Copiar link</button><button class="btn ghost" type="button" id="mlShareLink">📱 Compartilhar</button><button class="btn ghost" type="button" id="mlCopyData">📋 Copiar dados</button><button class="btn ghost" type="button" id="mlExport">📁 Exportar JSON</button></div></div>`;title.textContent='Compartilhar lista';m.classList.add('show');document.body.style.overflow='hidden';document.getElementById('mlCopyLink').onclick=copyLink;document.getElementById('mlShareLink').onclick=shareLink;document.getElementById('mlCopyData').onclick=copyData;document.getElementById('mlExport').onclick=exportList}
-async function copyLink(){const l=await selectedList();if(!l)return notify('Selecione uma lista.');try{const x=await makeShareLink(l);await copy(x.url);notify(x.remote?'🔗 Link curto copiado.':'🔗 Link local copiado.')}catch(e){notify(e.message==='local-link-too-large'?'Lista grande demais para link. Use Exportar JSON.':'Não foi possível gerar o link.')}}
-async function shareLink(){const l=await selectedList();if(!l)return notify('Selecione uma lista.');try{const x=await makeShareLink(l);if(typeof navigator.share==='function'){await navigator.share({title:l.name||'Lista de supermercado',text:'Lista de supermercado',url:x.url});return}await copy(x.url);notify(x.remote?'🔗 Link curto copiado.':'🔗 Link local copiado.')}catch(e){if(e.name!=='AbortError')notify('Não foi possível compartilhar.')}}
-async function copyData(){const l=await selectedList();if(!l)return notify('Selecione uma lista.');try{await copy(JSON.stringify(await payload(l),null,2));notify('📋 Dados copiados.')}catch{notify('Não foi possível copiar os dados.')}}
-async function exportList(){const l=await selectedList();if(!l)return notify('Selecione uma lista.');try{const p=await payload(l),u=URL.createObjectURL(new Blob([JSON.stringify(p,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=u;a.download='lista-'+(norm(l.name).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)||'lista')+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);notify('📁 Arquivo JSON criado.')}catch{notify('Não foi possível exportar a lista.')}}
-async function importPayload(p){if(!p||p.app!=='Minha Lista de Supermercado'||!['shared-list-v2','shared-list-v3'].includes(p.format)||![2,3].includes(p.version)||!p.list||!Array.isArray(p.list.items)||!Array.isArray(p.catalogs))throw Error('incompatible');if(!confirm(`Importar a lista "${String(p.list.name||'Lista compartilhada').slice(0,120)}"?\n\nEla será adicionada como uma nova lista.`))return false;const cats=await readStore('catalogs'),byKey=new Map(cats.map(c=>[`${norm(c.name)}|${norm(c.brand)}|${norm(c.unit||'un')}`,c.id])),map=new Map(),newCats=[];for(const c of p.catalogs){if(!c||typeof c.name!=='string'||!c.name.trim())throw Error('invalid-catalog');const key=`${norm(c.name)}|${norm(c.brand)}|${norm(c.unit||'un')}`,existing=byKey.get(key);if(existing)map.set(c.id,existing);else{const nc={...c,id:uid(),name:String(c.name).slice(0,120),brand:String(c.brand||'').slice(0,120),unit:String(c.unit||'un').slice(0,60),category:String(c.category||'Outros').slice(0,80),notes:String(c.notes||'').slice(0,2000),ean:String(c.ean||'').replace(/\D/g,'').slice(0,14)};newCats.push(nc);map.set(c.id,nc.id)}}const items=p.list.items.map(i=>{const mainItemId=map.get(i.mainItemId);if(!mainItemId)throw Error('invalid-reference');const x={...i,id:uid(),mainItemId};delete x.inventory;delete x.stock;return x}),nl={...p.list,id:uid(),name:String(p.list.name||'Lista compartilhada').slice(0,120),createdAt:new Date().toISOString(),archived:false,items};await write(['catalogs','lists'],t=>{for(const c of newCats)t.objectStore('catalogs').put(c);t.objectStore('lists').put(nl)});return true}
-async function importRemote(){const sp=new URLSearchParams(location.search),sid=sp.get('shared');if(!sid)return false;history.replaceState(null,'',location.pathname);if(!SHARE_ID_RE.test(sid))return notify('Link de compartilhamento inválido.'),true;if(!API)return notify('Compartilhamento remoto ainda não está configurado nesta versão.'),true;try{const r=await fetch(`${API}/api/share/${sid}`,{cache:'no-store'});if(!r.ok)throw Error(r.status===404?'not-found':'remote-failed');const p=await r.json();if(await importPayload(p))location.reload()}catch(e){console.error(e);notify(e.message==='not-found'?'Compartilhamento expirado ou não encontrado.':'Não foi possível obter a lista compartilhada.')}return true}
-async function importHash(){if(!location.hash.startsWith('#lista='))return;const raw=location.hash.slice(7);history.replaceState(null,'',location.pathname+location.search);let p;try{if(raw.length>MAX)throw Error();p=decode(raw)}catch{return notify('Link inválido ou corrompido.')}try{const changed=await importPayload(p);if(changed)location.reload()}catch(e){console.error(e);notify(e.message==='incompatible'?'Link incompatível.':'Não foi possível importar a lista. Nenhum dado foi alterado.')}}
-function bindShareButton(){const b=document.getElementById('shareListBtn');if(!b||b.dataset.mlShareFixed)return;b.dataset.mlShareFixed='1';b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();readStore('lists').then(showShareModal).catch(()=>notify('Não foi possível abrir o compartilhamento.'))},{capture:true})}
-function init(){bindShareButton();setTimeout(bindShareButton,500);setTimeout(async()=>{if(!(await importRemote()))await importHash()},250)}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+(() => {
+  'use strict';
+  const DB = 'MinhaListaDB',
+    MAX = 12000,
+    SHARE_ID_RE = /^[A-Za-z0-9_-]{36}$/;
+  const API = String(globalThis.MINHA_LISTA_SHARE_API || '')
+    .trim()
+    .replace(/\/+$/, '');
+  const norm = (s) =>
+    String(s ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLocaleLowerCase('pt-BR');
+  const uid = () =>
+    globalThis.crypto?.randomUUID?.() ||
+    `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  const notify = (m) => {
+    const t = document.getElementById('toast');
+    if (t) {
+      t.textContent = m;
+      t.classList.add('show');
+      clearTimeout(t._mlt);
+      t._mlt = setTimeout(() => t.classList.remove('show'), 2800);
+    } else alert(m);
+  };
+  const copy = async (text) => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    if (!document.execCommand('copy')) throw Error('copy-failed');
+    ta.remove();
+  };
+  const readStore = (store) =>
+    new Promise((resolve, reject) => {
+      const r = indexedDB.open(DB);
+      r.onerror = () => reject(r.error || Error('IndexedDB indisponível'));
+      r.onsuccess = () => {
+        const d = r.result;
+        try {
+          const t = d.transaction(store, 'readonly'),
+            q = t.objectStore(store).getAll();
+          q.onsuccess = () => resolve(q.result || []);
+          q.onerror = () => reject(q.error || Error('Falha na leitura'));
+          t.oncomplete = () => d.close();
+          t.onerror = () => {
+            d.close();
+            reject(t.error || Error('Falha IndexedDB'));
+          };
+        } catch (e) {
+          d.close();
+          reject(e);
+        }
+      };
+    });
+  const write = (stores, fn) =>
+    new Promise((resolve, reject) => {
+      const r = indexedDB.open(DB);
+      r.onerror = () => reject(r.error || Error('IndexedDB indisponível'));
+      r.onsuccess = () => {
+        const d = r.result;
+        let t;
+        try {
+          t = d.transaction(stores, 'readwrite');
+          fn(t);
+        } catch (e) {
+          try {
+            t?.abort();
+          } catch {}
+          d.close();
+          reject(e);
+          return;
+        }
+        t.oncomplete = () => {
+          d.close();
+          resolve();
+        };
+        t.onerror = () => {
+          d.close();
+          reject(t.error || Error('Falha IndexedDB'));
+        };
+        t.onabort = () => {
+          d.close();
+          reject(t.error || Error('Transação cancelada'));
+        };
+      };
+    });
+  function encode(obj) {
+    const b = new TextEncoder().encode(JSON.stringify(obj));
+    let s = '';
+    for (let i = 0; i < b.length; i += 32768) s += String.fromCharCode(...b.subarray(i, i + 32768));
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function decode(s) {
+    s = s.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    const b = atob(s),
+      bytes = Uint8Array.from(b, (c) => c.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+  async function payload(list) {
+    const cats = await readStore('catalogs'),
+      used = new Set((list.items || []).map((i) => i.mainItemId).filter(Boolean));
+    return {
+      app: 'Minha Lista de Supermercado',
+      format: 'shared-list-v3',
+      version: 3,
+      list: {
+        ...list,
+        items: (list.items || []).map((i) => {
+          const x = { ...i };
+          delete x.inventory;
+          delete x.stock;
+          return x;
+        }),
+      },
+      catalogs: cats.filter((c) => used.has(c.id)).map((c) => ({ ...c })),
+    };
+  }
+  async function selectedList() {
+    const s = document.getElementById('shareSelect');
+    return s?.value ? (await readStore('lists')).find((l) => l.id === s.value) || null : null;
+  }
+  async function remoteShare(p) {
+    if (!API) throw Error('share-api-disabled');
+    const r = await fetch(`${API}/api/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(p),
+      cache: 'no-store',
+    });
+    if (!r.ok) throw Error(`share-http-${r.status}`);
+    const d = await r.json();
+    if (!d?.url || !SHARE_ID_RE.test(String(d.id || ''))) throw Error('share-response');
+    return d.url;
+  }
+  const localLink = (p) => {
+    const x = location.href.split('#')[0] + '#lista=' + encode(p);
+    if (x.length > MAX) throw Error('local-link-too-large');
+    return x;
+  };
+  async function makeShareLink(l) {
+    const p = await payload(l);
+    if (API)
+      try {
+        return { url: await remoteShare(p), remote: true };
+      } catch (e) {
+        console.warn('Compartilhamento remoto indisponível:', e);
+      }
+    return { url: localLink(p), remote: false };
+  }
+  function showShareModal(lists) {
+    const m = document.getElementById('modal'),
+      title = document.getElementById('modalTitle'),
+      body = document.getElementById('modalBody');
+    if (!m || !title || !body) return notify('Interface de compartilhamento indisponível.');
+    const active = lists.filter((l) => !l.archived);
+    if (!active.length) return notify('Crie uma lista primeiro.');
+    body.innerHTML = `<div class="field"><label for="shareSelect">Escolha a lista</label><select id="shareSelect" class="select">${active.map((l) => `<option value="${String(l.id).replace(/"/g, '&quot;')}">${String(l.name || 'Lista').replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])}</option>`).join('')}</select></div><div class="subcard" style="margin-top:10px"><strong>🔗 Compartilhar</strong><div class="hint">O estoque nunca é incluído no compartilhamento.</div><div class="row stack-mobile" style="margin-top:9px"><button class="btn primary" type="button" id="mlCopyLink">🔗 Copiar link</button><button class="btn ghost" type="button" id="mlShareLink">📱 Compartilhar</button><button class="btn ghost" type="button" id="mlCopyData">📋 Copiar dados</button><button class="btn ghost" type="button" id="mlExport">📁 Exportar JSON</button></div></div>`;
+    title.textContent = 'Compartilhar lista';
+    m.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('mlCopyLink').onclick = copyLink;
+    document.getElementById('mlShareLink').onclick = shareLink;
+    document.getElementById('mlCopyData').onclick = copyData;
+    document.getElementById('mlExport').onclick = exportList;
+  }
+  async function copyLink() {
+    const l = await selectedList();
+    if (!l) return notify('Selecione uma lista.');
+    try {
+      const x = await makeShareLink(l);
+      await copy(x.url);
+      notify(x.remote ? '🔗 Link curto copiado.' : '🔗 Link local copiado.');
+    } catch (e) {
+      notify(
+        e.message === 'local-link-too-large'
+          ? 'Lista grande demais para link. Use Exportar JSON.'
+          : 'Não foi possível gerar o link.'
+      );
+    }
+  }
+  async function shareLink() {
+    const l = await selectedList();
+    if (!l) return notify('Selecione uma lista.');
+    try {
+      const x = await makeShareLink(l);
+      if (typeof navigator.share === 'function') {
+        await navigator.share({
+          title: l.name || 'Lista de supermercado',
+          text: 'Lista de supermercado',
+          url: x.url,
+        });
+        return;
+      }
+      await copy(x.url);
+      notify(x.remote ? '🔗 Link curto copiado.' : '🔗 Link local copiado.');
+    } catch (e) {
+      if (e.name !== 'AbortError') notify('Não foi possível compartilhar.');
+    }
+  }
+  async function copyData() {
+    const l = await selectedList();
+    if (!l) return notify('Selecione uma lista.');
+    try {
+      await copy(JSON.stringify(await payload(l), null, 2));
+      notify('📋 Dados copiados.');
+    } catch {
+      notify('Não foi possível copiar os dados.');
+    }
+  }
+  async function exportList() {
+    const l = await selectedList();
+    if (!l) return notify('Selecione uma lista.');
+    try {
+      const p = await payload(l),
+        u = URL.createObjectURL(
+          new Blob([JSON.stringify(p, null, 2)], { type: 'application/json' })
+        ),
+        a = document.createElement('a');
+      a.href = u;
+      a.download =
+        'lista-' +
+        (norm(l.name)
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '')
+          .slice(0, 60) || 'lista') +
+        '.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 1000);
+      notify('📁 Arquivo JSON criado.');
+    } catch {
+      notify('Não foi possível exportar a lista.');
+    }
+  }
+  async function importPayload(p) {
+    if (
+      !p ||
+      p.app !== 'Minha Lista de Supermercado' ||
+      !['shared-list-v2', 'shared-list-v3'].includes(p.format) ||
+      ![2, 3].includes(p.version) ||
+      !p.list ||
+      !Array.isArray(p.list.items) ||
+      !Array.isArray(p.catalogs)
+    )
+      throw Error('incompatible');
+    if (
+      !confirm(
+        `Importar a lista "${String(p.list.name || 'Lista compartilhada').slice(0, 120)}"?\n\nEla será adicionada como uma nova lista.`
+      )
+    )
+      return false;
+    const cats = await readStore('catalogs'),
+      byKey = new Map(
+        cats.map((c) => [`${norm(c.name)}|${norm(c.brand)}|${norm(c.unit || 'un')}`, c.id])
+      ),
+      map = new Map(),
+      newCats = [];
+    for (const c of p.catalogs) {
+      if (!c || typeof c.name !== 'string' || !c.name.trim()) throw Error('invalid-catalog');
+      const key = `${norm(c.name)}|${norm(c.brand)}|${norm(c.unit || 'un')}`,
+        existing = byKey.get(key);
+      if (existing) map.set(c.id, existing);
+      else {
+        const nc = {
+          ...c,
+          id: uid(),
+          name: String(c.name).slice(0, 120),
+          brand: String(c.brand || '').slice(0, 120),
+          unit: String(c.unit || 'un').slice(0, 60),
+          category: String(c.category || 'Outros').slice(0, 80),
+          notes: String(c.notes || '').slice(0, 2000),
+          ean: String(c.ean || '')
+            .replace(/\D/g, '')
+            .slice(0, 14),
+        };
+        newCats.push(nc);
+        map.set(c.id, nc.id);
+      }
+    }
+    const items = p.list.items.map((i) => {
+        const mainItemId = map.get(i.mainItemId);
+        if (!mainItemId) throw Error('invalid-reference');
+        const x = { ...i, id: uid(), mainItemId };
+        delete x.inventory;
+        delete x.stock;
+        return x;
+      }),
+      nl = {
+        ...p.list,
+        id: uid(),
+        name: String(p.list.name || 'Lista compartilhada').slice(0, 120),
+        createdAt: new Date().toISOString(),
+        archived: false,
+        items,
+      };
+    await write(['catalogs', 'lists'], (t) => {
+      for (const c of newCats) t.objectStore('catalogs').put(c);
+      t.objectStore('lists').put(nl);
+    });
+    return true;
+  }
+  async function importRemote() {
+    const sp = new URLSearchParams(location.search),
+      sid = sp.get('shared');
+    if (!sid) return false;
+    history.replaceState(null, '', location.pathname);
+    if (!SHARE_ID_RE.test(sid)) return (notify('Link de compartilhamento inválido.'), true);
+    if (!API)
+      return (notify('Compartilhamento remoto ainda não está configurado nesta versão.'), true);
+    try {
+      const r = await fetch(`${API}/api/share/${sid}`, { cache: 'no-store' });
+      if (!r.ok) throw Error(r.status === 404 ? 'not-found' : 'remote-failed');
+      const p = await r.json();
+      if (await importPayload(p)) location.reload();
+    } catch (e) {
+      console.error(e);
+      notify(
+        e.message === 'not-found'
+          ? 'Compartilhamento expirado ou não encontrado.'
+          : 'Não foi possível obter a lista compartilhada.'
+      );
+    }
+    return true;
+  }
+  async function importHash() {
+    if (!location.hash.startsWith('#lista=')) return;
+    const raw = location.hash.slice(7);
+    history.replaceState(null, '', location.pathname + location.search);
+    let p;
+    try {
+      if (raw.length > MAX) throw Error();
+      p = decode(raw);
+    } catch {
+      return notify('Link inválido ou corrompido.');
+    }
+    try {
+      const changed = await importPayload(p);
+      if (changed) location.reload();
+    } catch (e) {
+      console.error(e);
+      notify(
+        e.message === 'incompatible'
+          ? 'Link incompatível.'
+          : 'Não foi possível importar a lista. Nenhum dado foi alterado.'
+      );
+    }
+  }
+  function bindShareButton() {
+    const b = document.getElementById('shareListBtn');
+    if (!b || b.dataset.mlShareFixed) return;
+    b.dataset.mlShareFixed = '1';
+    b.addEventListener(
+      'click',
+      (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        readStore('lists')
+          .then(showShareModal)
+          .catch(() => notify('Não foi possível abrir o compartilhamento.'));
+      },
+      { capture: true }
+    );
+  }
+  function init() {
+    bindShareButton();
+    setTimeout(bindShareButton, 500);
+    setTimeout(async () => {
+      if (!(await importRemote())) await importHash();
+    }, 250);
+  }
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
 })();

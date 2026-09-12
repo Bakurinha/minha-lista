@@ -3,23 +3,26 @@
 
   const DB = 'MinhaListaDB';
 
-  const open = () => new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-  });
+  const open = () =>
+    new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
 
-  const all = (db, store) => new Promise((resolve, reject) => {
-    const request = db.transaction(store, 'readonly').objectStore(store).getAll();
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error);
-  });
+  const all = (db, store) =>
+    new Promise((resolve, reject) => {
+      const request = db.transaction(store, 'readonly').objectStore(store).getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
 
-  const put = async (db, store, value) => new Promise((resolve, reject) => {
-    const request = db.transaction(store, 'readwrite').objectStore(store).put(value);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  const put = async (db, store, value) =>
+    new Promise((resolve, reject) => {
+      const request = db.transaction(store, 'readwrite').objectStore(store).put(value);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
 
   const field = (id, label, type = 'text') =>
     `<div class="field"><label for="${id}">${label}</label><input class="input" id="${id}" name="${id}" type="${type}" ${type === 'number' ? 'min="0" step="any"' : ''}></div>`;
@@ -44,7 +47,7 @@
   const values = () => ({
     packageQuantity: document.getElementById('v230PackageQuantity')?.value ?? '',
     packageUnit: document.getElementById('v230PackageUnit')?.value ?? '',
-    expiryDate: document.getElementById('v230ExpiryDate')?.value ?? ''
+    expiryDate: document.getElementById('v230ExpiryDate')?.value ?? '',
   });
 
   async function snapshot() {

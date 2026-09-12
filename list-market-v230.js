@@ -10,39 +10,69 @@
   const HYDRATED_MARKER = 'data-v230-list-market-hydrated';
   const MAX_MARKET = 160;
   const FALLBACK_MARKETS = [
-    'Atakarejo', 'Atacadão', 'Assaí Atacadista', 'Hiperideal', 'RedeMix',
-    'Mercantil Rodrigues', 'Mix Bahia', 'Novo Mix', 'Mix Mateus', 'GBarbosa',
-    'Carrefour', "Sam's Club", 'Centro Sul', 'Mercantil de Brotas',
-    'Mercado Popular', 'Mercado Central', 'Mercado da Sete Portas', 'Mercado do Bairro'
+    'Atakarejo',
+    'Atacadão',
+    'Assaí Atacadista',
+    'Hiperideal',
+    'RedeMix',
+    'Mercantil Rodrigues',
+    'Mix Bahia',
+    'Novo Mix',
+    'Mix Mateus',
+    'GBarbosa',
+    'Carrefour',
+    "Sam's Club",
+    'Centro Sul',
+    'Mercantil de Brotas',
+    'Mercado Popular',
+    'Mercado Central',
+    'Mercado da Sete Portas',
+    'Mercado do Bairro',
   ];
   const snapshots = new WeakMap();
 
-  const esc = (value) => String(value ?? '').replace(/[&<>\"']/g, (char) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'
-  })[char]);
+  const esc = (value) =>
+    String(value ?? '').replace(
+      /[&<>\"']/g,
+      (char) =>
+        ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '\"': '&quot;',
+          "'": '&#39;',
+        })[char]
+    );
 
-  const open = () => new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB);
-    request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
-    request.onsuccess = () => resolve(request.result);
-  });
+  const open = () =>
+    new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB);
+      request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
+      request.onsuccess = () => resolve(request.result);
+    });
 
-  const readAll = (db, store) => new Promise((resolve, reject) => {
-    if (!db.objectStoreNames.contains(store)) return resolve([]);
-    const request = db.transaction(store, 'readonly').objectStore(store).getAll();
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error || Error(`Falha ao ler ${store}`));
-  });
+  const readAll = (db, store) =>
+    new Promise((resolve, reject) => {
+      if (!db.objectStoreNames.contains(store)) return resolve([]);
+      const request = db.transaction(store, 'readonly').objectStore(store).getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error || Error(`Falha ao ler ${store}`));
+    });
 
-  const putList = (db, list) => new Promise((resolve, reject) => {
-    const request = db.transaction(STORE, 'readwrite').objectStore(STORE).put(list);
-    request.onsuccess = resolve;
-    request.onerror = () => reject(request.error || Error('Falha ao salvar mercado da lista'));
-  });
+  const putList = (db, list) =>
+    new Promise((resolve, reject) => {
+      const request = db.transaction(STORE, 'readwrite').objectStore(STORE).put(list);
+      request.onsuccess = resolve;
+      request.onerror = () => reject(request.error || Error('Falha ao salvar mercado da lista'));
+    });
 
   async function snapshotLists() {
     const db = await open();
-    try { return await readAll(db, STORE); } finally { db.close(); }
+    try {
+      return await readAll(db, STORE);
+    } finally {
+      db.close();
+    }
   }
 
   function listForm() {
@@ -86,15 +116,26 @@
         const name = document.getElementById('lfName')?.value?.trim() || '';
         const date = document.getElementById('lfDate')?.value || '';
         const matching = lists
-          .filter((list) => (!listId || list.id === listId) && (!name || list.name === name) && (!date || (list.date || '') === date))
-          .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')));
+          .filter(
+            (list) =>
+              (!listId || list.id === listId) &&
+              (!name || list.name === name) &&
+              (!date || (list.date || '') === date)
+          )
+          .sort((a, b) =>
+            String(b.updatedAt || b.createdAt || '').localeCompare(
+              String(a.updatedAt || a.createdAt || '')
+            )
+          );
         const current = matching[0]?.marketName || '';
         const names = [
           ...markets.map((market) => market?.name),
           ...FALLBACK_MARKETS,
-          ...(current ? [current] : [])
+          ...(current ? [current] : []),
         ];
-        const unique = [...new Set(names.map((value) => String(value || '').trim()).filter(Boolean))];
+        const unique = [
+          ...new Set(names.map((value) => String(value || '').trim()).filter(Boolean)),
+        ];
         select.innerHTML = `<option value="">Sem mercado definido</option>${unique.map((nameValue) => `<option value="${esc(nameValue)}"${nameValue === current ? ' selected' : ''}>${esc(nameValue)}</option>`).join('')}`;
         select.value = current || '';
         field.setAttribute(HYDRATED_MARKER, '1');
@@ -109,7 +150,9 @@
 
   async function saveMarket(listId, market) {
     if (!listId) return null;
-    const value = String(market || '').trim().slice(0, MAX_MARKET);
+    const value = String(market || '')
+      .trim()
+      .slice(0, MAX_MARKET);
     const db = await open();
     try {
       const lists = await readAll(db, STORE);
@@ -139,7 +182,11 @@
       const candidates = [...created, ...changed]
         .filter((list) => !name || list.name === name)
         .filter((list) => !date || (list.date || '') === date);
-      const target = candidates.sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')))[0];
+      const target = candidates.sort((a, b) =>
+        String(b.updatedAt || b.createdAt || '').localeCompare(
+          String(a.updatedAt || a.createdAt || '')
+        )
+      )[0];
       if (target) return saveMarket(target.id, market);
     }
     return null;
@@ -148,7 +195,11 @@
   async function bind(form) {
     if (!form || form.dataset.v230MarketBound === '1') return;
     form.dataset.v230MarketBound = '1';
-    try { snapshots.set(form, await snapshotLists()); } catch (error) { console.error(error); }
+    try {
+      snapshots.set(form, await snapshotLists());
+    } catch (error) {
+      console.error(error);
+    }
 
     form.addEventListener('submit', async () => {
       try {
@@ -220,6 +271,7 @@
     });
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
 })();

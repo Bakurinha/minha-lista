@@ -17,84 +17,73 @@
     }
   };
 
-  const open = () => new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB);
-    request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
-    request.onsuccess = () => resolve(request.result);
-  });
+  const open = () =>
+    new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB);
+      request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
+      request.onsuccess = () => resolve(request.result);
+    });
 
-  const all = (db, store) => new Promise((resolve, reject) => {
-    const request = db.transaction(store, 'readonly').objectStore(store).getAll();
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error || Error('Falha IndexedDB'));
-  });
+  const all = (db, store) =>
+    new Promise((resolve, reject) => {
+      const request = db.transaction(store, 'readonly').objectStore(store).getAll();
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error || Error('Falha IndexedDB'));
+    });
 
-  const tx = (db, stores, fn) => new Promise((resolve, reject) => {
-    let transaction;
+  const tx = (db, stores, fn) =>
+    new Promise((resolve, reject) => {
+      let transaction;
 
-    try {
-      transaction = db.transaction(stores, 'readwrite');
-      fn(transaction);
-    } catch (error) {
       try {
-        transaction?.abort();
-      } catch {}
-      reject(error);
-      return;
-    }
+        transaction = db.transaction(stores, 'readwrite');
+        fn(transaction);
+      } catch (error) {
+        try {
+          transaction?.abort();
+        } catch {}
+        reject(error);
+        return;
+      }
 
-    transaction.oncomplete = resolve;
-    transaction.onerror = () => reject(transaction.error || Error('Falha IndexedDB'));
-    transaction.onabort = () => reject(transaction.error || Error('Transação cancelada'));
-  });
+      transaction.oncomplete = resolve;
+      transaction.onerror = () => reject(transaction.error || Error('Falha IndexedDB'));
+      transaction.onabort = () => reject(transaction.error || Error('Transação cancelada'));
+    });
 
-  const validDate = (value) => (
+  const validDate = (value) =>
     value == null ||
     value === '' ||
-    (/^\d{4}-\d{2}-\d{2}$/.test(String(value)) && (() => {
-      const [year, month, day] = String(value).split('-').map(Number);
-      const date = new Date(Date.UTC(year, month - 1, day));
-      return (
-        date.getUTCFullYear() === year &&
-        date.getUTCMonth() === month - 1 &&
-        date.getUTCDate() === day
-      );
-    })())
-  );
+    (/^\d{4}-\d{2}-\d{2}$/.test(String(value)) &&
+      (() => {
+        const [year, month, day] = String(value).split('-').map(Number);
+        const date = new Date(Date.UTC(year, month - 1, day));
+        return (
+          date.getUTCFullYear() === year &&
+          date.getUTCMonth() === month - 1 &&
+          date.getUTCDate() === day
+        );
+      })());
 
-  const id = (value) => (
-    typeof value === 'string' && value.length >= 1 && value.length <= 200
-  );
+  const id = (value) => typeof value === 'string' && value.length >= 1 && value.length <= 200;
 
-  const optionalNum = (value, max = 1000000) => (
+  const optionalNum = (value, max = 1000000) =>
     value == null ||
     value === '' ||
-    (
-      typeof value === 'number' &&
-      Number.isFinite(value) &&
-      value >= 0 &&
-      value <= max
-    )
-  );
+    (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max);
 
-  const cleanSettings = (settings) => Object.fromEntries(
-    Object.entries(settings || {})
-      .filter(([key]) => !['referenceDataVersion', 'referenceSeedV230'].includes(key))
-  );
+  const cleanSettings = (settings) =>
+    Object.fromEntries(
+      Object.entries(settings || {}).filter(
+        ([key]) => !['referenceDataVersion', 'referenceSeedV230'].includes(key)
+      )
+    );
 
   async function snapshot() {
     const db = await open();
 
     try {
-      const stores = [
-        'catalogs',
-        'lists',
-        'history',
-        'wishlist',
-        'trash',
-        'settings',
-        'inventory'
-      ];
+      const stores = ['catalogs', 'lists', 'history', 'wishlist', 'trash', 'settings', 'inventory'];
       const rows = await Promise.all(stores.map((store) => all(db, store)));
       const [catalogs, lists, history, wishlist, trash, settings, inventory] = rows;
 
@@ -109,9 +98,7 @@
         wishlist,
         trash,
         inventory,
-        settings: cleanSettings(
-          Object.fromEntries(settings.map((item) => [item.key, item.value]))
-        )
+        settings: cleanSettings(Object.fromEntries(settings.map((item) => [item.key, item.value]))),
       };
     } finally {
       db.close();
@@ -138,11 +125,10 @@
       history: raw.history,
       wishlist: Array.isArray(raw.wishlist) ? raw.wishlist : [],
       trash: Array.isArray(raw.trash) ? raw.trash : [],
-      settings: (
-        raw.settings &&
-        typeof raw.settings === 'object' &&
-        !Array.isArray(raw.settings)
-      ) ? raw.settings : {}
+      settings:
+        raw.settings && typeof raw.settings === 'object' && !Array.isArray(raw.settings)
+          ? raw.settings
+          : {},
     };
 
     data.catalogs = data.catalogs.map((catalog) => ({
@@ -150,7 +136,7 @@
       brand: String(catalog.brand || ''),
       unit: String(catalog.unit || 'un'),
       category: String(catalog.category || 'Outros'),
-      notes: String(catalog.notes || '')
+      notes: String(catalog.notes || ''),
     }));
 
     data.lists = data.lists.map((list) => ({
@@ -158,14 +144,16 @@
       purchaseType: list.purchaseType === 'virtual' ? 'virtual' : 'local',
       comments: String(list.comments || ''),
       archived: !!list.archived,
-      items: Array.isArray(list.items) ? list.items.map((item) => ({
-        ...item,
-        quantity: item.quantity == null ? null : item.quantity,
-        value: item.value == null ? null : item.value,
-        date: item.date || null,
-        marketName: String(item.marketName || ''),
-        comments: String(item.comments || '')
-      })) : []
+      items: Array.isArray(list.items)
+        ? list.items.map((item) => ({
+            ...item,
+            quantity: item.quantity == null ? null : item.quantity,
+            value: item.value == null ? null : item.value,
+            date: item.date || null,
+            marketName: String(item.marketName || ''),
+            comments: String(item.comments || ''),
+          }))
+        : [],
     }));
 
     data.history = data.history.map((item) => ({
@@ -175,7 +163,7 @@
       brand: String(item.brand || ''),
       unit: String(item.unit || ''),
       marketName: String(item.marketName || ''),
-      origin: String(item.origin || 'legacy-backup')
+      origin: String(item.origin || 'legacy-backup'),
     }));
 
     return data;
@@ -325,7 +313,7 @@
         ...normalized,
         backupFormatVersion: 2,
         schemaVersion: 6,
-        inventory: []
+        inventory: [],
       };
     }
 
@@ -334,7 +322,7 @@
         ...data,
         backupFormatVersion: 2,
         schemaVersion: 6,
-        inventory: Array.isArray(data.inventory) ? data.inventory : []
+        inventory: Array.isArray(data.inventory) ? data.inventory : [],
       };
     }
 
@@ -342,9 +330,7 @@
   };
 
   const download = (name, text) => {
-    const url = URL.createObjectURL(
-      new Blob([text], { type: 'application/json' })
-    );
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = name;
@@ -383,9 +369,11 @@
     const error = validate(data);
     if (error) return toast(error);
 
-    if (!confirm(
-      'ATENÇÃO\n\nA importação substituirá os dados pessoais atuais, incluindo o estoque.\n\nContinuar?'
-    )) {
+    if (
+      !confirm(
+        'ATENÇÃO\n\nA importação substituirá os dados pessoais atuais, incluindo o estoque.\n\nContinuar?'
+      )
+    ) {
       return false;
     }
 
@@ -393,17 +381,10 @@
     const db = await open();
 
     try {
-      const internal = (await all(db, 'settings'))
-        .filter((item) => ['referenceDataVersion', 'referenceSeedV230'].includes(item.key));
-      const stores = [
-        'catalogs',
-        'lists',
-        'history',
-        'wishlist',
-        'trash',
-        'settings',
-        'inventory'
-      ];
+      const internal = (await all(db, 'settings')).filter((item) =>
+        ['referenceDataVersion', 'referenceSeedV230'].includes(item.key)
+      );
+      const stores = ['catalogs', 'lists', 'history', 'wishlist', 'trash', 'settings', 'inventory'];
 
       await tx(db, stores, (transaction) => {
         for (const store of stores) transaction.objectStore(store).clear();
@@ -439,21 +420,29 @@
 
     if (button && !button.dataset.v230Backup) {
       button.dataset.v230Backup = '1';
-      button.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        exportV2();
-      }, { capture: true });
+      button.addEventListener(
+        'click',
+        (event) => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          exportV2();
+        },
+        { capture: true }
+      );
     }
 
     if (input && !input.dataset.v230Backup) {
       input.dataset.v230Backup = '1';
-      input.addEventListener('change', (event) => {
-        event.stopImmediatePropagation();
-        const file = event.target.files?.[0];
-        if (file) importV2(file);
-        event.target.value = '';
-      }, { capture: true });
+      input.addEventListener(
+        'change',
+        (event) => {
+          event.stopImmediatePropagation();
+          const file = event.target.files?.[0];
+          if (file) importV2(file);
+          event.target.value = '';
+        },
+        { capture: true }
+      );
     }
   }
 
@@ -461,7 +450,7 @@
     bind();
     new MutationObserver(bind).observe(document.body, {
       subtree: true,
-      childList: true
+      childList: true,
     });
   }
 
@@ -475,6 +464,6 @@
     validate,
     migrate,
     snapshot,
-    normalizeLegacyBackup
+    normalizeLegacyBackup,
   };
 })();

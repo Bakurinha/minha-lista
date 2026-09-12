@@ -16,7 +16,7 @@
     3: Object.freeze(['trash']),
     4: Object.freeze(['referenceProducts', 'referenceMarkets']),
     5: Object.freeze([]),
-    6: Object.freeze(['inventory'])
+    6: Object.freeze(['inventory']),
   });
 
   const keyPath = (store) => (store === 'settings' ? 'key' : 'id');
@@ -53,11 +53,7 @@
     }
 
     let created = 0;
-    for (
-      let version = Math.max(1, oldVersion + 1);
-      version <= newVersion;
-      version += 1
-    ) {
+    for (let version = Math.max(1, oldVersion + 1); version <= newVersion; version += 1) {
       created += applyVersion(db, version);
     }
     return created;
@@ -75,9 +71,8 @@
     }
 
     return Object.freeze(
-      Array.from(
-        { length: newVersion - Math.max(0, oldVersion) },
-        (_, index) => Math.max(1, oldVersion + 1 + index)
+      Array.from({ length: newVersion - Math.max(0, oldVersion) }, (_, index) =>
+        Math.max(1, oldVersion + 1 + index)
       ).flatMap((version) => MIGRATIONS[version] || [])
     );
   }
@@ -118,6 +113,6 @@
     applyVersion,
     migrate,
     plan,
-    open
+    open,
   };
 })();

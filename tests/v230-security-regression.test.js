@@ -39,7 +39,7 @@ assert(
   'estoque deve manter validade e estoque mínimo'
 );
 assert(
-  (list.includes('f.isConnected') || list.includes('form.isConnected')),
+  list.includes('f.isConnected') || list.includes('form.isConnected'),
   'formulário inválido não pode aplicar patch posterior'
 );
 assert(
@@ -59,17 +59,17 @@ assert(
   listMarket.includes('O mercado será exibido na lista e ficará associado a ela.'),
   'mercado da lista deve ser apresentado como dado da própria lista'
 );
-assert(listMarket.includes('FALLBACK_MARKETS'), 'seletor deve possuir fallback local para não depender da leitura do banco para aparecer');
+assert(
+  listMarket.includes('FALLBACK_MARKETS'),
+  'seletor deve possuir fallback local para não depender da leitura do banco para aparecer'
+);
 assert(
   !/delete\s+next\.marketName/.test(listMarket),
   'mercado antigo dos itens não deve ser removido ao salvar o mercado da lista'
 );
 
 assert(worker.includes('MAX_BODY_BYTES'), 'Worker deve limitar corpo recebido');
-assert(
-  /expirationTtl\s*:\s*SHARE_TTL/.test(worker),
-  'Worker deve aplicar TTL'
-);
+assert(/expirationTtl\s*:\s*SHARE_TTL/.test(worker), 'Worker deve aplicar TTL');
 assert(worker.includes('ID_RE'), 'ID do compartilhamento deve ter formato restrito');
 assert(worker.includes('APP_ORIGIN'), 'CORS deve ficar restrito à origem do aplicativo');
 assert(worker.includes('expiryDate'), 'Worker deve validar validade do V3');

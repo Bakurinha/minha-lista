@@ -19,7 +19,7 @@
     'settings',
     'referenceProducts',
     'referenceMarkets',
-    'inventory'
+    'inventory',
   ];
   const KEY_PATHS = Object.freeze({
     catalogs: 'id',
@@ -30,56 +30,58 @@
     settings: 'key',
     referenceProducts: 'id',
     referenceMarkets: 'id',
-    inventory: 'id'
+    inventory: 'id',
   });
 
   const $ = (id) => document.getElementById(id);
 
-  const all = (db, store) => new Promise((resolve, reject) => {
-    let request;
-    try {
-      request = db.transaction(store, 'readonly').objectStore(store).getAll();
-    } catch (error) {
-      reject(error);
-      return;
-    }
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error || Error('Falha IndexedDB'));
-  });
+  const all = (db, store) =>
+    new Promise((resolve, reject) => {
+      let request;
+      try {
+        request = db.transaction(store, 'readonly').objectStore(store).getAll();
+      } catch (error) {
+        reject(error);
+        return;
+      }
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error || Error('Falha IndexedDB'));
+    });
 
-  const open = () => new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
-  });
+  const open = () =>
+    new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
+    });
 
-  const validId = (value) => (
-    typeof value === 'string' && value.trim().length >= 1 && value.length <= 200
-  );
+  const validId = (value) =>
+    typeof value === 'string' && value.trim().length >= 1 && value.length <= 200;
 
-  const validString = (value, required = false) => (
-    typeof value === 'string' && (!required || value.trim().length > 0)
-  );
+  const validString = (value, required = false) =>
+    typeof value === 'string' && (!required || value.trim().length > 0);
 
-  const validNumber = (value, max = 1000000000) => (
-    value == null || value === '' || (
-      typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max
-    )
-  );
+  const validNumber = (value, max = 1000000000) =>
+    value == null ||
+    value === '' ||
+    (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max);
 
   const validDate = (value) => {
     if (value == null || value === '') return true;
     if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
     const [year, month, day] = value.split('-').map(Number);
     const date = new Date(Date.UTC(year, month - 1, day));
-    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+    return (
+      date.getUTCFullYear() === year &&
+      date.getUTCMonth() === month - 1 &&
+      date.getUTCDate() === day
+    );
   };
 
-  const validEan = (value) => (
-    value == null || value === '' || (
-      typeof value === 'string' && /^(?:\d{8}|\d{12,14})$/.test(value.replace(/\D/g, ''))
-    )
-  );
+  const validEan = (value) =>
+    value == null ||
+    value === '' ||
+    (typeof value === 'string' && /^(?:\d{8}|\d{12,14})$/.test(value.replace(/\D/g, '')));
 
   function duplicateIds(records) {
     const seen = new Set();
@@ -101,10 +103,13 @@
     const add = (store, message) => issues.push(`${store}: ${message}`);
     const catalogs = new Set();
     const globalIds = new Set();
-    const counts = Object.fromEntries(STORES.map((store) => [store, Array.isArray(rows[store]) ? rows[store].length : 0]));
+    const counts = Object.fromEntries(
+      STORES.map((store) => [store, Array.isArray(rows[store]) ? rows[store].length : 0])
+    );
 
     for (const store of STORES) {
-      if (!Array.isArray(rows[store])) add('database', `snapshot ausente ou inválido para ${store}`);
+      if (!Array.isArray(rows[store]))
+        add('database', `snapshot ausente ou inválido para ${store}`);
     }
 
     for (const store of STORES) {
@@ -113,40 +118,75 @@
     }
 
     for (const catalog of rows.catalogs || []) {
-      if (!catalog || !validId(catalog.id) || !validString(catalog.name, true) || !validEan(catalog.ean)) {
+      if (
+        !catalog ||
+        !validId(catalog.id) ||
+        !validString(catalog.name, true) ||
+        !validEan(catalog.ean)
+      ) {
         add('catalogs', `registro inválido (${catalog?.id || 'sem ID'})`);
         continue;
       }
       if (catalogs.has(catalog.id)) add('catalogs', `ID duplicado (${catalog.id})`);
       catalogs.add(catalog.id);
-      if (catalog.brand != null && !validString(catalog.brand)) add('catalogs', `brand inválido (${catalog.id})`);
-      if (catalog.unit != null && !validString(catalog.unit)) add('catalogs', `unit inválido (${catalog.id})`);
-      if (catalog.category != null && !validString(catalog.category)) add('catalogs', `category inválido (${catalog.id})`);
-      if (catalog.notes != null && !validString(catalog.notes)) add('catalogs', `notes inválido (${catalog.id})`);
+      if (catalog.brand != null && !validString(catalog.brand))
+        add('catalogs', `brand inválido (${catalog.id})`);
+      if (catalog.unit != null && !validString(catalog.unit))
+        add('catalogs', `unit inválido (${catalog.id})`);
+      if (catalog.category != null && !validString(catalog.category))
+        add('catalogs', `category inválido (${catalog.id})`);
+      if (catalog.notes != null && !validString(catalog.notes))
+        add('catalogs', `notes inválido (${catalog.id})`);
     }
 
     for (const list of rows.lists || []) {
-      if (!list || !validId(list.id) || !validString(list.name, true) || !Array.isArray(list.items) || !validDate(list.date)) {
+      if (
+        !list ||
+        !validId(list.id) ||
+        !validString(list.name, true) ||
+        !Array.isArray(list.items) ||
+        !validDate(list.date)
+      ) {
         add('lists', `registro inválido (${list?.id || 'sem ID'})`);
         continue;
       }
-      if (list.marketName != null && !validString(list.marketName)) add('lists', `marketName inválido (${list.id})`);
+      if (list.marketName != null && !validString(list.marketName))
+        add('lists', `marketName inválido (${list.id})`);
 
       for (const item of list.items) {
         const itemId = item?.id || 'sem ID';
-        if (!item || !validId(item.id) || !validId(item.mainItemId) || !catalogs.has(item.mainItemId)) {
+        if (
+          !item ||
+          !validId(item.id) ||
+          !validId(item.mainItemId) ||
+          !catalogs.has(item.mainItemId)
+        ) {
           add('lists', `item inválido ou órfão (${itemId})`);
           continue;
         }
         if (globalIds.has(item.id)) add('lists', `ID de item duplicado globalmente (${item.id})`);
         globalIds.add(item.id);
         if (typeof item.done !== 'boolean') add('lists', `done inválido (${item.id})`);
-        if (!validNumber(item.quantity) || !validNumber(item.value) || !validNumber(item.packageQuantity)) {
+        if (
+          !validNumber(item.quantity) ||
+          !validNumber(item.value) ||
+          !validNumber(item.packageQuantity)
+        ) {
           add('lists', `quantidade/valor inválido (${item.id})`);
         }
-        if (!validDate(item.date) || !validDate(item.expiryDate)) add('lists', `data inválida (${item.id})`);
-        for (const field of ['productName', 'productBrand', 'productUnit', 'productCategory', 'marketName', 'comments', 'packageUnit']) {
-          if (item[field] != null && !validString(item[field])) add('lists', `${field} inválido (${item.id})`);
+        if (!validDate(item.date) || !validDate(item.expiryDate))
+          add('lists', `data inválida (${item.id})`);
+        for (const field of [
+          'productName',
+          'productBrand',
+          'productUnit',
+          'productCategory',
+          'marketName',
+          'comments',
+          'packageUnit',
+        ]) {
+          if (item[field] != null && !validString(item[field]))
+            add('lists', `${field} inválido (${item.id})`);
         }
       }
     }
@@ -155,22 +195,31 @@
       if (
         !entry ||
         !validId(entry.id) ||
-        (entry.mainItemId != null && (!validId(entry.mainItemId) || !catalogs.has(entry.mainItemId))) ||
+        (entry.mainItemId != null &&
+          (!validId(entry.mainItemId) || !catalogs.has(entry.mainItemId))) ||
         !validString(entry.itemName, true) ||
         !validNumber(entry.value) ||
         !validDate(entry.date)
       ) {
         add('history', `registro inválido ou órfão (${entry?.id || 'sem ID'})`);
       }
-      if (entry?.marketName != null && !validString(entry.marketName)) add('history', `marketName inválido (${entry?.id || 'sem ID'})`);
+      if (entry?.marketName != null && !validString(entry.marketName))
+        add('history', `marketName inválido (${entry?.id || 'sem ID'})`);
     }
 
     for (const wish of rows.wishlist || []) {
-      if (!wish || !validId(wish.id) || !validString(wish.name, true)) add('wishlist', `registro inválido (${wish?.id || 'sem ID'})`);
+      if (!wish || !validId(wish.id) || !validString(wish.name, true))
+        add('wishlist', `registro inválido (${wish?.id || 'sem ID'})`);
     }
 
     for (const removed of rows.trash || []) {
-      if (!removed || !validId(removed.id) || !['catalog', 'list'].includes(removed.type) || !removed.data || typeof removed.data !== 'object') {
+      if (
+        !removed ||
+        !validId(removed.id) ||
+        !['catalog', 'list'].includes(removed.type) ||
+        !removed.data ||
+        typeof removed.data !== 'object'
+      ) {
         add('trash', `registro inválido (${removed?.id || 'sem ID'})`);
       }
     }
@@ -180,11 +229,13 @@
     }
 
     for (const product of rows.referenceProducts || []) {
-      if (!product || !validId(product.id) || !validString(product.name, true)) add('referenceProducts', `registro inválido (${product?.id || 'sem ID'})`);
+      if (!product || !validId(product.id) || !validString(product.name, true))
+        add('referenceProducts', `registro inválido (${product?.id || 'sem ID'})`);
     }
 
     for (const market of rows.referenceMarkets || []) {
-      if (!market || !validId(market.id) || !validString(market.name, true)) add('referenceMarkets', `registro inválido (${market?.id || 'sem ID'})`);
+      if (!market || !validId(market.id) || !validString(market.name, true))
+        add('referenceMarkets', `registro inválido (${market?.id || 'sem ID'})`);
     }
 
     for (const stock of rows.inventory || []) {
@@ -204,19 +255,21 @@
         add('inventory', `lote inválido ou órfão (${stockId})`);
       }
       for (const field of ['marketName', 'location', 'notes']) {
-        if (stock?.[field] != null && !validString(stock[field])) add('inventory', `${field} inválido (${stockId})`);
+        if (stock?.[field] != null && !validString(stock[field]))
+          add('inventory', `${field} inválido (${stockId})`);
       }
     }
 
     const version = meta.version ?? null;
-    if (version !== null && version < VERSION) add('database', `versão ${version}; esperado >= ${VERSION}`);
+    if (version !== null && version < VERSION)
+      add('database', `versão ${version}; esperado >= ${VERSION}`);
 
     return {
       ok: issues.length === 0,
       version,
       missing: Array.isArray(meta.missing) ? meta.missing : [],
       counts,
-      issues
+      issues,
     };
   }
 
@@ -230,7 +283,8 @@
         if (!db.objectStoreNames.contains(store)) continue;
         try {
           const actual = db.transaction(store, 'readonly').objectStore(store).keyPath;
-          if (actual !== KEY_PATHS[store]) keyPathIssues.push(`${store}: keyPath "${actual}"; esperado "${KEY_PATHS[store]}"`);
+          if (actual !== KEY_PATHS[store])
+            keyPathIssues.push(`${store}: keyPath "${actual}"; esperado "${KEY_PATHS[store]}"`);
         } catch (error) {
           keyPathIssues.push(`${store}: não foi possível ler keyPath (${error.message || 'erro'})`);
         }
@@ -242,7 +296,7 @@
           version: db.version,
           missing,
           counts: {},
-          issues: [`Stores ausentes: ${missing.join(', ')}`, ...keyPathIssues]
+          issues: [`Stores ausentes: ${missing.join(', ')}`, ...keyPathIssues],
         };
       }
 
@@ -269,14 +323,17 @@
       '',
       result.ok ? '✓ Nenhum problema encontrado.' : '⚠ Problemas encontrados:',
       result.issues.length
-        ? result.issues.slice(0, 20).map((issue) => `• ${issue}`).join('\n')
+        ? result.issues
+            .slice(0, 20)
+            .map((issue) => `• ${issue}`)
+            .join('\n')
         : '• Estrutura, tipos e referências básicas OK.',
       '',
       `Versão do banco: ${result.version}`,
       '',
       'Registros:',
       counts || 'nenhum',
-      result.issues.length > 20 ? '\n...mais problemas foram encontrados.' : ''
+      result.issues.length > 20 ? '\n...mais problemas foram encontrados.' : '',
     ].join('\n');
   }
 
