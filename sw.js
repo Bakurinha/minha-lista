@@ -66,3 +66,5 @@ self.addEventListener('fetch', (event) => {
     )
   );
 });
+
+// V2.3.0: cache-only service worker; runtime modules are bootstrapped by the page.
