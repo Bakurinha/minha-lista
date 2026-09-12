@@ -26,3 +26,4 @@ jobs:
         run: node tests/v230-foundation.test.js
       - name: V3 UI contract
         run: node tests/v230-v3-ui.test.js
+# Validation trigger: keep foundation checks tied to the current main branch.
