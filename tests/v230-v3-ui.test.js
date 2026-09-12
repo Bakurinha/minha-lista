@@ -40,7 +40,7 @@ assert(
   sw.includes("'./v3-compact-controls.js'"),
   'Controles responsivos não estão no cache do Service Worker'
 );
-assert(sw.includes('minha-lista-v2-3-7'), 'Cache PWA não está na versão atual');
+assert(sw.includes('minha-lista-v2-3-8'), 'Cache PWA não está na versão atual');
 assert(icons.includes('const ICONS'), 'Mapa principal de ícones ausente');
 assert(iconForce.includes('Extended_Pictographic'), 'Fallback pictográfico ausente');
 
@@ -76,8 +76,11 @@ assert(
   compact.includes("dispatchEvent(new Event('input', { bubbles: true }))"),
   'Pesquisa visual não sincroniza com o listener original'
 );
+assert(compact.includes('flex: 0 1 420px'), 'Pesquisa desktop está sem limite de largura');
+assert(compact.includes('max-width: 420px'), 'Pesquisa desktop ainda pode ocupar largura excessiva');
+assert(compact.includes('align-self: flex-start'), 'Pesquisa pode esticar verticalmente com o container');
 assert(compact.includes('@media (max-width: 620px)'), 'Ajuste mobile ausente');
-assert(compact.includes('max-height: 112px'), 'Limite vertical mobile ausente');
+assert(compact.includes('max-height: 102px'), 'Limite vertical mobile ausente');
 assert(
   compact.includes('max-width: 180px'),
   'Seleção ainda não possui limite responsivo no mobile'
@@ -111,6 +114,7 @@ assert(
   /navigator\.serviceWorker[\s\S]*?\.register\(/.test(runtime),
   'Service Worker não está registrado pelo runtime'
 );
+assert(version.includes("const VERSION = 'v2.3.8'"), 'Versão funcional não está sincronizada');
 assert(version.includes("script.src = './v3-shell.js'"), 'Shell não está ligado ao versionador');
 
-console.log('V2.3.7 UI/sharing contract: OK');
+console.log('V2.3.8 UI/sharing contract: OK');
