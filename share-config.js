@@ -30,11 +30,14 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
           request.onerror = () => reject(request.error || Error('IndexedDB indisponível'));
           request.onsuccess = () => resolve(request.result);
         });
-        if (db.objectStoreNames.contains('catalogs') && db.objectStoreNames.contains('lists')) return db;
+        if (db.objectStoreNames.contains('catalogs') && db.objectStoreNames.contains('lists'))
+          return db;
         db.close();
         lastError = Error('Banco de dados ainda não está pronto');
       } catch (error) {
-        try { db?.close(); } catch {}
+        try {
+          db?.close();
+        } catch {}
         lastError = error;
       }
       await sleep(200);
@@ -49,7 +52,9 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
       const finish = (fn, value) => {
         if (done) return;
         done = true;
-        try { db.close(); } catch {}
+        try {
+          db.close();
+        } catch {}
         fn(value);
       };
       try {
@@ -70,23 +75,36 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
         const tx = db.transaction(['catalogs', 'lists'], 'readwrite');
         for (const catalog of catalogs) tx.objectStore('catalogs').put(catalog);
         tx.objectStore('lists').put(list);
-        tx.oncomplete = () => { db.close(); resolve(); };
-        tx.onerror = () => { db.close(); reject(tx.error || Error('Falha IndexedDB')); };
-        tx.onabort = () => { db.close(); reject(tx.error || Error('Transação cancelada')); };
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => {
+          db.close();
+          reject(tx.error || Error('Falha IndexedDB'));
+        };
+        tx.onabort = () => {
+          db.close();
+          reject(tx.error || Error('Transação cancelada'));
+        };
       } catch (error) {
-        try { db?.close(); } catch {}
+        try {
+          db?.close();
+        } catch {}
         reject(error);
       }
     });
   }
 
-  const norm = (value) => String(value ?? '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .toLocaleLowerCase('pt-BR');
+  const norm = (value) =>
+    String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLocaleLowerCase('pt-BR');
 
-  const uid = () => globalThis.crypto?.randomUUID?.() ||
+  const uid = () =>
+    globalThis.crypto?.randomUUID?.() ||
     `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
   function cleanPayload(list, catalogs) {
@@ -104,7 +122,9 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
           return copy;
         }),
       },
-      catalogs: catalogs.filter((catalog) => used.has(catalog.id)).map((catalog) => ({ ...catalog })),
+      catalogs: catalogs
+        .filter((catalog) => used.has(catalog.id))
+        .map((catalog) => ({ ...catalog })),
     };
   }
 
@@ -135,7 +155,9 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
     area.remove();
   }
 
-  function closeModal(modal) { modal?.remove(); }
+  function closeModal(modal) {
+    modal?.remove();
+  }
 
   function modalBase(title, body) {
     const modal = document.createElement('div');
@@ -151,9 +173,26 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
     if (!list) return notify('A lista selecionada não foi encontrada.');
     try {
       const result = await createShare(list);
-      const modal = modalBase('Lista compartilhada', `<p class="muted">Use este código para importar a lista em outro aparelho.</p><div class="panel" style="text-align:center;margin:12px 0"><strong style="font-size:28px;letter-spacing:2px;word-break:break-all">${result.code}</strong></div><div class="row"><button type="button" class="btn primary" data-copy-code>Copiar código</button><button type="button" class="btn ghost" data-copy-link>Copiar link</button></div><p class="hint">O código é mais simples para enviar por mensagem. O link continua disponível para compatibilidade.</p>`);
-      modal.querySelector('[data-copy-code]').onclick = async () => { try { await copy(result.code); notify('Código copiado.'); } catch { notify('Não foi possível copiar o código.'); } };
-      modal.querySelector('[data-copy-link]').onclick = async () => { try { await copy(result.url); notify('Link copiado.'); } catch { notify('Não foi possível copiar o link.'); } };
+      const modal = modalBase(
+        'Lista compartilhada',
+        `<p class="muted">Use este código para importar a lista em outro aparelho.</p><div class="panel" style="text-align:center;margin:12px 0"><strong style="font-size:28px;letter-spacing:2px;word-break:break-all">${result.code}</strong></div><div class="row"><button type="button" class="btn primary" data-copy-code>Copiar código</button><button type="button" class="btn ghost" data-copy-link>Copiar link</button></div><p class="hint">O código é mais simples para enviar por mensagem. O link continua disponível para compatibilidade.</p>`
+      );
+      modal.querySelector('[data-copy-code]').onclick = async () => {
+        try {
+          await copy(result.code);
+          notify('Código copiado.');
+        } catch {
+          notify('Não foi possível copiar o código.');
+        }
+      };
+      modal.querySelector('[data-copy-link]').onclick = async () => {
+        try {
+          await copy(result.url);
+          notify('Link copiado.');
+        } catch {
+          notify('Não foi possível copiar o link.');
+        }
+      };
     } catch (error) {
       console.error(error);
       notify('Não foi possível gerar o código de compartilhamento.');
@@ -177,18 +216,41 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
       });
       if (!response.ok) throw Error(response.status === 404 ? 'not-found' : 'remote-failed');
       const payload = await response.json();
-      if (payload?.app !== 'Minha Lista de Supermercado' || !['shared-list-v2', 'shared-list-v3', 'shared-list-v3-compact'].includes(payload?.format) || ![2, 3].includes(payload?.version) || !payload.list || !Array.isArray(payload.list.items) || !Array.isArray(payload.catalogs)) throw Error('incompatible');
-      if (askConfirmation && !confirm(`Importar a lista "${String(payload.list.name || 'Lista compartilhada').slice(0, 120)}"?\n\nEla será adicionada como uma nova lista.`)) return false;
+      if (
+        payload?.app !== 'Minha Lista de Supermercado' ||
+        !['shared-list-v2', 'shared-list-v3', 'shared-list-v3-compact'].includes(payload?.format) ||
+        ![2, 3].includes(payload?.version) ||
+        !payload.list ||
+        !Array.isArray(payload.list.items) ||
+        !Array.isArray(payload.catalogs)
+      )
+        throw Error('incompatible');
+      if (
+        askConfirmation &&
+        !confirm(
+          `Importar a lista "${String(payload.list.name || 'Lista compartilhada').slice(0, 120)}"?\n\nEla será adicionada como uma nova lista.`
+        )
+      )
+        return false;
 
       const existing = await all('catalogs');
-      const byKey = new Map(existing.map((catalog) => [`${norm(catalog.name)}|${norm(catalog.brand)}|${norm(catalog.unit || 'un')}`, catalog.id]));
+      const byKey = new Map(
+        existing.map((catalog) => [
+          `${norm(catalog.name)}|${norm(catalog.brand)}|${norm(catalog.unit || 'un')}`,
+          catalog.id,
+        ])
+      );
       const map = new Map();
       const newCatalogs = [];
       for (const catalog of payload.catalogs) {
-        if (!catalog || typeof catalog.name !== 'string' || !catalog.name.trim()) throw Error('invalid-catalog');
+        if (!catalog || typeof catalog.name !== 'string' || !catalog.name.trim())
+          throw Error('invalid-catalog');
         const key = `${norm(catalog.name)}|${norm(catalog.brand)}|${norm(catalog.unit || 'un')}`;
         const found = byKey.get(key);
-        if (found) { map.set(catalog.id, found); continue; }
+        if (found) {
+          map.set(catalog.id, found);
+          continue;
+        }
         const created = {
           ...catalog,
           id: uid(),
@@ -197,7 +259,9 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
           unit: String(catalog.unit || 'un').slice(0, 60),
           category: String(catalog.category || 'Outros').slice(0, 80),
           notes: String(catalog.notes || '').slice(0, 2000),
-          ean: String(catalog.ean || '').replace(/\D/g, '').slice(0, 14),
+          ean: String(catalog.ean || '')
+            .replace(/\D/g, '')
+            .slice(0, 14),
         };
         newCatalogs.push(created);
         map.set(catalog.id, created.id);
@@ -226,26 +290,38 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
       return true;
     } catch (error) {
       console.error(error);
-      notify(error.message === 'not-found' ? 'Código expirado ou não encontrado.' : 'Não foi possível importar a lista. Nenhum dado foi alterado.');
+      notify(
+        error.message === 'not-found'
+          ? 'Código expirado ou não encontrado.'
+          : 'Não foi possível importar a lista. Nenhum dado foi alterado.'
+      );
       return false;
     }
   }
 
   function openShareMenu() {
-    all('lists').then((lists) => {
-      const active = lists.filter((list) => !list.archived);
-      const modal = modalBase('Compartilhamento', `<div class="panel"><h3 style="margin-top:0">Compartilhar uma lista</h3><p class="muted">Gere um código curto para enviar a outra pessoa.</p><div class="field"><label for="mlShareList">Lista</label><select id="mlShareList" class="select">${active.map((list) => `<option value="${String(list.id).replace(/\"/g, '&quot;')}">${String(list.name).replace(/[&<>\"]/g, '')}</option>`).join('')}</select></div><button type="button" class="btn primary" style="margin-top:10px" data-generate ${active.length ? '' : 'disabled'}>Gerar código</button></div><div class="panel"><h3 style="margin-top:0">Importar por código</h3><p class="muted">Cole o código de 12 caracteres recebido.</p><input id="mlShareCode" class="input" inputmode="text" autocomplete="off" maxlength="12" placeholder="Ex.: 9EDme3EzZjqI" style="text-transform:none"><button type="button" class="btn primary" style="margin-top:10px" data-import>Importar lista</button></div>${active.length ? '' : '<p class="hint">Crie uma lista antes de compartilhar.</p>'}`);
-      modal.querySelector('[data-generate]')?.addEventListener('click', async () => {
-        const id = modal.querySelector('#mlShareList')?.value;
-        if (!id) return;
-        closeModal(modal);
-        await shareListById(id);
+    all('lists')
+      .then((lists) => {
+        const active = lists.filter((list) => !list.archived);
+        const modal = modalBase(
+          'Compartilhamento',
+          `<div class="panel"><h3 style="margin-top:0">Compartilhar uma lista</h3><p class="muted">Gere um código curto para enviar a outra pessoa.</p><div class="field"><label for="mlShareList">Lista</label><select id="mlShareList" class="select">${active.map((list) => `<option value="${String(list.id).replace(/\"/g, '&quot;')}">${String(list.name).replace(/[&<>\"]/g, '')}</option>`).join('')}</select></div><button type="button" class="btn primary" style="margin-top:10px" data-generate ${active.length ? '' : 'disabled'}>Gerar código</button></div><div class="panel"><h3 style="margin-top:0">Importar por código</h3><p class="muted">Cole o código de 12 caracteres recebido.</p><input id="mlShareCode" class="input" inputmode="text" autocomplete="off" maxlength="12" placeholder="Ex.: 9EDme3EzZjqI" style="text-transform:none"><button type="button" class="btn primary" style="margin-top:10px" data-import>Importar lista</button></div>${active.length ? '' : '<p class="hint">Crie uma lista antes de compartilhar.</p>'}`
+        );
+        modal.querySelector('[data-generate]')?.addEventListener('click', async () => {
+          const id = modal.querySelector('#mlShareList')?.value;
+          if (!id) return;
+          closeModal(modal);
+          await shareListById(id);
+        });
+        modal.querySelector('[data-import]')?.addEventListener('click', async () => {
+          const code = modal.querySelector('#mlShareCode')?.value;
+          if (await importCode(code)) closeModal(modal);
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+        notify('Não foi possível abrir o compartilhamento.');
       });
-      modal.querySelector('[data-import]')?.addEventListener('click', async () => {
-        const code = modal.querySelector('#mlShareCode')?.value;
-        if (await importCode(code)) closeModal(modal);
-      });
-    }).catch((error) => { console.error(error); notify('Não foi possível abrir o compartilhamento.'); });
   }
 
   async function consumeIncomingCode() {
@@ -261,11 +337,15 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
     if (!button || button.dataset.mlShareConfigBound === '2') return;
     button.dataset.mlShareConfigBound = '2';
     button.type = 'button';
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      openShareMenu();
-    }, true);
+    button.addEventListener(
+      'click',
+      (event) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        openShareMenu();
+      },
+      true
+    );
   }
 
   function init() {
@@ -274,7 +354,8 @@ window.MINHA_LISTA_SHARE_API = 'https://minha-lista.suportebakura.workers.dev';
     setTimeout(consumeIncomingCode, 700);
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
   new MutationObserver(bind).observe(document.documentElement, { childList: true, subtree: true });
 })();
