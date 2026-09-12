@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-1';
+const CACHE = 'minha-lista-v2-3-0';
 const CORE = [
   './',
   './index.html',
@@ -60,13 +60,13 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() =>
-        caches.match(event.request).then(
-          (cached) =>
-            cached ||
-            (event.request.mode === 'navigate'
-              ? caches.match('./index.html')
-              : Response.error())
-        )
+        caches
+          .match(event.request)
+          .then(
+            (cached) =>
+              cached ||
+              (event.request.mode === 'navigate' ? caches.match('./index.html') : Response.error())
+          )
       )
   );
 });
