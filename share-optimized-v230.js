@@ -228,7 +228,8 @@
   function normalizeImportedPayload(payload) {
     if (!payload || payload.app !== 'Minha Lista de Supermercado') throw Error('incompatible');
     const allowed = new Set(['shared-list-v2', 'shared-list-v3', 'shared-list-v3-compact']);
-    if (!allowed.has(payload.format) || ![2, 3].includes(payload.version)) throw Error('incompatible');
+    if (!allowed.has(payload.format) || ![2, 3].includes(payload.version))
+      throw Error('incompatible');
     if (payload.format === 'shared-list-v2' && payload.version !== 2) throw Error('incompatible');
     if (
       (payload.format === 'shared-list-v3' || payload.format === 'shared-list-v3-compact') &&
@@ -324,9 +325,7 @@
         if (changed) location.reload();
       } catch (error) {
         console.error(error);
-        notify(
-          'Não foi possível importar o link compactado. Nenhum dado foi alterado.'
-        );
+        notify('Não foi possível importar o link compactado. Nenhum dado foi alterado.');
       }
       return true;
     }
@@ -463,7 +462,9 @@
               })[char]
           )}</option>`
       )
-      .join('')}</select></div><div class="subcard" style="margin-top:10px"><strong>🔗 Compartilhamento</strong><div class="hint">O estoque não entra no compartilhamento. O app tenta usar link remoto curto e, quando não disponível, usa link local compactado.</div><div class="row stack-mobile" style="margin-top:9px"><button class="btn primary" type="button" id="mlCompactCopy">Copiar link</button><button class="btn ghost" type="button" id="mlCompactShare">Compartilhar</button><button class="btn ghost" type="button" id="mlCompactData">Copiar dados</button><button class="btn ghost" type="button" id="mlCompactExport">Exportar JSON</button></div></div>`;
+      .join(
+        ''
+      )}</select></div><div class="subcard" style="margin-top:10px"><strong>🔗 Compartilhamento</strong><div class="hint">O estoque não entra no compartilhamento. O app tenta usar link remoto curto e, quando não disponível, usa link local compactado.</div><div class="row stack-mobile" style="margin-top:9px"><button class="btn primary" type="button" id="mlCompactCopy">Copiar link</button><button class="btn ghost" type="button" id="mlCompactShare">Compartilhar</button><button class="btn ghost" type="button" id="mlCompactData">Copiar dados</button><button class="btn ghost" type="button" id="mlCompactExport">Exportar JSON</button></div></div>`;
     title.textContent = 'Compartilhar lista';
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
