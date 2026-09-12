@@ -35,6 +35,7 @@ jobs:
           node --check db-open-bridge-v230.js
           node --check version-v230.js
           node --check v3-shell.js
+          node --check v3-compact-controls.js
           node --check share-optimized-v230.js
           node --check tests/v230-data-preservation.test.js
           node --check tests/v230-db-migrations.test.js
