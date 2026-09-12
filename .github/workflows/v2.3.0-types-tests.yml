@@ -11,5 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate TypeScript contract source
+      - name: Validate TypeScript contracts
         run: node tests/v230-types.test.js
+      - name: Run TypeScript compiler
+        run: npm run typecheck
