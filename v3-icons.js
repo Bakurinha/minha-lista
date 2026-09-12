@@ -18,7 +18,7 @@
     '⬆️': '<path d="M12 20V8M8 12l4-4 4 4M5 5h14"/>',
     '🔐': '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
     '🧹': '<path d="m4 20 9-9M13 11l4-4 3 3-4 4M6 18l-2 2M14 4l6 6"/>',
-    ℹ️: '<circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/>',
+    'ℹ️': '<circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/>',
     '📱': '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M10 6h4M11 18h2"/>',
     '🏪': '<path d="M4 10h16M5 10v10h14V10M3 10l1.5-6h15L21 10M8 20v-6h8v6"/>',
     '⚠️': '<path d="m12 3 9 17H3L12 3Z"/><path d="M12 9v5M12 17h.01"/>',
@@ -63,33 +63,14 @@
     body.v3-ui .iconbtn,
     body.v3-ui .close,
     body.v3-ui .v3-menu-toggle,
-    body.v3-ui .v3-drawer-close {
-      color: var(--v3-accent);
-    }
+    body.v3-ui .v3-drawer-close { color: var(--v3-accent); }
     body.v3-ui .iconbtn:hover,
     body.v3-ui .close:hover { background: var(--v3-accent-soft); }
     body.v3-ui .empty .emoji { font-size: 0; }
-    body.v3-ui .ml-v3-icon {
-      width: 1.15em;
-      height: 1.15em;
-      display: inline-block;
-      vertical-align: -0.18em;
-      flex: 0 0 auto;
-      color: var(--v3-accent);
-    }
-    body.v3-ui .ml-v3-icon svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 1.8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
+    body.v3-ui .ml-v3-icon { width: 1.15em; height: 1.15em; display: inline-block; vertical-align: -0.18em; flex: 0 0 auto; color: var(--v3-accent); }
+    body.v3-ui .ml-v3-icon svg { width: 100%; height: 100%; display: block; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     body.v3-ui .nav-icon .ml-v3-icon { width: 21px; height: 21px; }
-    body.v3-ui .iconbtn .ml-v3-icon,
-    body.v3-ui .close .ml-v3-icon { width: 19px; height: 19px; }
+    body.v3-ui .iconbtn .ml-v3-icon, body.v3-ui .close .ml-v3-icon { width: 19px; height: 19px; }
     body.v3-ui .btn .ml-v3-icon { width: 17px; height: 17px; }
     body.v3-ui .section-title .ml-v3-icon { width: 20px; height: 20px; vertical-align: -0.2em; }
     body.v3-ui .empty .ml-v3-icon { width: 38px; height: 38px; margin-bottom: 7px; }
@@ -117,20 +98,14 @@
     const parent = node.parentElement;
     if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION'].includes(parent.tagName)) return;
     const source = node.nodeValue;
-    const pattern = new RegExp(
-      Object.keys(ICONS)
-        .map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-        .join('|'),
-      'gu'
-    );
+    const pattern = new RegExp(Object.keys(ICONS).map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gu');
     if (!pattern.test(source)) return;
     pattern.lastIndex = 0;
     const fragment = document.createDocumentFragment();
     let last = 0;
     let match;
     while ((match = pattern.exec(source))) {
-      if (match.index > last)
-        fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
+      if (match.index > last) fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
       fragment.appendChild(iconSpan(match[0]));
       last = match.index + match[0].length;
     }
@@ -156,15 +131,13 @@
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.TEXT_NODE) replaceTextNode(node);
-          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon'))
-            scan(node);
+          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon')) scan(node);
         });
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState === 'loading')
-    document.addEventListener('DOMContentLoaded', install, { once: true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
 })();
