@@ -28,7 +28,7 @@ function payload(n = 1, format = 'shared-list-v2') {
   return {
     app: 'Minha Lista de Supermercado',
     format,
-    version: format === 'shared-list-v3' ? 3 : 2,
+    version: format === 'shared-list-v2' ? 2 : 3,
     list: {
       id: 'x',
       name: 'Compra',
@@ -43,6 +43,8 @@ function payload(n = 1, format = 'shared-list-v2') {
 test('payload V2 mínimo válido', () => assert.equal(validatePayload(payload()).ok, true));
 test('payload V3 mínimo válido', () =>
   assert.equal(validatePayload(payload(1, 'shared-list-v3')).ok, true));
+test('payload V3 compacto mínimo válido', () =>
+  assert.equal(validatePayload(payload(1, 'shared-list-v3-compact')).ok, true));
 test('V3 com embalagem e validade', () => {
   const p = payload(1, 'shared-list-v3');
   p.list.items[0].packageQuantity = 20;
