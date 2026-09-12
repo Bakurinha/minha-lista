@@ -3,7 +3,8 @@ const assert = require('assert');
 
 const app = fs.readFileSync('app.js', 'utf8');
 const inv = fs.readFileSync('inventory.js', 'utf8');
-const share = fs.readFileSync('enhancements.js', 'utf8');
+const share = fs.readFileSync('share-optimized-v230.js', 'utf8');
+const legacyShare = fs.readFileSync('enhancements.js', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
 
 assert.match(
@@ -46,7 +47,9 @@ const productCount = products.reduce(
 
 assert(productCount >= 1000, `reference products: ${productCount}`);
 assert(new Set(markets).size >= 50, `reference markets: ${new Set(markets).size}`);
-assert.match(share, /shared-list-v3/, 'sharing layer must support V3');
+assert.match(share, /shared-list-v3(?:-compact)?/, 'sharing layer must support V3');
+assert(share.includes('shared-list-v2'), 'sharing layer must retain V2 compatibility');
+assert(legacyShare.includes('__mlShareLegacyWaiting'), 'legacy sharing shim missing');
 assert(sw.includes('./backup-v230.js'), 'Service Worker must cache backup-v230.js');
 assert(sw.includes('./list-enhancements.js'), 'Service Worker must cache list-enhancements.js');
 assert(sw.includes('./list-market-v230.js'), 'Service Worker must cache list-market-v230.js');
