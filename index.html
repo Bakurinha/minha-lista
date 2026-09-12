@@ -50,6 +50,8 @@ html[data-theme="light"] body{background:#f4f7f5;color:#172019}html[data-theme="
 <nav class="nav" aria-label="Navegação principal"><div class="nav-inner"><button class="active" data-view="listsView"><span class="nav-icon">📝</span>Listas</button><button data-view="catalogView"><span class="nav-icon">📦</span>Itens</button><button data-view="wishlistView"><span class="nav-icon">⭐</span>Desejos</button><button data-view="historyView"><span class="nav-icon">💰</span>Histórico</button><button data-view="settingsView"><span class="nav-icon">⚙️</span>Opções</button></div></nav>
 <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="sheet"><div class="sheet-head"><h2 id="modalTitle">Janela</h2><button class="close" id="modalClose" aria-label="Fechar">×</button></div><div id="modalBody"></div></div></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="./db-migrations-v230.js"></script>
+<script src="./db-open-bridge-v230.js"></script>
 <script src="./app.js"></script>
 <script src="./list-market-v230.js"></script>
 </body>
