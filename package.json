@@ -1,7 +1,7 @@
 {
   "name": "minha-lista",
   "private": true,
-  "version": "2.3.4",
+  "version": "2.3.7",
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
