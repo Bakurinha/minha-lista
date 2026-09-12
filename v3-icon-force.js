@@ -24,8 +24,7 @@
     let last = 0;
     let match;
     while ((match = pattern.exec(source))) {
-      if (match.index > last)
-        fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
+      if (match.index > last) fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
       fragment.appendChild(iconNode(match[0]));
       last = match.index + match[0].length;
     }
@@ -59,17 +58,26 @@
     document.head.appendChild(style);
   }
 
+  function loadMenuAutoclose() {
+    if (window.__mlMenuAutocloseRequested) return;
+    window.__mlMenuAutocloseRequested = true;
+    const script = document.createElement('script');
+    script.src = './v3-menu-autoclose.js';
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+
   function install() {
     if (document.body.dataset.v3IconForceInstalled === '1') return;
     document.body.dataset.v3IconForceInstalled = '1';
     scan();
     normalizeMenuToggle();
+    loadMenuAutoclose();
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.TEXT_NODE) replaceUnsupported(node);
-          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon'))
-            scan(node);
+          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon')) scan(node);
         });
       }
       normalizeMenuToggle();
@@ -77,7 +85,6 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState === 'loading')
-    document.addEventListener('DOMContentLoaded', install, { once: true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
 })();
