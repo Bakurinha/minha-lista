@@ -16,8 +16,11 @@ const shareCompat = fs.readFileSync('share-optimized-v230.js', 'utf8');
 assert(shell.includes('v3-menu-toggle'), 'Botão hamburger ausente');
 assert(shell.includes('v3-menu-overlay'), 'Overlay do menu ausente');
 assert(shell.includes('v3-menu-open'), 'Estado do menu ausente');
-assert(shell.includes('width: min(100%, 780px)'), 'Limite responsivo desktop ausente');
-assert(shell.includes('max-width: 780px'), 'Max-width responsivo ausente');
+assert(
+  /width:\s*min\(100%,780px\)/.test(shell),
+  'Limite responsivo desktop ausente'
+);
+assert(shell.includes('max-width:780px'), 'Max-width responsivo ausente');
 assert(shell.includes('prefers-reduced-motion'), 'Acessibilidade de movimento ausente');
 assert(shell.includes('Escape'), 'Fechamento do menu por teclado ausente');
 assert(shell.includes('ICONS'), 'Sistema visual de ícones ausente');
