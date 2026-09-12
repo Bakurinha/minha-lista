@@ -29,7 +29,7 @@ assert(
 );
 assert(
   runtime.includes("'./v3-compact-controls.js'"),
-  'Controles compactos não estão no bootstrap do runtime'
+  'Controles responsivos não estão no bootstrap do runtime'
 );
 assert(sw.includes("'./v3-icons.js'"), 'Ícones não estão no cache do Service Worker');
 assert(
@@ -38,16 +38,22 @@ assert(
 );
 assert(
   sw.includes("'./v3-compact-controls.js'"),
-  'Controles compactos não estão no cache do Service Worker'
+  'Controles responsivos não estão no cache do Service Worker'
 );
-assert(sw.includes('minha-lista-v2-3-4'), 'Cache PWA não está na versão atual');
+assert(sw.includes('minha-lista-v2-3-7'), 'Cache PWA não está na versão atual');
 assert(icons.includes('const ICONS'), 'Mapa principal de ícones ausente');
 assert(iconForce.includes('Extended_Pictographic'), 'Fallback pictográfico ausente');
-assert(compact.includes('#listSearch'), 'Pesquisa de listas não está compactada');
-assert(compact.includes('#inventoryView select'), 'Seleções do estoque não estão compactadas');
+assert(compact.includes('#listSearch'), 'Pesquisa de listas não está configurada');
+assert(compact.includes('#catalogSearch'), 'Pesquisa de catálogo não está configurada');
+assert(compact.includes('#wishSearch'), 'Pesquisa de desejos não está configurada');
+assert(compact.includes('MAX_SEARCH_LINES = 5'), 'Pesquisa não possui limite vertical responsivo');
+assert(compact.includes('autosizeSearch'), 'Pesquisa não possui autosize por linha');
+assert(compact.includes('removeAttribute(\'maxlength\')'), 'Pesquisa ainda possui limite artificial de caracteres');
+assert(compact.includes('white-space: pre-wrap'), 'Pesquisa não permite quebra de linha');
+assert(compact.includes('overflow-wrap: anywhere'), 'Pesquisa não trata textos longos responsivamente');
 assert(compact.includes('@media (max-width: 620px)'), 'Ajuste mobile ausente');
-assert(compact.includes('max-width: 220px'), 'Pesquisa ainda não tem limite compacto no mobile');
-assert(compact.includes('max-width: 180px'), 'Seleção ainda não tem limite compacto no mobile');
+assert(compact.includes('max-height: 112px'), 'Limite vertical mobile ausente');
+assert(compact.includes('max-width: 180px'), 'Seleção ainda não possui limite responsivo no mobile');
 assert(compact.includes('@media (max-width: 380px)'), 'Ajuste para telas pequenas ausente');
 assert(sharing.includes('openReady'), 'Compartilhamento não aguarda o banco ficar pronto');
 assert(
@@ -78,4 +84,4 @@ assert(
 );
 assert(version.includes("script.src = './v3-shell.js'"), 'Shell não está ligado ao versionador');
 
-console.log('V2.3.4 UI/sharing contract: OK');
+console.log('V2.3.7 UI/sharing contract: OK');
