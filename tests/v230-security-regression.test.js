@@ -22,9 +22,18 @@ assert(!app.includes('firebase'), 'não deve depender de Firebase');
 assert(!app.includes('supabase'), 'não deve depender de Supabase');
 
 assert(share.includes('shared-list-v3'), 'compartilhamento oficial deve suportar V3');
-assert(share.includes('shared-list-v3-compact'), 'compartilhamento oficial deve suportar formato compacto');
-assert(share.includes('/api/share'), 'compartilhamento oficial deve usar a API de compartilhamento');
-assert(shareCompat.includes('__mlShareOptimizedLoaded'), 'shim legado de compartilhamento deve permanecer inerte');
+assert(
+  share.includes('shared-list-v3-compact'),
+  'compartilhamento oficial deve suportar formato compacto'
+);
+assert(
+  share.includes('/api/share'),
+  'compartilhamento oficial deve usar a API de compartilhamento'
+);
+assert(
+  shareCompat.includes('__mlShareOptimizedLoaded'),
+  'shim legado de compartilhamento deve permanecer inerte'
+);
 assert(backup.includes('backupFormatVersion: 2'), 'backup deve usar formato V2');
 assert(backup.includes('inventory'), 'backup deve preservar inventário');
 assert(
@@ -58,7 +67,7 @@ assert(
 
 assert(sw.includes("'./v3-shell.js'"), 'Service Worker deve cachear o shell V3');
 assert(sw.includes("'./version-v230.js'"), 'Service Worker deve cachear o versionador');
-assert(sw.includes("minha-lista-v2-3-7"), 'Service Worker deve usar o cache da versão atual');
+assert(sw.includes('minha-lista-v2-3-7'), 'Service Worker deve usar o cache da versão atual');
 assert(!sw.includes('src="./v3-shell.js"'), 'Service Worker não deve injetar scripts no HTML');
 assert(index.includes('list-market-v230.js'), 'HTML deve carregar a entrada do runtime');
 

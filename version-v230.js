@@ -2,7 +2,7 @@
   'use strict';
 
   // Versão funcional exibida pela interface e usada pela camada de compatibilidade.
-  const VERSION = 'v2.3.4';
+  const VERSION = 'v2.3.7';
   const VERSION_PATTERN = /v\d+\.\d+\.\d+/gi;
 
   function updateVisibleVersion() {
