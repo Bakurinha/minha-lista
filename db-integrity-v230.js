@@ -4,6 +4,9 @@
  * Verifica a estrutura física do banco, registros, IDs, referências entre
  * catálogos/listas/histórico/estoque e tipos básicos de dados.
  * O diagnóstico nunca corrige, remove ou reescreve dados automaticamente.
+ *
+ * Este módulo é deliberadamente separado do fluxo de correção: encontrar
+ * uma inconsistência não autoriza o app a apagar ou "consertar" o registro.
  */
 (() => {
   'use strict';
@@ -35,6 +38,7 @@
 
   const $ = (id) => document.getElementById(id);
 
+  // Leitura isolada de uma store para manter o diagnóstico readonly.
   const all = (db, store) =>
     new Promise((resolve, reject) => {
       let request;
@@ -97,6 +101,9 @@
   /**
    * Valida um snapshot já carregado. A função é pura e não toca no IndexedDB,
    * facilitando testes e futuras ferramentas de diagnóstico.
+   *
+   * As referências são verificadas onde o domínio exige vínculo forte:
+   * itens de lista/estoque apontam para um catálogo existente, por exemplo.
    */
   function validateRows(rows, meta = {}) {
     const issues = [];
@@ -112,11 +119,13 @@
         add('database', `snapshot ausente ou inválido para ${store}`);
     }
 
+    // Primeiro detectamos problemas estruturais comuns a qualquer store.
     for (const store of STORES) {
       const duplicates = duplicateIds((rows[store] || []).filter((record) => store !== 'settings'));
       for (const duplicate of duplicates) add(store, `ID duplicado (${duplicate})`);
     }
 
+    // Catálogo é a referência primária para itens de listas e estoque.
     for (const catalog of rows.catalogs || []) {
       if (
         !catalog ||
@@ -139,6 +148,8 @@
         add('catalogs', `notes inválido (${catalog.id})`);
     }
 
+    // Listas mantêm seus itens embutidos. O diagnóstico valida tanto a lista
+    // quanto a referência do item ao catálogo, sem tentar reconstruí-la.
     for (const list of rows.lists || []) {
       if (
         !list ||
@@ -238,6 +249,8 @@
         add('referenceMarkets', `registro inválido (${market?.id || 'sem ID'})`);
     }
 
+    // Estoque também aponta para catálogo, mas seus lotes possuem campos
+    // adicionais de validade, quantidade, mercado e localização.
     for (const stock of rows.inventory || []) {
       const stockId = stock?.id || 'sem ID';
       if (
@@ -273,6 +286,7 @@
     };
   }
 
+  // Diagnóstico físico: stores/keyPaths primeiro, conteúdo depois.
   async function diagnose() {
     const db = await open();
     try {
@@ -312,6 +326,8 @@
     }
   }
 
+  // Converte o resultado para uma mensagem humana curta, limitando a saída
+  // para não transformar um banco muito corrompido em um alerta interminável.
   function report(result) {
     const counts = Object.entries(result.counts)
       .filter(([, count]) => count > 0)
