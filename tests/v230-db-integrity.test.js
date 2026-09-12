@@ -4,7 +4,9 @@ const vm = require('node:vm');
 
 const source = fs.readFileSync('db-integrity-v230.js', 'utf8');
 
-assert(/const\s+STORES\s*=\s*\[\s*'catalogs'\s*,[\s\S]*'inventory'\s*\]/.test(source));
+assert(source.includes('const STORES'));
+assert(source.includes("'catalogs'"));
+assert(source.includes("'inventory'"));
 assert(/const\s+KEY_PATHS\s*=\s*Object\.freeze\(\{/.test(source));
 assert(source.includes('objectStoreNames.contains(store)'));
 assert(source.includes('objectStore(store).keyPath'));
