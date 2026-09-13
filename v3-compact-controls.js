@@ -1,10 +1,18 @@
 (() => {
   'use strict';
 
-  // Correção exclusiva da área de pesquisa de Itens Cadastrados e Lista de desejos.
+  // Padroniza EXCLUSIVAMENTE a área de pesquisa em todas as telas que possuem busca.
+  // A largura não é reduzida: no celular acompanha a largura disponível.
   const STYLE_ID = 'ml-v3-compact-controls';
-  const SEARCH_IDS = ['catalogSearch', 'wishSearch'];
-  const MAX_SEARCH_LINES = 5;
+  const SEARCH_IDS = [
+    'listSearch',
+    'catalogSearch',
+    'wishSearch',
+    'invSearch',
+    'historyItemSearch',
+    'historyMarketSearch',
+  ];
+  const MAX_SEARCH_LINES = 2;
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -13,10 +21,10 @@
     style.textContent = `
       .ml-search-multiline-wrap {
         display: block !important;
-        width: min(100%, 320px) !important;
-        max-width: 320px !important;
+        width: 100% !important;
+        max-width: 100% !important;
         min-width: 0 !important;
-        flex: 0 1 320px !important;
+        flex: 1 1 auto !important;
         box-sizing: border-box !important;
       }
       .ml-search-multiline {
@@ -46,13 +54,6 @@
         border: 0 !important;
         opacity: 0 !important;
         pointer-events: none !important;
-      }
-      @media (max-width: 620px) {
-        .ml-search-multiline-wrap {
-          width: 100% !important;
-          max-width: 100% !important;
-          flex: 1 1 100% !important;
-        }
       }
     `;
     document.head.appendChild(style);
