@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-9';
+const CACHE = 'minha-lista-v2-3-10';
 const CORE = [
   './',
   './index.html',
@@ -72,4 +72,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.9: navigation uses network-first with cache bypass to prevent stale PWA pages.
+// V2.3.10: duplicate search controller removed from runtime; navigation keeps cache bypass.
