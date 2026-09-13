@@ -60,12 +60,14 @@
       overflow-wrap: anywhere;
       display: block;
     }
-    body.v3-ui .ml-search-proxy.ml-search-home {
-      min-height: 28px;
-      height: 28px;
-      line-height: 18px;
-      padding-top: 4px;
-      padding-bottom: 4px;
+    @media (max-width: 600px) {
+      body.v3-ui .ml-search-proxy.ml-search-mobile-compact {
+        min-height: 28px !important;
+        height: 28px !important;
+        line-height: 18px !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+      }
     }
     body.v3-ui .ml-search-proxy.ml-search-scroll {
       overflow-y: auto;
@@ -78,6 +80,13 @@
     'wishSearch',
     'historyItemSearch',
     'historyMarketSearch',
+    'invSearch',
+  ]);
+
+  const MOBILE_COMPACT_SEARCH_IDS = new Set([
+    'listSearch',
+    'catalogSearch',
+    'wishSearch',
     'invSearch',
   ]);
 
@@ -137,9 +146,9 @@
     if (!(input instanceof HTMLInputElement)) return;
     if (!SEARCH_IDS.has(input.id) || input.dataset.mlSearchProxyBound === '1') return;
 
-    const isHomeListSearch = input.id === 'listSearch';
+    const isMobileCompactSearch = MOBILE_COMPACT_SEARCH_IDS.has(input.id);
     const proxy = document.createElement('textarea');
-    proxy.className = `${input.className} ml-search-proxy${isHomeListSearch ? ' ml-search-home' : ''}`;
+    proxy.className = `${input.className} ml-search-proxy${isMobileCompactSearch ? ' ml-search-mobile-compact' : ''}`;
     proxy.id = `${input.id}__ui`;
     proxy.name = input.name || '';
     proxy.placeholder = input.placeholder || '';
@@ -164,7 +173,7 @@
     };
 
     const resize = () => {
-      proxy.style.height = isHomeListSearch ? '28px' : '42px';
+      proxy.style.height = '42px';
       const styles = getComputedStyle(proxy);
       const lineHeight = Number.parseFloat(styles.lineHeight) || 22;
       const borderY =
@@ -204,20 +213,20 @@
     scan();
     installSearchProxies();
     const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
+      mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.TEXT_NODE) replaceTextNode(node);
-          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon')) {
-            scan(node);
-            installSearchProxies(node);
-          }
+          if (!(node instanceof Element)) return;
+          scan(node);
+          installSearchProxies(node);
         });
-      }
+      });
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState === 'loading')
+  if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', install, { once: true });
-  else install();
+  } else {
+    install();
+  }
 })();
