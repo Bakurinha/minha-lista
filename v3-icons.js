@@ -48,6 +48,7 @@
     body.v3-ui .empty .ml-v3-icon { width:38px; height:38px; margin-bottom:7px; }
 
     body.v3-ui .ml-search-proxy {
+      box-sizing: border-box !important;
       resize: none;
       overflow-x: hidden;
       overflow-y: hidden;
@@ -72,21 +73,38 @@
     body.v3-ui .ml-search-proxy.ml-search-scroll {
       overflow-y: auto;
     }
-
+    /* Corrige especificamente os campos visuais de Itens e Desejos */
+    body.v3-ui #catalogSearch,
+    body.v3-ui #wishSearch,
+    body.v3-ui #catalogSearch__ui,
+    body.v3-ui #wishSearch__ui, 
+    body.v3-ui #wishInput,
+    body.v3-ui #catalogInput,
+    body.v3-ui #invFilter {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      height: 42px !important;
+      min-height: 42px !important;
+      max-height: 42px !important;
+      padding: 9px 13px !important;
+      line-height: 22px !important;
+      overflow: hidden !important;
+      resize: none !important;
+    }
     /* Largura compacta das pesquisas principais, sem alterar o Histórico. */
     body.v3-ui #listSearch__ui,
     body.v3-ui #catalogSearch__ui,
     body.v3-ui #wishSearch__ui,
     body.v3-ui #invSearch__ui {
-      width: 80%;
-      max-width: 560px;
+      width: 100%;
+      max-width: 500px;
       margin-right: auto;
     }
 
     /* Campo de filtro do Estoque. */
     body.v3-ui .filters .input,
     body.v3-ui .filters .select {
-      width: 80%;
+      width: 100%;
       max-width: 420px;
     }
 
@@ -95,12 +113,12 @@
       body.v3-ui #catalogSearch__ui,
       body.v3-ui #wishSearch__ui,
       body.v3-ui #invSearch__ui {
-        width: 88%;
+        width: 100%;
         max-width: none;
       }
       body.v3-ui .filters .input,
       body.v3-ui .filters .select {
-        width: 88%;
+        width: 70%;
         max-width: none;
       }
     }
@@ -216,6 +234,14 @@
         (Number.parseFloat(styles.paddingBottom) || 9);
       const oneLineHeight = Math.ceil(lineHeight + paddingY + borderY);
       const maxHeight = Math.max(oneLineHeight, Math.ceil(lineHeight * 2 + paddingY + borderY));
+      if (['listSearch', 'catalogSearch', 'wishSearch', 'invSearch'].includes(input.id)) {
+        proxy.style.height = '42px';
+        proxy.style.minHeight = '42px';
+        proxy.style.maxHeight = '42px';
+        proxy.style.overflowY = 'hidden';
+        proxy.classList.remove('ml-search-scroll');
+        return;
+      }
       const nextHeight = Math.min(Math.max(proxy.scrollHeight, oneLineHeight), maxHeight);
       proxy.style.height = `${nextHeight}px`;
       proxy.classList.toggle('ml-search-scroll', proxy.scrollHeight > maxHeight);
