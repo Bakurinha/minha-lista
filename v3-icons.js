@@ -213,20 +213,20 @@
     scan();
     installSearchProxies();
     const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
+      for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
-          if (!(node instanceof Element)) return;
-          scan(node);
-          installSearchProxies(node);
+          if (node.nodeType === Node.TEXT_NODE) replaceTextNode(node);
+          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon')) {
+            scan(node);
+            installSearchProxies(node);
+          }
         });
-      });
+      }
     });
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState === 'loading') {
+  if (document.readyState === 'loading')
     document.addEventListener('DOMContentLoaded', install, { once: true });
-  } else {
-    install();
-  }
+  else install();
 })();
