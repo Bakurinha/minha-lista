@@ -136,7 +136,10 @@
     proxy.name = input.name || '';
     proxy.placeholder = input.placeholder || '';
     proxy.autocomplete = input.autocomplete || 'off';
-    proxy.setAttribute('aria-label', input.getAttribute('aria-label') || input.placeholder || 'Pesquisar');
+    proxy.setAttribute(
+      'aria-label',
+      input.getAttribute('aria-label') || input.placeholder || 'Pesquisar'
+    );
     proxy.setAttribute('spellcheck', 'false');
     proxy.value = input.value || '';
     proxy.dataset.mlSearchProxyFor = input.id;
@@ -156,8 +159,12 @@
       proxy.style.height = '42px';
       const styles = getComputedStyle(proxy);
       const lineHeight = Number.parseFloat(styles.lineHeight) || 22;
-      const borderY = (Number.parseFloat(styles.borderTopWidth) || 1) + (Number.parseFloat(styles.borderBottomWidth) || 1);
-      const paddingY = (Number.parseFloat(styles.paddingTop) || 9) + (Number.parseFloat(styles.paddingBottom) || 9);
+      const borderY =
+        (Number.parseFloat(styles.borderTopWidth) || 1) +
+        (Number.parseFloat(styles.borderBottomWidth) || 1);
+      const paddingY =
+        (Number.parseFloat(styles.paddingTop) || 9) +
+        (Number.parseFloat(styles.paddingBottom) || 9);
       const oneLineHeight = Math.ceil(lineHeight + paddingY + borderY);
       const maxHeight = Math.max(oneLineHeight, Math.ceil(lineHeight * 2 + paddingY + borderY));
       const nextHeight = Math.min(Math.max(proxy.scrollHeight, oneLineHeight), maxHeight);
