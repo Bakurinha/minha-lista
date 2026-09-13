@@ -72,6 +72,38 @@
     body.v3-ui .ml-search-proxy.ml-search-scroll {
       overflow-y: auto;
     }
+
+    /* Largura compacta das pesquisas principais, sem alterar o Histórico. */
+    body.v3-ui #listSearch__ui,
+    body.v3-ui #catalogSearch__ui,
+    body.v3-ui #wishSearch__ui,
+    body.v3-ui #invSearch__ui {
+      width: 80%;
+      max-width: 560px;
+      margin-right: auto;
+    }
+
+    /* Campo de filtro do Estoque. */
+    body.v3-ui .filters .input,
+    body.v3-ui .filters .select {
+      width: 80%;
+      max-width: 420px;
+    }
+
+    @media (max-width: 600px) {
+      body.v3-ui #listSearch__ui,
+      body.v3-ui #catalogSearch__ui,
+      body.v3-ui #wishSearch__ui,
+      body.v3-ui #invSearch__ui {
+        width: 88%;
+        max-width: none;
+      }
+      body.v3-ui .filters .input,
+      body.v3-ui .filters .select {
+        width: 88%;
+        max-width: none;
+      }
+    }
   `;
 
   const SEARCH_IDS = new Set([
