@@ -60,6 +60,13 @@
       overflow-wrap: anywhere;
       display: block;
     }
+    body.v3-ui .ml-search-proxy.ml-search-home {
+      min-height: 28px;
+      height: 28px;
+      line-height: 18px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
     body.v3-ui .ml-search-proxy.ml-search-scroll {
       overflow-y: auto;
     }
@@ -130,8 +137,9 @@
     if (!(input instanceof HTMLInputElement)) return;
     if (!SEARCH_IDS.has(input.id) || input.dataset.mlSearchProxyBound === '1') return;
 
+    const isHomeListSearch = input.id === 'listSearch';
     const proxy = document.createElement('textarea');
-    proxy.className = `${input.className} ml-search-proxy`;
+    proxy.className = `${input.className} ml-search-proxy${isHomeListSearch ? ' ml-search-home' : ''}`;
     proxy.id = `${input.id}__ui`;
     proxy.name = input.name || '';
     proxy.placeholder = input.placeholder || '';
@@ -156,7 +164,7 @@
     };
 
     const resize = () => {
-      proxy.style.height = '42px';
+      proxy.style.height = isHomeListSearch ? '28px' : '42px';
       const styles = getComputedStyle(proxy);
       const lineHeight = Number.parseFloat(styles.lineHeight) || 22;
       const borderY =
