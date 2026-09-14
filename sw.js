@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-13';
+const CACHE = 'minha-lista-v2-3-14';
 const CORE = [
   './',
   './index.html',
@@ -74,4 +74,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.13: cache version bumped for the refined initial loading behavior.
+// V2.3.14: cache version bumped for the first-run privacy refinement.
