@@ -65,9 +65,11 @@ self.addEventListener('fetch', (event) => {
         caches
           .match(event.request)
           .then(
-            (cached) => cached || (isNavigation ? caches.match('./index.html') : Response.error())
+            (cached) =>
+              cached ||
+              (isNavigation ? caches.match('./index.html') : Response.error())
           )
       )
   );
 });
-// V2.3.16: cache version bumped for the final first-run privacy correction.
+// V2.3.9: cache version aligned with the application version.
