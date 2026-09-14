@@ -115,8 +115,8 @@
     document.head.appendChild(script);
   }
 
-  // Uma única expansão incremental ativa. A expansão 2 permanece no repositório
-  // apenas por compatibilidade histórica e não é mais disparada automaticamente.
-  loadProductExpansion();
-  refresh();
+  // A expansão 2 permanece no repositório apenas por compatibilidade histórica.
+  // A expansão 3 inicia somente após o marcador do catálogo ser estabilizado,
+  // evitando disputa com o seed do app.js durante a inicialização.
+  refresh().finally(loadProductExpansion);
 })();
