@@ -355,6 +355,10 @@
         z-index: 20;
         padding: 7px max(8px, env(safe-area-inset-left)) calc(7px + env(safe-area-inset-bottom));
         backdrop-filter: blur(10px);
+        visibility: hidden;
+      }
+      body.v3-ui .nav {
+        visibility: visible;
       }
       .nav-inner {
         max-width: 820px;
