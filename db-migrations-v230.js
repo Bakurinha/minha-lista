@@ -132,8 +132,27 @@
   };
 })();
 
-// Etapa 3: instala a tela de carregamento antes do núcleo principal.
+// Etapa 3: cria o overlay de carregamento imediatamente, antes do núcleo principal.
 (() => {
+  if (!document.getElementById('initialLoading')) {
+    const style = document.createElement('style');
+    style.id = 'initialLoadingStyle';
+    style.textContent = `
+      #initialLoading { position:fixed; inset:0; z-index:9999; display:grid; place-items:center; background:#f4f7f5; color:#172019; font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; transition:opacity .18s ease,visibility .18s ease; }
+      #initialLoading .box { text-align:center; padding:24px; }
+      #initialLoading .spin { width:26px; height:26px; margin:0 auto 12px; border:3px solid rgba(22,163,74,.18); border-top-color:#16a34a; border-radius:50%; animation:initialLoadingSpin .7s linear infinite; }
+      #initialLoading .title { font-size:20px; font-weight:800; }
+      #initialLoading .sub { margin-top:6px; color:#68736c; font-size:13px; }
+      @keyframes initialLoadingSpin { to { transform:rotate(360deg); } }
+    `;
+    document.head.appendChild(style);
+    const overlay = document.createElement('div');
+    overlay.id = 'initialLoading';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.innerHTML = '<div class="box"><div class="spin" aria-hidden="true"></div><div class="title">Minha Lista</div><div class="sub">carregando...</div></div>';
+    document.body.prepend(overlay);
+  }
   const script = document.createElement('script');
   script.src = './initial-loading.js';
   script.async = false;
