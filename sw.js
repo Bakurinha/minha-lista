@@ -65,9 +65,7 @@ self.addEventListener('fetch', (event) => {
         caches
           .match(event.request)
           .then(
-            (cached) =>
-              cached ||
-              (isNavigation ? caches.match('./index.html') : Response.error())
+            (cached) => cached || (isNavigation ? caches.match('./index.html') : Response.error())
           )
       )
   );
