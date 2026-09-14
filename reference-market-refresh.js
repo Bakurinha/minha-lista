@@ -117,5 +117,14 @@
     }
   }
 
-  refresh();
+  function loadSecondProductExpansion() {
+    if (document.querySelector('script[data-reference-product-expansion-v230-2]')) return;
+    const script = document.createElement('script');
+    script.src = './reference-product-expansion-v230-2.js';
+    script.dataset.referenceProductExpansionV2302 = '1';
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+
+  refresh().finally(loadSecondProductExpansion);
 })();
