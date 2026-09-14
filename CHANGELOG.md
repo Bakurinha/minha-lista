@@ -1,5 +1,22 @@
 # CHANGELOG — Minha Lista de Supermercado
 
+## V2.3.9 — 14/09/2026
+
+### Versionamento e manutenção
+
+- Versão do aplicativo alinhada em `2.3.9`.
+- `package.json` e `package-lock.json` mantidos sincronizados.
+- Manifest, versão visual e Service Worker sincronizados com a versão do aplicativo.
+- Cache do Service Worker alinhado para `minha-lista-v2-3-9`.
+- Scripts existentes de sincronização de versão preservados como mecanismo oficial de versionamento.
+
+### Etapas P0 recentes
+
+- Ajustes responsivos das áreas de pesquisa para telas móveis.
+- Edição de itens dentro de listas corrigida sem fechamento indevido da lista.
+- Tela de carregamento inicial adicionada para reduzir o flash visual durante a inicialização.
+- Primeira tela de privacidade permanece pendente para revisão futura.
+
 ## V2.3.0 — 11/09/2026
 
 ### Confiabilidade e dados
