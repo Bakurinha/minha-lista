@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-12';
+const CACHE = 'minha-lista-v2-3-13';
 const CORE = [
   './',
   './index.html',
@@ -6,12 +6,6 @@ const CORE = [
   './share-optimized-v230.js',
   './enhancements.js',
   './inventory.js',
-  './reference-market-refresh.js',
-  './reference-product-expansion-v230.js',
-  './reference-product-expansion-v230-2.js',
-  './reference-product-expansion-v230-3.js',
-  './reference-product-expansion-v230-4.js',
-  './reference-product-expansion-v230-5.js',
   './backup-v230.js',
   './list-enhancements.js',
   './etapa2-keep-list.js',
@@ -19,6 +13,7 @@ const CORE = [
   './list-market-v230.js',
   './db-integrity-v230.js',
   './db-migrations-v230.js',
+  './db-open-bridge-v230.js',
   './version-v230.js',
   './v3-shell.js',
   './v3-icons.js',
@@ -74,4 +69,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.13: cache version includes the expanded offline reference bank module.
+// V2.3.13: removes legacy reference-expansion modules from the active PWA cache.
