@@ -85,9 +85,6 @@
           MARKETS.forEach((name, index) => {
             markets.put({ id: `ref-m-${index + 1}`, name });
           });
-
-          // O marcador 1 é o contrato esperado pelo núcleo legado. O valor 3
-          // usado anteriormente fazia o app.js limpar o catálogo em todo reload.
           settings.put({ key: REFERENCE_DATA_MARKER, value: 1 });
 
           transaction.oncomplete = resolve;
@@ -106,17 +103,14 @@
   }
 
   function loadProductExpansion() {
-    const marker = 'referenceProductExpansionV230_3';
+    const marker = 'referenceProductExpansionV230_4';
     if (document.querySelector(`script[data-reference-expansion="${marker}"]`)) return;
     const script = document.createElement('script');
-    script.src = './reference-product-expansion-v230-3.js';
+    script.src = './reference-product-expansion-v230-4.js';
     script.dataset.referenceExpansion = marker;
     script.defer = true;
     document.head.appendChild(script);
   }
 
-  // A expansão 2 permanece no repositório apenas por compatibilidade histórica.
-  // A expansão 3 inicia somente após o marcador do catálogo ser estabilizado,
-  // evitando disputa com o seed do app.js durante a inicialização.
   refresh().finally(loadProductExpansion);
 })();
