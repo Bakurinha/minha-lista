@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-8';
+const CACHE = 'minha-lista-v2-3-9';
 const CORE = [
   './',
   './index.html',
