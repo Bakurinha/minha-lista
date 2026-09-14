@@ -126,7 +126,13 @@
   }
 
   // As expansões são independentes da atualização dos mercados.
-  loadProductExpansion('./reference-product-expansion-v230-2.js', 'referenceProductExpansionV230_2');
-  loadProductExpansion('./reference-product-expansion-v230-3.js', 'referenceProductExpansionV230_3');
+  loadProductExpansion(
+    './reference-product-expansion-v230-2.js',
+    'referenceProductExpansionV230_2'
+  );
+  loadProductExpansion(
+    './reference-product-expansion-v230-3.js',
+    'referenceProductExpansionV230_3'
+  );
   refresh();
 })();
