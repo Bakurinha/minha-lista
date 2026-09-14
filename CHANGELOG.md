@@ -1,5 +1,30 @@
 # CHANGELOG — Minha Lista de Supermercado
 
+## V2.3.12 — 14/09/2026
+
+### Catálogo de referência offline
+
+- Corrigida a expansão final para não ser bloqueada pelo marcador da expansão anterior.
+- A nova expansão completa o banco até o alvo acumulado de `2040` produtos, adicionando apenas o que faltar.
+- Mantidos os registros existentes e a verificação de duplicidade por nome, marca e unidade.
+
+### Informação da interface
+
+- Adicionado indicador dinâmico do banco offline no cadastro de itens.
+- A informação consulta diretamente o IndexedDB e exibe a quantidade atual de produtos e mercados, evitando números fixos ou desatualizados.
+
+### Versionamento
+
+- Versão do aplicativo alinhada em `2.3.12`.
+- Service Worker atualizado para `minha-lista-v2-3-12`.
+- Manifest e versão visual sincronizados.
+
+### Validação
+
+- Código e referências do novo módulo conferidos no repositório.
+- A contagem real no IndexedDB continua dependendo da execução no navegador do usuário.
+- Não foi declarado teste E2E em Chrome/Android neste ambiente.
+
 ## V2.3.11 — 14/09/2026
 
 ### Catálogo de referência offline
