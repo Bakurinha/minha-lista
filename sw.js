@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-10';
+const CACHE = 'minha-lista-v2-3-11';
 const CORE = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const CORE = [
   './reference-market-refresh.js',
   './reference-product-expansion-v230.js',
   './reference-product-expansion-v230-2.js',
+  './reference-product-expansion-v230-3.js',
   './backup-v230.js',
   './list-enhancements.js',
   './etapa2-keep-list.js',
@@ -71,4 +72,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.10: cache version aligned with the application version.
+// V2.3.11: cache version aligned with the application version.
