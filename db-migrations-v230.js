@@ -131,3 +131,12 @@
     open,
   };
 })();
+
+// Etapa 3: instala a tela de carregamento antes do núcleo principal.
+(() => {
+  const script = document.createElement('script');
+  script.src = './initial-loading.js';
+  script.async = false;
+  script.dataset.v230InitialLoading = '1';
+  document.head.appendChild(script);
+})();
