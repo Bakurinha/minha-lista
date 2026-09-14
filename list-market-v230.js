@@ -10,24 +10,10 @@
   const HYDRATED_MARKER = 'data-v230-list-market-hydrated';
   const MAX_MARKET = 160;
   const FALLBACK_MARKETS = [
-    'Atakarejo',
-    'Atacadão',
-    'Assaí Atacadista',
-    'Hiperideal',
-    'RedeMix',
-    'Mercantil Rodrigues',
-    'Mix Bahia',
-    'Novo Mix',
-    'Mix Mateus',
-    'GBarbosa',
-    'Carrefour',
-    "Sam's Club",
-    'Centro Sul',
-    'Mercantil de Brotas',
-    'Mercado Popular',
-    'Mercado Central',
-    'Mercado da Sete Portas',
-    'Mercado do Bairro',
+    'Atakarejo', 'Atacadão', 'Assaí Atacadista', 'Hiperideal', 'RedeMix',
+    'Mercantil Rodrigues', 'Mix Bahia', 'Novo Mix', 'Mix Mateus', 'GBarbosa',
+    'Carrefour', "Sam's Club", 'Centro Sul', 'Mercantil de Brotas',
+    'Mercado Popular', 'Mercado Central', 'Mercado da Sete Portas', 'Mercado do Bairro',
   ];
   const snapshots = new WeakMap();
   const esc = (value) =>
@@ -253,7 +239,6 @@
     './enhancements.js',
     './inventory.js',
     './reference-market-refresh.js',
-    './reference-product-expansion-v230.js',
     './list-enhancements.js',
     './etapa2-keep-list.js',
     './db-integrity-v230.js',
