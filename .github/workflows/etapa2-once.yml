@@ -18,20 +18,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Aplicar ajuste mínimo sobre baseline validado
+      - name: Aplicar ajuste mínimo por linha
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import subprocess
-          baseline_sha = '492c553aecc08bf36eb6ab43ad334a5a863ff45a'
-          p = Path('app.js')
-          s = subprocess.check_output(['git', 'show', f'{baseline_sha}:app.js'], text=True, encoding='utf-8')
-          old = "        closeModal(false);\n        await load();\n        openListNoReset(l.id);"
-          new = "        await load();\n        openListNoReset(l.id);"
-          if s.count(old) != 1:
-              raise SystemExit(f'Bloco esperado no baseline não encontrado de forma única: {s.count(old)}')
-          p.write_text(s.replace(old, new), encoding='utf-8')
-          PY
+          set -e
+          git checkout 492c553aecc08bf36eb6ab43ad334a5a863ff45a -- app.js
+          sed -i '1362d' app.js
+          test "$(git diff --numstat -- app.js | awk '{print $1 "," $2}')" = "1,0"
+          git diff -- app.js
 
       - name: Remover workflow temporário e gravar alteração
         run: |
