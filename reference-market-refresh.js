@@ -74,9 +74,13 @@
 
   function countProducts(db) {
     return new Promise((resolve, reject) => {
-      const request = db.transaction('referenceProducts', 'readonly').objectStore('referenceProducts').count();
+      const request = db
+        .transaction('referenceProducts', 'readonly')
+        .objectStore('referenceProducts')
+        .count();
       request.onsuccess = () => resolve(request.result || 0);
-      request.onerror = () => reject(request.error || Error('Falha ao contar produtos de referência'));
+      request.onerror = () =>
+        reject(request.error || Error('Falha ao contar produtos de referência'));
     });
   }
 
