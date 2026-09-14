@@ -1,5 +1,19 @@
 # CHANGELOG — Minha Lista de Supermercado
 
+## V2.3.11 — 14/09/2026
+
+### Catálogo de referência offline
+
+- Corrigida a expansão adicional para trabalhar com um alvo total acumulado de `2040` produtos.
+- O aplicativo calcula quantos registros ainda faltam e adiciona somente essa quantidade.
+- A expansão usa marcador próprio e mantém os registros existentes.
+- Service Worker atualizado para `minha-lista-v2-3-11`.
+
+### Validação
+
+- A contagem final no IndexedDB do dispositivo continua dependente da execução real no navegador.
+- Não foi declarado teste E2E em Chrome/Android neste ambiente.
+
 ## V2.3.10 — 14/09/2026
 
 ### Catálogo de referência offline
