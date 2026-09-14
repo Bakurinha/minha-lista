@@ -10,19 +10,61 @@
   const PRODUCT_EXPANSION_MARKER = 'referenceProductExpansionV230_5';
   const PRODUCT_TARGET = 10040;
   const MARKETS = [
-    'Atakarejo', 'Atacadão', 'Assaí Atacadista', 'Hiperideal', 'RedeMix',
-    'Mercantil Rodrigues', 'Mix Bahia', 'Novo Mix', 'Mix Mateus', 'GBarbosa',
-    'Carrefour', "Sam's Club", 'Pão de Açúcar', 'Mercantil de Brotas',
-    'Mercado Central', 'Mercado da Sete Portas', 'Mercado do Bairro',
-    'Super Muffato', 'Condor', 'Angeloni', 'Giassi', 'Koch', 'Fort Atacadista',
-    'Mart Minas', 'Supernosso', 'EPA', 'Supermercados BH', 'Oba Hortifruti',
-    'St Marche', 'Dia Brasil', 'Roldão', 'Tenda Atacado', 'Spani Atacadista',
-    'Tonin', 'Villefort', 'ABC Atacado e Varejo', 'Guanabara', 'Zona Sul',
-    'Imperatriz', 'Savegnago', 'Tauste', 'Zaffari', 'Nacional', 'Muffato Max',
-    'Hortifruti Natural da Terra', 'Mineirão Atacarejo', 'Total Atacado',
-    'RF Atacado', 'Sol e Mar Supermercados', 'Mercadinhos São Luiz',
-    'Cometa Supermercados', 'São Luiz', 'Davo Supermercados',
-    'Confiança Supermercados', 'Koch Hipermercado',
+    'Atakarejo',
+    'Atacadão',
+    'Assaí Atacadista',
+    'Hiperideal',
+    'RedeMix',
+    'Mercantil Rodrigues',
+    'Mix Bahia',
+    'Novo Mix',
+    'Mix Mateus',
+    'GBarbosa',
+    'Carrefour',
+    "Sam's Club",
+    'Pão de Açúcar',
+    'Mercantil de Brotas',
+    'Mercado Central',
+    'Mercado da Sete Portas',
+    'Mercado do Bairro',
+    'Super Muffato',
+    'Condor',
+    'Angeloni',
+    'Giassi',
+    'Koch',
+    'Fort Atacadista',
+    'Mart Minas',
+    'Supernosso',
+    'EPA',
+    'Supermercados BH',
+    'Oba Hortifruti',
+    'St Marche',
+    'Dia Brasil',
+    'Roldão',
+    'Tenda Atacado',
+    'Spani Atacadista',
+    'Tonin',
+    'Villefort',
+    'ABC Atacado e Varejo',
+    'Guanabara',
+    'Zona Sul',
+    'Imperatriz',
+    'Savegnago',
+    'Tauste',
+    'Zaffari',
+    'Nacional',
+    'Muffato Max',
+    'Hortifruti Natural da Terra',
+    'Mineirão Atacarejo',
+    'Total Atacado',
+    'RF Atacado',
+    'Sol e Mar Supermercados',
+    'Mercadinhos São Luiz',
+    'Cometa Supermercados',
+    'São Luiz',
+    'Davo Supermercados',
+    'Confiança Supermercados',
+    'Koch Hipermercado',
   ];
 
   function open() {
@@ -91,9 +133,13 @@
         }
 
         const marker = await new Promise((resolve, reject) => {
-          const request = db.transaction('settings', 'readonly').objectStore('settings').get(PRODUCT_EXPANSION_MARKER);
+          const request = db
+            .transaction('settings', 'readonly')
+            .objectStore('settings')
+            .get(PRODUCT_EXPANSION_MARKER);
           request.onsuccess = () => resolve(request.result || null);
-          request.onerror = () => reject(request.error || Error('Falha ao ler marcador da expansão'));
+          request.onerror = () =>
+            reject(request.error || Error('Falha ao ler marcador da expansão'));
         });
         db.close();
 
