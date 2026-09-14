@@ -4,62 +4,20 @@
   const VERSION = 6;
   const STORE = 'referenceMarkets';
   const REFERENCE_DATA_MARKER = 'referenceDataVersion';
+  const PRODUCT_EXPANSION_MARKER = 'referenceProductExpansionV230_4';
   const MARKETS = [
-    'Atakarejo',
-    'Atacadão',
-    'Assaí Atacadista',
-    'Hiperideal',
-    'RedeMix',
-    'Mercantil Rodrigues',
-    'Mix Bahia',
-    'Novo Mix',
-    'Mix Mateus',
-    'GBarbosa',
-    'Carrefour',
-    "Sam's Club",
-    'Pão de Açúcar',
-    'Mercantil de Brotas',
-    'Mercado Central',
-    'Mercado da Sete Portas',
-    'Mercado do Bairro',
-    'Super Muffato',
-    'Condor',
-    'Angeloni',
-    'Giassi',
-    'Koch',
-    'Fort Atacadista',
-    'Mart Minas',
-    'Supernosso',
-    'EPA',
-    'Supermercados BH',
-    'Oba Hortifruti',
-    'St Marche',
-    'Dia Brasil',
-    'Roldão',
-    'Tenda Atacado',
-    'Spani Atacadista',
-    'Tonin',
-    'Villefort',
-    'ABC Atacado e Varejo',
-    'Guanabara',
-    'Zona Sul',
-    'Imperatriz',
-    'Savegnago',
-    'Tauste',
-    'Zaffari',
-    'Nacional',
-    'Muffato Max',
-    'Hortifruti Natural da Terra',
-    'Mineirão Atacarejo',
-    'Total Atacado',
-    'RF Atacado',
-    'Sol e Mar Supermercados',
-    'Mercadinhos São Luiz',
-    'Cometa Supermercados',
-    'São Luiz',
-    'Davo Supermercados',
-    'Confiança Supermercados',
-    'Koch Hipermercado',
+    'Atakarejo', 'Atacadão', 'Assaí Atacadista', 'Hiperideal', 'RedeMix',
+    'Mercantil Rodrigues', 'Mix Bahia', 'Novo Mix', 'Mix Mateus', 'GBarbosa',
+    'Carrefour', "Sam's Club", 'Pão de Açúcar', 'Mercantil de Brotas',
+    'Mercado Central', 'Mercado da Sete Portas', 'Mercado do Bairro', 'Super Muffato',
+    'Condor', 'Angeloni', 'Giassi', 'Koch', 'Fort Atacadista', 'Mart Minas',
+    'Supernosso', 'EPA', 'Supermercados BH', 'Oba Hortifruti', 'St Marche',
+    'Dia Brasil', 'Roldão', 'Tenda Atacado', 'Spani Atacadista', 'Tonin', 'Villefort',
+    'ABC Atacado e Varejo', 'Guanabara', 'Zona Sul', 'Imperatriz', 'Savegnago',
+    'Tauste', 'Zaffari', 'Nacional', 'Muffato Max', 'Hortifruti Natural da Terra',
+    'Mineirão Atacarejo', 'Total Atacado', 'RF Atacado', 'Sol e Mar Supermercados',
+    'Mercadinhos São Luiz', 'Cometa Supermercados', 'São Luiz', 'Davo Supermercados',
+    'Confiança Supermercados', 'Koch Hipermercado',
   ];
 
   function open() {
@@ -86,6 +44,9 @@
             markets.put({ id: `ref-m-${index + 1}`, name });
           });
           settings.put({ key: REFERENCE_DATA_MARKER, value: 1 });
+          // O total real do banco é a fonte de verdade. Se uma expansão anterior
+          // marcou a etapa como concluída antes de atingir o alvo, libera a correção.
+          settings.delete(PRODUCT_EXPANSION_MARKER);
 
           transaction.oncomplete = resolve;
           transaction.onerror = () =>
