@@ -184,7 +184,7 @@
     const updated = document.createDocumentFragment();
     const notice = document.createElement('div');
     notice.className = 'notice';
-    notice.innerHTML = '<strong>Esta versão é local.</strong><br>Seus produtos, listas, preços e observações são armazenados localmente neste dispositivo. A V2.2.2 não envia o conteúdo das listas para servidores, não coleta preços, não possui Analytics, login, Firebase ou banco de usuários.';
+    notice.innerHTML = '<strong>Esta versão é local.</strong><br>Seus produtos, listas, preços e observações são armazenados localmente neste dispositivo. O aplicativo não envia o conteúdo das listas para servidores, não coleta preços, não possui Analytics, login, Firebase ou banco de usuários.';
     updated.appendChild(notice);
 
     const backup = document.createElement('div');
