@@ -170,7 +170,8 @@
     } catch (error) {
       console.error(error);
     }
-    form.addEventListener('submit', async () => {
+    form.addEventListener('submit', async (event) => {
+      if (event.target !== form) return;
       try {
         const target = await persistSubmittedList(form);
         if (target) setTimeout(() => window.location.reload(), 50);
