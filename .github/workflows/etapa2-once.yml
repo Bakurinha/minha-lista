@@ -21,8 +21,6 @@ jobs:
       - name: Aplicar ajuste mínimo por linha
         run: |
           set -e
-          git fetch origin 492c553aecc08bf36eb6ab43ad334a5a863ff45a
-          git checkout 492c553aecc08bf36eb6ab43ad334a5a863ff45a -- app.js
           sed -i '1362d' app.js
           test "$(git diff --numstat -- app.js | awk '{print $1 "," $2}')" = "1,0"
           git diff -- app.js
