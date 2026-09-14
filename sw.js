@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-12';
+const CACHE = 'minha-lista-v2-3-13';
 const CORE = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const CORE = [
   './reference-product-expansion-v230-2.js',
   './reference-product-expansion-v230-3.js',
   './reference-product-expansion-v230-4.js',
+  './reference-product-expansion-v230-5.js',
   './backup-v230.js',
   './list-enhancements.js',
   './etapa2-keep-list.js',
@@ -73,4 +74,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.12: cache version aligned with the application version.
+// V2.3.13: cache version includes the expanded offline reference bank module.
