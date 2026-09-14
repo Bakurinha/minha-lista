@@ -5,6 +5,7 @@
   const STORE = 'referenceMarkets';
   const REFERENCE_DATA_MARKER = 'referenceDataVersion';
   const PRODUCT_EXPANSION_MARKER = 'referenceProductExpansionV230_4';
+  const PRODUCT_TARGET = 2040;
   const MARKETS = [
     'Atakarejo',
     'Atacadão',
@@ -71,14 +72,24 @@
     });
   }
 
+  function countProducts(db) {
+    return new Promise((resolve, reject) => {
+      const request = db.transaction('referenceProducts', 'readonly').objectStore('referenceProducts').count();
+      request.onsuccess = () => resolve(request.result || 0);
+      request.onerror = () => reject(request.error || Error('Falha ao contar produtos de referência'));
+    });
+  }
+
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   async function refresh() {
     for (let attempt = 0; attempt < 20; attempt += 1) {
       try {
         const db = await open();
+        const productCount = await countProducts(db);
         await new Promise((resolve, reject) => {
-          const transaction = db.transaction(['referenceMarkets', 'settings'], 'readwrite');
+          const stores = ['referenceMarkets', 'settings'];
+          const transaction = db.transaction(stores, 'readwrite');
           const markets = transaction.objectStore(STORE);
           const settings = transaction.objectStore('settings');
 
@@ -87,9 +98,11 @@
             markets.put({ id: `ref-m-${index + 1}`, name });
           });
           settings.put({ key: REFERENCE_DATA_MARKER, value: 1 });
-          // O total real do banco é a fonte de verdade. Se uma expansão anterior
-          // marcou a etapa como concluída antes de atingir o alvo, libera a correção.
-          settings.delete(PRODUCT_EXPANSION_MARKER);
+
+          // Só libera a expansão quando o banco ainda está abaixo do alvo.
+          // Depois de atingir 2.040, o marcador permanece para impedir reloads
+          // e expansões repetidas a cada abertura.
+          if (productCount < PRODUCT_TARGET) settings.delete(PRODUCT_EXPANSION_MARKER);
 
           transaction.oncomplete = resolve;
           transaction.onerror = () =>
