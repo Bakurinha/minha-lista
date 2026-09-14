@@ -1,47 +1,6 @@
 (() => {
   'use strict';
 
-  const FALLBACK = '<circle cx="12" cy="12" r="8.5"/><path d="M9 12h6M12 9v6"/>';
-
-  function iconNode(value) {
-    const span = document.createElement('span');
-    span.className = 'ml-v3-icon';
-    span.setAttribute('aria-hidden', 'true');
-    span.dataset.v3IconFallback = value;
-    span.innerHTML = `<svg viewBox="0 0 24 24">${FALLBACK}</svg>`;
-    return span;
-  }
-
-  function replaceUnsupported(node) {
-    if (!node.nodeValue || node.parentElement?.closest('.ml-v3-icon')) return;
-    const parent = node.parentElement;
-    if (!parent || ['SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION'].includes(parent.tagName)) return;
-    const source = node.nodeValue;
-    const pattern = /\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*/gu;
-    if (!pattern.test(source)) return;
-    pattern.lastIndex = 0;
-    const fragment = document.createDocumentFragment();
-    let last = 0;
-    let match;
-    while ((match = pattern.exec(source))) {
-      if (match.index > last)
-        fragment.appendChild(document.createTextNode(source.slice(last, match.index)));
-      fragment.appendChild(iconNode(match[0]));
-      last = match.index + match[0].length;
-    }
-    if (last < source.length) fragment.appendChild(document.createTextNode(source.slice(last)));
-    node.replaceWith(fragment);
-  }
-
-  function scan(root = document.body) {
-    if (!root) return;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    let node;
-    while ((node = walker.nextNode())) nodes.push(node);
-    nodes.forEach(replaceUnsupported);
-  }
-
   function normalizeMenuToggle() {
     const toggle = document.querySelector('.v3-menu-toggle');
     if (!toggle || toggle.querySelector('[data-v3-menu-icon]')) return;
@@ -71,20 +30,11 @@
   function install() {
     if (document.body.dataset.v3IconForceInstalled === '1') return;
     document.body.dataset.v3IconForceInstalled = '1';
-    scan();
     normalizeMenuToggle();
     loadMenuAutoclose();
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.TEXT_NODE) replaceUnsupported(node);
-          else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon'))
-            scan(node);
-        });
-      }
-      normalizeMenuToggle();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+
+    const menuObserver = new MutationObserver(() => normalizeMenuToggle());
+    menuObserver.observe(document.body, { childList: true, subtree: true });
   }
 
   if (document.readyState === 'loading')
