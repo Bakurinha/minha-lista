@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-11';
+const CACHE = 'minha-lista-v2-3-12';
 const CORE = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const CORE = [
   './backup-v230.js',
   './list-enhancements.js',
   './etapa2-keep-list.js',
+  './initial-loading.js',
   './list-market-v230.js',
   './db-integrity-v230.js',
   './db-migrations-v230.js',
@@ -73,4 +74,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.11: cache version bumped to deliver the item-edit return fix.
+// V2.3.12: cache version bumped to deliver the initial loading screen.
