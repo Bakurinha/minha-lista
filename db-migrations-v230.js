@@ -159,3 +159,62 @@
   script.dataset.v230InitialLoading = '1';
   document.head.appendChild(script);
 })();
+
+// Etapa 4: a primeira tela usa o conteúdo atual de privacidade sem alterar
+// o fluxo de confirmação já implementado em app.js.
+(() => {
+  'use strict';
+
+  const TITLE_PATTERN = /^\s*(?:🔐\s*)?Privacidade dos seus dados\s*$/u;
+
+  function isFirstRunPrivacy(title) {
+    return TITLE_PATTERN.test(String(title?.textContent || ''));
+  }
+
+  function updateFirstRunPrivacy() {
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    if (!isFirstRunPrivacy(title) || !body) return false;
+
+    title.textContent = 'Privacidade dos seus dados';
+
+    const action = body.querySelector('#privacyUnderstand');
+    if (!action) return false;
+
+    const updated = document.createDocumentFragment();
+    const notice = document.createElement('div');
+    notice.className = 'notice';
+    notice.innerHTML = '<strong>Esta versão é local.</strong><br>Seus produtos, listas, preços e observações são armazenados localmente neste dispositivo. A V2.2.2 não envia o conteúdo das listas para servidores, não coleta preços, não possui Analytics, login, Firebase ou banco de usuários.';
+    updated.appendChild(notice);
+
+    const backup = document.createElement('div');
+    backup.className = 'panel';
+    backup.style.marginTop = '10px';
+    backup.innerHTML = '<strong>Backup e compartilhamento</strong><br><span class="muted">Ao exportar ou compartilhar, você escolhe manualmente onde o arquivo será salvo/enviado usando os recursos do próprio aparelho. O aplicativo não envia esses dados por conta própria.</span>';
+    updated.appendChild(backup);
+
+    const storage = document.createElement('div');
+    storage.className = 'panel';
+    storage.innerHTML = '<strong>Armazenamento</strong><br><span class="muted">O IndexedDB não é criptografia. Se o dispositivo ou navegador for comprometido, o armazenamento local não deve ser considerado um cofre de dados.</span>';
+    updated.appendChild(storage);
+
+    updated.appendChild(action);
+    body.replaceChildren(updated);
+    return true;
+  }
+
+  function watch() {
+    const started = Date.now();
+    const timer = setInterval(() => {
+      if (updateFirstRunPrivacy() || Date.now() - started >= 5000) {
+        clearInterval(timer);
+      }
+    }, 50);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', watch, { once: true });
+  } else {
+    watch();
+  }
+})();
