@@ -7,10 +7,13 @@
 - Corrigida a expansão adicional para trabalhar com um alvo total acumulado de `2040` produtos.
 - O aplicativo calcula quantos registros ainda faltam e adiciona somente essa quantidade.
 - A expansão usa marcador próprio e mantém os registros existentes.
+- Corrigido o conflito entre o marcador dos mercados e o marcador do catálogo: o `referenceDataVersion` volta a representar o contrato esperado pelo núcleo e não provoca mais a limpeza do catálogo em cada recarregamento.
+- A expansão 2 deixou de ser disparada automaticamente para evitar duas expansões gravando o IndexedDB ao mesmo tempo.
 - Service Worker atualizado para `minha-lista-v2-3-11`.
 
 ### Validação
 
+- A causa da contagem permanecer em aproximadamente `1040` foi identificada no código: `reference-market-refresh.js` gravava `referenceDataVersion = 3`, enquanto o núcleo considerava qualquer valor diferente de `1` como necessidade de limpar e recriar o catálogo-base.
 - A contagem final no IndexedDB do dispositivo continua dependente da execução real no navegador.
 - Não foi declarado teste E2E em Chrome/Android neste ambiente.
 
@@ -35,7 +38,7 @@
 - Versão do aplicativo alinhada em `2.3.9`.
 - `package.json` e `package-lock.json` mantidos sincronizados.
 - Manifest, versão visual e Service Worker sincronizados com a versão do aplicativo.
-- Cache do Service Worker alinhado para `minha-lista-v2-3-9`.
+- Cache do Service Worker alinhado com `2.3.9`.
 - Scripts existentes de sincronização de versão preservados como mecanismo oficial de versionamento.
 
 ### Etapas P0 recentes
