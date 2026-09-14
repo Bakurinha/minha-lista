@@ -159,34 +159,3 @@
   script.dataset.v230InitialLoading = '1';
   document.head.appendChild(script);
 })();
-
-// Etapa 4: remove somente o ícone do título da primeira tela de privacidade.
-// O conteúdo, o foco e o fluxo de confirmação continuam inalterados.
-(() => {
-  'use strict';
-
-  const TITLE = 'Privacidade dos seus dados';
-  const LOCK_ICON = '🔐';
-
-  function cleanFirstRunPrivacyTitle() {
-    const title = document.getElementById('modalTitle');
-    if (!title || title.textContent.trim() !== TITLE) return;
-
-    title.querySelectorAll('.ml-v3-icon').forEach((icon) => icon.remove());
-
-    [...title.childNodes].forEach((node) => {
-      if (node.nodeType !== Node.TEXT_NODE) return;
-      node.nodeValue = String(node.nodeValue || '').replace(LOCK_ICON, '');
-    });
-  }
-
-  if (typeof MutationObserver !== 'undefined' && document.documentElement) {
-    const observer = new MutationObserver(cleanFirstRunPrivacyTitle);
-    observer.observe(document.documentElement, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-    });
-    cleanFirstRunPrivacyTitle();
-  }
-})();
