@@ -116,23 +116,18 @@
     }
   }
 
-  function loadProductExpansion(path, marker) {
+  function loadProductExpansion() {
+    const marker = 'referenceProductExpansionV230_3';
     if (document.querySelector(`script[data-reference-expansion="${marker}"]`)) return;
     const script = document.createElement('script');
-    script.src = path;
+    script.src = './reference-product-expansion-v230-3.js';
     script.dataset.referenceExpansion = marker;
     script.defer = true;
     document.head.appendChild(script);
   }
 
-  // As expansões são independentes da atualização dos mercados.
-  loadProductExpansion(
-    './reference-product-expansion-v230-2.js',
-    'referenceProductExpansionV230_2'
-  );
-  loadProductExpansion(
-    './reference-product-expansion-v230-3.js',
-    'referenceProductExpansionV230_3'
-  );
+  // A expansão 2 não é mais disparada automaticamente para evitar gravações concorrentes.
+  // A expansão 3 usa o total acumulado como alvo e completa o catálogo atual.
+  loadProductExpansion();
   refresh();
 })();
