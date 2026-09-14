@@ -8,6 +8,7 @@ const CORE = [
   './inventory.js',
   './reference-market-refresh.js',
   './reference-product-expansion-v230.js',
+  './reference-product-expansion-v230-2.js',
   './backup-v230.js',
   './list-enhancements.js',
   './etapa2-keep-list.js',
