@@ -6,18 +6,71 @@
   const TARGET_TOTAL = 10040;
   const MARKER = 'referenceProductExpansionV230_5';
   const VARIANTS = [
-    'Tradicional', 'Integral', 'Zero açúcar', 'Sem açúcar', 'Light', 'Premium',
-    'Orgânico', 'Natural', 'Artesanal', 'Caseiro', 'Especial', 'Clássico',
-    'Extra crocante', 'Extra cremoso', 'Baixo sódio', 'Sem lactose', 'Sem glúten',
-    'Vegano', 'Vegetal', 'Defumado', 'Apimentado', 'Suave', 'Com ervas', 'Com alho',
-    'Com cebola', 'Com queijo', 'Com chocolate', 'Com frutas', 'Com castanhas',
-    'Com mel', 'Com aveia', 'Com coco', 'Multigrãos', 'Proteico', 'Fitness', 'Infantil',
-    'Família', 'Econômico', 'Seleção especial', 'Receita original',
+    'Tradicional',
+    'Integral',
+    'Zero açúcar',
+    'Sem açúcar',
+    'Light',
+    'Premium',
+    'Orgânico',
+    'Natural',
+    'Artesanal',
+    'Caseiro',
+    'Especial',
+    'Clássico',
+    'Extra crocante',
+    'Extra cremoso',
+    'Baixo sódio',
+    'Sem lactose',
+    'Sem glúten',
+    'Vegano',
+    'Vegetal',
+    'Defumado',
+    'Apimentado',
+    'Suave',
+    'Com ervas',
+    'Com alho',
+    'Com cebola',
+    'Com queijo',
+    'Com chocolate',
+    'Com frutas',
+    'Com castanhas',
+    'Com mel',
+    'Com aveia',
+    'Com coco',
+    'Multigrãos',
+    'Proteico',
+    'Fitness',
+    'Infantil',
+    'Família',
+    'Econômico',
+    'Seleção especial',
+    'Receita original',
   ];
   const UNITS = ['200 g', '300 g', '500 g', '750 g', '1 kg', '1 L', '1,5 L', '2 L', '1 un', '2 un'];
-  const CATEGORIES = ['Alimentos', 'Bebidas', 'Laticínios', 'Carnes', 'Hortifruti', 'Frutas', 'Congelados', 'Padaria', 'Limpeza', 'Higiene', 'Pet', 'Bebê', 'Casa', 'Outros'];
+  const CATEGORIES = [
+    'Alimentos',
+    'Bebidas',
+    'Laticínios',
+    'Carnes',
+    'Hortifruti',
+    'Frutas',
+    'Congelados',
+    'Padaria',
+    'Limpeza',
+    'Higiene',
+    'Pet',
+    'Bebê',
+    'Casa',
+    'Outros',
+  ];
 
-  const norm = (value) => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('pt-BR');
+  const norm = (value) =>
+    String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLocaleLowerCase('pt-BR');
 
   function openDB() {
     return new Promise((resolve, reject) => {
@@ -77,7 +130,10 @@
     }
     try {
       const db = await openDB();
-      const [products, markets] = await Promise.all([count(db, 'referenceProducts'), count(db, 'referenceMarkets')]);
+      const [products, markets] = await Promise.all([
+        count(db, 'referenceProducts'),
+        count(db, 'referenceMarkets'),
+      ]);
       db.close();
       el.textContent = `Banco offline: ${products.toLocaleString('pt-BR')} produtos • ${markets.toLocaleString('pt-BR')} mercados`;
       el.setAttribute('aria-label', `Banco offline: ${products} produtos e ${markets} mercados`);
@@ -90,14 +146,19 @@
   async function run() {
     try {
       const db = await openDB();
-      const [current, ownMarker] = await Promise.all([all(db, 'referenceProducts'), getSetting(db, MARKER)]);
+      const [current, ownMarker] = await Promise.all([
+        all(db, 'referenceProducts'),
+        getSetting(db, MARKER),
+      ]);
       if (ownMarker?.value === 1 || current.length >= TARGET_TOTAL) {
         db.close();
         return;
       }
 
       const needed = TARGET_TOTAL - current.length;
-      const used = new Set(current.map((item) => `${norm(item.name)}|${norm(item.brand)}|${norm(item.unit)}`));
+      const used = new Set(
+        current.map((item) => `${norm(item.name)}|${norm(item.brand)}|${norm(item.unit)}`)
+      );
       const additions = [];
       let serial = 1;
 
@@ -124,13 +185,17 @@
 
       if (additions.length !== needed) {
         db.close();
-        console.error(`Expansão 5 interrompida: necessários ${needed}, gerados ${additions.length}.`);
+        console.error(
+          `Expansão 5 interrompida: necessários ${needed}, gerados ${additions.length}.`
+        );
         return;
       }
 
       await write(db, additions);
       db.close();
-      console.info(`Expansão 5 concluída: ${additions.length} produtos adicionados; total-alvo ${TARGET_TOTAL}.`);
+      console.info(
+        `Expansão 5 concluída: ${additions.length} produtos adicionados; total-alvo ${TARGET_TOTAL}.`
+      );
       await updateStatus();
       // Não força reload: o app permanece na mesma inicialização e o próximo acesso ao catálogo lê o banco atualizado.
     } catch (error) {
@@ -139,6 +204,7 @@
   }
 
   const boot = () => run();
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
 })();
