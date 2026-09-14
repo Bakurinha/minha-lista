@@ -1,0 +1,95 @@
+name: Etapa 2 keep list
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/etapa2-keep-list.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Criar correção de retorno da edição
+        run: |
+          set -e
+          cat > etapa2-keep-list.js <<'EOF'
+          (() => {
+            'use strict';
+
+            const KEY = '__mlReturnListAfterItemEdit';
+            let pendingListId = '';
+            let retries = 0;
+
+            function openListFallback(listId) {
+              if (!listId) return true;
+              const modal = document.getElementById('modal');
+              const itemForm = document.getElementById('itemForm');
+              if (modal?.classList.contains('show') && !itemForm) {
+                sessionStorage.removeItem(KEY);
+                return true;
+              }
+              const button = [...document.querySelectorAll('[data-action="open-list"]')]
+                .find((element) => element.dataset.id === listId);
+              if (!button) return false;
+              sessionStorage.removeItem(KEY);
+              button.click();
+              return true;
+            }
+
+            function restorePendingList() {
+              const listId = sessionStorage.getItem(KEY) || pendingListId;
+              if (!listId) return;
+              if (openListFallback(listId)) return;
+              if (retries++ < 24) setTimeout(restorePendingList, 250);
+              else sessionStorage.removeItem(KEY);
+            }
+
+            document.addEventListener('click', (event) => {
+              const edit = event.target.closest('[data-action="edit-item"]');
+              if (edit) pendingListId = edit.dataset.list || '';
+            }, true);
+
+            document.addEventListener('submit', (event) => {
+              if (!(event.target instanceof HTMLFormElement) || event.target.id !== 'itemForm') return;
+              if (!pendingListId) return;
+              sessionStorage.setItem(KEY, pendingListId);
+              retries = 0;
+              setTimeout(restorePendingList, 1200);
+            }, true);
+
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', () => setTimeout(restorePendingList, 700), { once: true });
+            } else {
+              setTimeout(restorePendingList, 700);
+            }
+          })();
+          EOF
+
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('list-market-v230.js')
+          text = path.read_text()
+          marker = "    './list-enhancements.js',\n"
+          insert = marker + "    './etapa2-keep-list.js',\n"
+          if insert not in text:
+              if marker not in text:
+                  raise SystemExit('marcador não encontrado')
+              text = text.replace(marker, insert, 1)
+              path.write_text(text)
+          PY
+
+          git add etapa2-keep-list.js list-market-v230.js
+          git rm .github/workflows/etapa2-keep-list.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(list): restaurar lista após editar item'
+          git push
