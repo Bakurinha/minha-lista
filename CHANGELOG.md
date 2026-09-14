@@ -1,5 +1,19 @@
 # CHANGELOG — Minha Lista de Supermercado
 
+## V2.3.10 — 14/09/2026
+
+### Catálogo de referência offline
+
+- Corrigido o acionamento da segunda expansão do catálogo para não depender da conclusão da atualização dos mercados.
+- A segunda expansão mantém o alvo de `1000` novos registros e evita duplicidade por nome, marca e unidade.
+- Service Worker atualizado para `minha-lista-v2-3-10` para forçar a atualização dos módulos no PWA.
+
+### Versionamento
+
+- Versão do aplicativo alinhada em `2.3.10`.
+- `package.json`, `package-lock.json` e manifest sincronizados.
+- Versão visual atualizada para `v2.3.10`.
+
 ## V2.3.9 — 14/09/2026
 
 ### Versionamento e manutenção
