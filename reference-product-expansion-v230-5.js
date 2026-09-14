@@ -197,7 +197,10 @@
         `Expansão 5 concluída: ${additions.length} produtos adicionados; total-alvo ${TARGET_TOTAL}.`
       );
       await updateStatus();
-      // Não força reload: o app permanece na mesma inicialização e o próximo acesso ao catálogo lê o banco atualizado.
+
+      // O app mantém os produtos de referência em memória durante a inicialização.
+      // Após gravar a expansão, um único reload sincroniza essa memória com o IndexedDB.
+      location.reload();
     } catch (error) {
       console.error('Expansão 5 do banco de referência:', error);
     }
