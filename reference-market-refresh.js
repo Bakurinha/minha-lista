@@ -3,8 +3,7 @@
   const DB = 'MinhaListaDB';
   const VERSION = 6;
   const STORE = 'referenceMarkets';
-  const MARKER = 'referenceDataVersion';
-
+  const REFERENCE_DATA_MARKER = 'referenceDataVersion';
   const MARKETS = [
     'Atakarejo',
     'Atacadão',
@@ -77,19 +76,6 @@
     for (let attempt = 0; attempt < 20; attempt += 1) {
       try {
         const db = await open();
-        const request = db.transaction('settings', 'readonly').objectStore('settings').get(MARKER);
-
-        const version = await new Promise((resolve, reject) => {
-          request.onsuccess = () => resolve(request.result?.value || 0);
-          request.onerror = () => reject(request.error);
-        });
-
-        if (version < 2) {
-          db.close();
-          await wait(100);
-          continue;
-        }
-
         await new Promise((resolve, reject) => {
           const transaction = db.transaction(['referenceMarkets', 'settings'], 'readwrite');
           const markets = transaction.objectStore(STORE);
@@ -99,7 +85,10 @@
           MARKETS.forEach((name, index) => {
             markets.put({ id: `ref-m-${index + 1}`, name });
           });
-          settings.put({ key: MARKER, value: 3 });
+
+          // O marcador 1 é o contrato esperado pelo núcleo legado. O valor 3
+          // usado anteriormente fazia o app.js limpar o catálogo em todo reload.
+          settings.put({ key: REFERENCE_DATA_MARKER, value: 1 });
 
           transaction.oncomplete = resolve;
           transaction.onerror = () =>
@@ -126,8 +115,8 @@
     document.head.appendChild(script);
   }
 
-  // A expansão 2 não é mais disparada automaticamente para evitar gravações concorrentes.
-  // A expansão 3 usa o total acumulado como alvo e completa o catálogo atual.
+  // Uma única expansão incremental ativa. A expansão 2 permanece no repositório
+  // apenas por compatibilidade histórica e não é mais disparada automaticamente.
   loadProductExpansion();
   refresh();
 })();
