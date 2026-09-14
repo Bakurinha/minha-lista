@@ -80,7 +80,8 @@
     body.v3-ui #wishSearch__ui, 
     body.v3-ui #wishInput,
     body.v3-ui #catalogInput,
-    body.v3-ui #invFilter {
+    body.v3-ui #invFilter,
+    body.v3-ui #listItemSearch {
       box-sizing: border-box !important;
       width: 100% !important;
       height: 42px !important;
