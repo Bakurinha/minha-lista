@@ -97,6 +97,25 @@
     setTimeout(() => overlay.remove(), 220);
   }
 
+  function cleanFirstRunPrivacyTitle() {
+    const title = document.getElementById('modalTitle');
+    if (!title || title.textContent.trim() !== '🔐 Privacidade dos seus dados' && title.textContent.trim() !== 'Privacidade dos seus dados') return;
+    title.querySelectorAll('.ml-v3-icon').forEach((icon) => icon.remove());
+    [...title.childNodes].forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        node.nodeValue = String(node.nodeValue || '').replace(/🔐/gu, '');
+      }
+    });
+  }
+
+  function watchFirstRunPrivacy() {
+    const started = Date.now();
+    const timer = setInterval(() => {
+      cleanFirstRunPrivacyTitle();
+      if (Date.now() - started >= 12000) clearInterval(timer);
+    }, 50);
+  }
+
   function watch() {
     const started = Date.now();
     const timer = setInterval(() => {
@@ -109,6 +128,7 @@
 
   function init() {
     mount();
+    watchFirstRunPrivacy();
     watch();
   }
 
