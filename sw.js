@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-15';
+const CACHE = 'minha-lista-v2-3-16';
 const CORE = [
   './',
   './index.html',
@@ -42,8 +42,8 @@ self.addEventListener('activate', (event) =>
         Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
       )
       .then(() => self.clients.claim())
-  );
-});
+  )
+);
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
@@ -74,4 +74,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.15: cache version bumped for the first-run privacy correction.
+// V2.3.16: cache version bumped for the final first-run privacy correction.
