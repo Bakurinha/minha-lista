@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-12';
+const CACHE = 'minha-lista-v2-3-14';
 const CORE = [
   './',
   './index.html',
@@ -21,6 +21,8 @@ const CORE = [
   './v3-menu-autoclose.js',
   './v3-compact-controls.js',
   './share-config.js',
+  './reference-market-refresh.js',
+  './reference-product-expansion-v230-5.js?v=6',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
@@ -47,10 +49,8 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-
   const isNavigation = event.request.mode === 'navigate';
   const request = isNavigation ? new Request(event.request, { cache: 'no-store' }) : event.request;
-
   event.respondWith(
     fetch(request)
       .then((response) => {
@@ -61,12 +61,10 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() =>
-        caches
-          .match(event.request)
-          .then(
-            (cached) => cached || (isNavigation ? caches.match('./index.html') : Response.error())
-          )
+        caches.match(event.request).then(
+          (cached) => cached || (isNavigation ? caches.match('./index.html') : Response.error())
+        )
       )
   );
 });
-// V2.3.13: removes legacy reference-expansion modules from the active PWA cache.
+// V2.3.14: refreshes reference-count logic and keeps expansion modules available offline.
