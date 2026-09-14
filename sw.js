@@ -18,6 +18,7 @@ const CORE = [
   './v3-shell.js',
   './v3-icons.js',
   './v3-icon-force.js',
+  './v3-menu-autoclose.js',
   './v3-compact-controls.js',
   './share-config.js',
   './manifest.json',
