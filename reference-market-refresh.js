@@ -1,6 +1,5 @@
 (() => {
   'use strict';
-
   const DB = 'MinhaListaDB';
   const VERSION = 6;
   const STORE = 'referenceMarkets';
@@ -117,16 +116,17 @@
     }
   }
 
-  function loadSecondProductExpansion() {
-    if (document.querySelector('script[data-reference-product-expansion-v230-2]')) return;
+  function loadProductExpansion(path, marker) {
+    if (document.querySelector(`script[data-reference-expansion="${marker}"]`)) return;
     const script = document.createElement('script');
-    script.src = './reference-product-expansion-v230-2.js';
-    script.dataset.referenceProductExpansionV2302 = '1';
+    script.src = path;
+    script.dataset.referenceExpansion = marker;
     script.defer = true;
     document.head.appendChild(script);
   }
 
-  // A expansão de produtos deve iniciar independentemente da atualização dos mercados.
-  loadSecondProductExpansion();
+  // As expansões são independentes da atualização dos mercados.
+  loadProductExpansion('./reference-product-expansion-v230-2.js', 'referenceProductExpansionV230_2');
+  loadProductExpansion('./reference-product-expansion-v230-3.js', 'referenceProductExpansionV230_3');
   refresh();
 })();
