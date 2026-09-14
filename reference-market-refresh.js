@@ -2,17 +2,215 @@
   'use strict';
   if (window.__mlReferenceMarketRefreshV230_5) return;
   window.__mlReferenceMarketRefreshV230_5 = true;
-  const DB='MinhaListaDB', VERSION=6, STORE='referenceMarkets';
-  const REFERENCE_DATA_MARKER='referenceDataVersion';
-  const PRODUCT_EXPANSION_MARKER='referenceProductExpansionV230_6';
-  const PRODUCT_TARGET=20000;
-  const MARKETS = ['Atakarejo','Atacadão','Assaí Atacadista','Hiperideal','RedeMix','Mercantil Rodrigues','Mix Bahia','Novo Mix','Mix Mateus','GBarbosa','Carrefour',"Sam's Club",'Pão de Açúcar','Mercantil de Brotas','Mercado Central','Mercado da Sete Portas','Mercado do Bairro','Super Muffato','Condor','Angeloni','Giassi','Koch','Fort Atacadista','Mart Minas','Supernosso','EPA','Supermercados BH','Oba Hortifruti','St Marche','Dia Brasil','Roldão','Tenda Atacado','Spani Atacadista','Tonin','Villefort','ABC Atacado e Varejo','Guanabara','Zona Sul','Imperatriz','Savegnago','Tauste','Zaffari','Nacional','Muffato Max','Hortifruti Natural da Terra','Mineirão Atacarejo','Total Atacado','RF Atacado','Sol e Mar Supermercados','Mercadinhos São Luiz','Cometa Supermercados','São Luiz','Davo Supermercados','Confiança Supermercados','Koch Hipermercado','Grupo Mateus','Novo Atacarejo','Mateus Supermercados','Hiper Bompreço','Bompreço','Carrefour Bairro','Carrefour Express','TodoDia','Mercado Extra','Extra Hiper','Pão de Açúcar Minuto','Prezunic','Supermarket','Mundial','Princesa Supermercados','Hortifruti','Redeconomia','Multi Market','Inter Supermercados','Dom Atacadista','Campineira','Enxuto','Covabra','Tauste Supermercados','Confiança','Jaú Serve','Delta Max','São Vicente','Paulistão Atacadista','Pague Menos','Barbosa Supermercados','Ipanema','Semar Supermercados','Shibata','Sonda','Joanin','Nagumo','Mambo','Hirota Food','Asun','Bistek','Comper','Avenida','Tatico','Bahamas','Bahamas Mix','Mart Plus','Centerbox','Bom Vizinho','Frangolândia','Pinheiro Supermercado','Unicompra','Rede Super Líder','Primato Supermercado','Verona Supermercados','Bavaresco','Andorinha Supermercado','Supermercado Tibúrcio','Supermercado Bernardão','Bonanza Supermercado','Supermercado Moranguinho','Quartetto Supermercados','Supermercado Baklizi','Supermercado Pepão','Supermercado Delta Max'];
-  function open(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,VERSION);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error||Error('IndexedDB indisponível'));});}
-  function count(db,store){return new Promise((resolve,reject)=>{const r=db.transaction(store,'readonly').objectStore(store).count();r.onsuccess=()=>resolve(r.result||0);r.onerror=()=>reject(r.error||Error(`Falha ao contar ${store}`));});}
-  function all(db,store){return new Promise((resolve,reject)=>{const r=db.transaction(store,'readonly').objectStore(store).getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error||Error(`Falha ao ler ${store}`));});}
-  const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-  function sameMarkets(current){if(current.length!==MARKETS.length)return false;const names=new Set(current.map(item=>String(item?.name||'').trim()));return MARKETS.every(name=>names.has(name));}
-  async function refresh(){for(let attempt=0;attempt<20;attempt++){try{const db=await open();const [productCount,currentMarkets]=await Promise.all([count(db,'referenceProducts'),all(db,STORE)]);if(!sameMarkets(currentMarkets)){await new Promise((resolve,reject)=>{const tx=db.transaction([STORE,'settings'],'readwrite');const markets=tx.objectStore(STORE),settings=tx.objectStore('settings');markets.clear();MARKETS.forEach((name,index)=>markets.put({id:`ref-m-${index+1}`,name}));settings.put({key:REFERENCE_DATA_MARKER,value:1});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||Error('Falha ao atualizar mercados'));tx.onabort=()=>reject(tx.error||Error('Atualização cancelada'));});}else{await new Promise((resolve,reject)=>{const tx=db.transaction('settings','readwrite');tx.objectStore('settings').put({key:REFERENCE_DATA_MARKER,value:1});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||Error('Falha ao atualizar marcador'));tx.onabort=()=>reject(tx.error||Error('Atualização cancelada'));});}const marker=await new Promise((resolve,reject)=>{const r=db.transaction('settings','readonly').objectStore('settings').get(PRODUCT_EXPANSION_MARKER);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>reject(r.error||Error('Falha ao ler marcador da expansão'));});db.close();if(productCount<PRODUCT_TARGET&&marker?.value!==1)loadProductExpansion();return;}catch(error){console.error('Referência de mercados:',error);await wait(100);}}}
-  function loadProductExpansion(){const marker=PRODUCT_EXPANSION_MARKER;if(document.querySelector(`script[data-reference-expansion="${marker}"]`))return;const script=document.createElement('script');script.src='./reference-product-expansion-v230-5.js';script.dataset.referenceExpansion=marker;script.defer=true;document.head.appendChild(script);}
+  const DB = 'MinhaListaDB',
+    VERSION = 6,
+    STORE = 'referenceMarkets';
+  const REFERENCE_DATA_MARKER = 'referenceDataVersion';
+  const PRODUCT_EXPANSION_MARKER = 'referenceProductExpansionV230_6';
+  const PRODUCT_TARGET = 20000;
+  const MARKETS = [
+    'Atakarejo',
+    'Atacadão',
+    'Assaí Atacadista',
+    'Hiperideal',
+    'RedeMix',
+    'Mercantil Rodrigues',
+    'Mix Bahia',
+    'Novo Mix',
+    'Mix Mateus',
+    'GBarbosa',
+    'Carrefour',
+    "Sam's Club",
+    'Pão de Açúcar',
+    'Mercantil de Brotas',
+    'Mercado Central',
+    'Mercado da Sete Portas',
+    'Mercado do Bairro',
+    'Super Muffato',
+    'Condor',
+    'Angeloni',
+    'Giassi',
+    'Koch',
+    'Fort Atacadista',
+    'Mart Minas',
+    'Supernosso',
+    'EPA',
+    'Supermercados BH',
+    'Oba Hortifruti',
+    'St Marche',
+    'Dia Brasil',
+    'Roldão',
+    'Tenda Atacado',
+    'Spani Atacadista',
+    'Tonin',
+    'Villefort',
+    'ABC Atacado e Varejo',
+    'Guanabara',
+    'Zona Sul',
+    'Imperatriz',
+    'Savegnago',
+    'Tauste',
+    'Zaffari',
+    'Nacional',
+    'Muffato Max',
+    'Hortifruti Natural da Terra',
+    'Mineirão Atacarejo',
+    'Total Atacado',
+    'RF Atacado',
+    'Sol e Mar Supermercados',
+    'Mercadinhos São Luiz',
+    'Cometa Supermercados',
+    'São Luiz',
+    'Davo Supermercados',
+    'Confiança Supermercados',
+    'Koch Hipermercado',
+    'Grupo Mateus',
+    'Novo Atacarejo',
+    'Mateus Supermercados',
+    'Hiper Bompreço',
+    'Bompreço',
+    'Carrefour Bairro',
+    'Carrefour Express',
+    'TodoDia',
+    'Mercado Extra',
+    'Extra Hiper',
+    'Pão de Açúcar Minuto',
+    'Prezunic',
+    'Supermarket',
+    'Mundial',
+    'Princesa Supermercados',
+    'Hortifruti',
+    'Redeconomia',
+    'Multi Market',
+    'Inter Supermercados',
+    'Dom Atacadista',
+    'Campineira',
+    'Enxuto',
+    'Covabra',
+    'Tauste Supermercados',
+    'Confiança',
+    'Jaú Serve',
+    'Delta Max',
+    'São Vicente',
+    'Paulistão Atacadista',
+    'Pague Menos',
+    'Barbosa Supermercados',
+    'Ipanema',
+    'Semar Supermercados',
+    'Shibata',
+    'Sonda',
+    'Joanin',
+    'Nagumo',
+    'Mambo',
+    'Hirota Food',
+    'Asun',
+    'Bistek',
+    'Comper',
+    'Avenida',
+    'Tatico',
+    'Bahamas',
+    'Bahamas Mix',
+    'Mart Plus',
+    'Centerbox',
+    'Bom Vizinho',
+    'Frangolândia',
+    'Pinheiro Supermercado',
+    'Unicompra',
+    'Rede Super Líder',
+    'Primato Supermercado',
+    'Verona Supermercados',
+    'Bavaresco',
+    'Andorinha Supermercado',
+    'Supermercado Tibúrcio',
+    'Supermercado Bernardão',
+    'Bonanza Supermercado',
+    'Supermercado Moranguinho',
+    'Quartetto Supermercados',
+    'Supermercado Baklizi',
+    'Supermercado Pepão',
+    'Supermercado Delta Max',
+  ];
+  function open() {
+    return new Promise((resolve, reject) => {
+      const r = indexedDB.open(DB, VERSION);
+      r.onsuccess = () => resolve(r.result);
+      r.onerror = () => reject(r.error || Error('IndexedDB indisponível'));
+    });
+  }
+  function count(db, store) {
+    return new Promise((resolve, reject) => {
+      const r = db.transaction(store, 'readonly').objectStore(store).count();
+      r.onsuccess = () => resolve(r.result || 0);
+      r.onerror = () => reject(r.error || Error(`Falha ao contar ${store}`));
+    });
+  }
+  function all(db, store) {
+    return new Promise((resolve, reject) => {
+      const r = db.transaction(store, 'readonly').objectStore(store).getAll();
+      r.onsuccess = () => resolve(r.result || []);
+      r.onerror = () => reject(r.error || Error(`Falha ao ler ${store}`));
+    });
+  }
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  function sameMarkets(current) {
+    if (current.length !== MARKETS.length) return false;
+    const names = new Set(current.map((item) => String(item?.name || '').trim()));
+    return MARKETS.every((name) => names.has(name));
+  }
+  async function refresh() {
+    for (let attempt = 0; attempt < 20; attempt++) {
+      try {
+        const db = await open();
+        const [productCount, currentMarkets] = await Promise.all([
+          count(db, 'referenceProducts'),
+          all(db, STORE),
+        ]);
+        if (!sameMarkets(currentMarkets)) {
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction([STORE, 'settings'], 'readwrite');
+            const markets = tx.objectStore(STORE),
+              settings = tx.objectStore('settings');
+            markets.clear();
+            MARKETS.forEach((name, index) => markets.put({ id: `ref-m-${index + 1}`, name }));
+            settings.put({ key: REFERENCE_DATA_MARKER, value: 1 });
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error || Error('Falha ao atualizar mercados'));
+            tx.onabort = () => reject(tx.error || Error('Atualização cancelada'));
+          });
+        } else {
+          await new Promise((resolve, reject) => {
+            const tx = db.transaction('settings', 'readwrite');
+            tx.objectStore('settings').put({ key: REFERENCE_DATA_MARKER, value: 1 });
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error || Error('Falha ao atualizar marcador'));
+            tx.onabort = () => reject(tx.error || Error('Atualização cancelada'));
+          });
+        }
+        const marker = await new Promise((resolve, reject) => {
+          const r = db
+            .transaction('settings', 'readonly')
+            .objectStore('settings')
+            .get(PRODUCT_EXPANSION_MARKER);
+          r.onsuccess = () => resolve(r.result || null);
+          r.onerror = () => reject(r.error || Error('Falha ao ler marcador da expansão'));
+        });
+        db.close();
+        if (productCount < PRODUCT_TARGET && marker?.value !== 1) loadProductExpansion();
+        return;
+      } catch (error) {
+        console.error('Referência de mercados:', error);
+        await wait(100);
+      }
+    }
+  }
+  function loadProductExpansion() {
+    const marker = PRODUCT_EXPANSION_MARKER;
+    if (document.querySelector(`script[data-reference-expansion="${marker}"]`)) return;
+    const script = document.createElement('script');
+    script.src = './reference-product-expansion-v230-5.js';
+    script.dataset.referenceExpansion = marker;
+    script.defer = true;
+    document.head.appendChild(script);
+  }
   refresh();
 })();
