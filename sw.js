@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-10';
+const CACHE = 'minha-lista-v2-3-11';
 const CORE = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const CORE = [
   './reference-product-expansion-v230.js',
   './backup-v230.js',
   './list-enhancements.js',
+  './etapa2-keep-list.js',
   './list-market-v230.js',
   './db-integrity-v230.js',
   './db-migrations-v230.js',
@@ -17,7 +18,6 @@ const CORE = [
   './v3-shell.js',
   './v3-icons.js',
   './v3-icon-force.js',
-  './v3-menu-autoclose.js',
   './v3-compact-controls.js',
   './share-config.js',
   './manifest.json',
@@ -72,4 +72,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.10: duplicate search controller removed from runtime; navigation keeps cache bypass.
+// V2.3.11: cache version bumped to deliver the item-edit return fix.
