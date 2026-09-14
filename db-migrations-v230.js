@@ -150,7 +150,8 @@
     overlay.id = 'initialLoading';
     overlay.setAttribute('role', 'status');
     overlay.setAttribute('aria-live', 'polite');
-    overlay.innerHTML = '<div class="box"><div class="spin" aria-hidden="true"></div><div class="title">Minha Lista</div><div class="sub">carregando...</div></div>';
+    overlay.innerHTML =
+      '<div class="box"><div class="spin" aria-hidden="true"></div><div class="title">Minha Lista</div><div class="sub">carregando...</div></div>';
     document.body.prepend(overlay);
   }
   const script = document.createElement('script');
@@ -184,18 +185,21 @@
     const updated = document.createDocumentFragment();
     const notice = document.createElement('div');
     notice.className = 'notice';
-    notice.innerHTML = '<strong>Esta versão é local.</strong><br>Seus produtos, listas, preços e observações são armazenados localmente neste dispositivo. O aplicativo não envia o conteúdo das listas para servidores, não coleta preços, não possui Analytics, login, Firebase ou banco de usuários.';
+    notice.innerHTML =
+      '<strong>Esta versão é local.</strong><br>Seus produtos, listas, preços e observações são armazenados localmente neste dispositivo. O aplicativo não envia o conteúdo das listas para servidores, não coleta preços, não possui Analytics, login, Firebase ou banco de usuários.';
     updated.appendChild(notice);
 
     const backup = document.createElement('div');
     backup.className = 'panel';
     backup.style.marginTop = '10px';
-    backup.innerHTML = '<strong>Backup e compartilhamento</strong><br><span class="muted">Ao exportar ou compartilhar, você escolhe manualmente onde o arquivo será salvo/enviado usando os recursos do próprio aparelho. O aplicativo não envia esses dados por conta própria.</span>';
+    backup.innerHTML =
+      '<strong>Backup e compartilhamento</strong><br><span class="muted">Ao exportar ou compartilhar, você escolhe manualmente onde o arquivo será salvo/enviado usando os recursos do próprio aparelho. O aplicativo não envia esses dados por conta própria.</span>';
     updated.appendChild(backup);
 
     const storage = document.createElement('div');
     storage.className = 'panel';
-    storage.innerHTML = '<strong>Armazenamento</strong><br><span class="muted">O IndexedDB não é criptografia. Se o dispositivo ou navegador for comprometido, o armazenamento local não deve ser considerado um cofre de dados.</span>';
+    storage.innerHTML =
+      '<strong>Armazenamento</strong><br><span class="muted">O IndexedDB não é criptografia. Se o dispositivo ou navegador for comprometido, o armazenamento local não deve ser considerado um cofre de dados.</span>';
     updated.appendChild(storage);
 
     updated.appendChild(action);

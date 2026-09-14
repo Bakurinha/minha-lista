@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-16';
+const CACHE = 'minha-lista-v2-3-8';
 const CORE = [
   './',
   './index.html',
@@ -50,9 +50,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   const isNavigation = event.request.mode === 'navigate';
-  const request = isNavigation
-    ? new Request(event.request, { cache: 'no-store' })
-    : event.request;
+  const request = isNavigation ? new Request(event.request, { cache: 'no-store' }) : event.request;
 
   event.respondWith(
     fetch(request)
@@ -67,9 +65,7 @@ self.addEventListener('fetch', (event) => {
         caches
           .match(event.request)
           .then(
-            (cached) =>
-              cached ||
-              (isNavigation ? caches.match('./index.html') : Response.error())
+            (cached) => cached || (isNavigation ? caches.match('./index.html') : Response.error())
           )
       )
   );
