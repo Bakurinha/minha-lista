@@ -254,6 +254,7 @@
     './reference-market-refresh.js',
     './reference-product-expansion-v230.js',
     './list-enhancements.js',
+    './etapa2-keep-list.js',
     './db-integrity-v230.js',
     './version-v230.js',
     './v3-shell.js',
