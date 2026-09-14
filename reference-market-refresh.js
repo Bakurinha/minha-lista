@@ -126,5 +126,7 @@
     document.head.appendChild(script);
   }
 
-  refresh().finally(loadSecondProductExpansion);
+  // A expansão de produtos deve iniciar independentemente da atualização dos mercados.
+  loadSecondProductExpansion();
+  refresh();
 })();
