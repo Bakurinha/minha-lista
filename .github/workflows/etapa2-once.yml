@@ -22,13 +22,16 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
           p = Path('app.js')
           s = p.read_text(encoding='utf-8')
-          old = "        closeModal(false);\n        await load();\n        openListNoReset(l.id);"
-          new = "        await load();\n        openListNoReset(l.id);"
-          if s.count(old) != 1:
-              raise SystemExit(f'Bloco esperado não encontrado de forma única: {s.count(old)}')
-          p.write_text(s.replace(old, new), encoding='utf-8')
+          pattern = re.compile(r'([ \t]*)closeModal\(false\);\r?\n\1await load\(\);\r?\n\1openListNoReset\(l\.id\);')
+          matches = pattern.findall(s)
+          print(f'Blocos-alvo encontrados: {len(matches)}')
+          if len(matches) != 1:
+              raise SystemExit('Bloco esperado não encontrado de forma única.')
+          s = pattern.sub(lambda m: f'{m.group(1)}await load();\n{m.group(1)}openListNoReset(l.id);', s, count=1)
+          p.write_text(s, encoding='utf-8')
           PY
 
       - name: Remover workflow temporário e gravar alteração
