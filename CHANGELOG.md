@@ -4,9 +4,11 @@
 
 ### Catálogo de referência offline
 
-- Corrigida a expansão final para não ser bloqueada pelo marcador da expansão anterior.
-- A nova expansão completa o banco até o alvo acumulado de `2040` produtos, adicionando apenas o que faltar.
-- Mantidos os registros existentes e a verificação de duplicidade por nome, marca e unidade.
+- Corrigida a lógica de verificação da expansão para não depender indevidamente de um marcador anterior.
+- A preparação do catálogo passou a considerar a quantidade real existente em `referenceProducts`.
+- O alvo atual acumulado do catálogo de produtos de referência é `20.000` registros.
+- Mantidos os registros existentes e a verificação de duplicidade durante a expansão.
+- O catálogo de mercados é mantido com `120` nomes de referência.
 
 ### Informação da interface
 
@@ -21,9 +23,14 @@
 
 ### Validação
 
-- Código e referências do novo módulo conferidos no repositório.
-- A contagem real no IndexedDB continua dependendo da execução no navegador do usuário.
+- Código e referências dos módulos conferidos no repositório.
+- A contagem efetiva no IndexedDB continua dependendo da execução no navegador do usuário.
 - Não foi declarado teste E2E em Chrome/Android neste ambiente.
+
+### Pendências identificadas após a V2.3.12
+
+- Flash visual de ícones/renderização durante inicialização e operações ainda não resolvido definitivamente.
+- A interface pode apresentar estados intermediários enquanto o banco de referência é preparado; a correção para manter a tela de carregamento até a conclusão do banco está registrada no backlog.
 
 ## V2.3.11 — 14/09/2026
 
