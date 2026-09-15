@@ -1,4 +1,4 @@
-# Minha Lista de Supermercado — V2.3.0
+# Minha Lista de Supermercado — V2.3.12
 
 Documento técnico interno. O aplicativo permanece PWA, local e offline, sem redesign visual nesta versão.
 
@@ -10,23 +10,23 @@ Documento técnico interno. O aplicativo permanece PWA, local e offline, sem red
 - Sem login, servidor, nuvem, Firebase, Firestore, Analytics, Supabase, anúncios, pagamentos ou API externa de preços.
 - Dados pessoais permanecem no dispositivo.
 
-## V2.3.0 — arquitetura e responsabilidades
+## V2.3.12 — arquitetura e responsabilidades
 
-A V2.3.0 adiciona controle de estoque por lotes, expansão do banco de referência, migrações explícitas, backup atualizado, compartilhamento V3 e verificações de integridade.
+A V2.3.12 mantém a base V2.3 e reúne melhorias de confiabilidade, catálogo de referência offline, migrações explícitas, backup, compartilhamento, integridade e interface V3.
 
-### Módulos
+### Módulos principais
 
-- `app.js`: núcleo existente da aplicação e compatibilidade com o fluxo principal.
+- `app.js`: núcleo da aplicação, IndexedDB e fluxo principal.
 - `inventory.js`: CRUD do estoque, múltiplos lotes, validade, quantidade mínima e ajustes rápidos.
-- `backup-v230.js`: exportação/importação dos dados pessoais e migração de backups V1/V2.
-- `db-migrations-v230.js`: contrato documentado das versões do IndexedDB de V1 a V6.
+- `backup-v230.js`: exportação/importação dos dados pessoais e compatibilidade com backups anteriores.
+- `db-migrations-v230.js`: contrato das versões do IndexedDB de V1 a V6.
 - `db-integrity-v230.js`: diagnóstico da estrutura e dos vínculos do banco, sem reparo automático.
-- `enhancements.js`: compartilhamento V3, importação compartilhada e integração com histórico/navegação.
-- `list-enhancements.js`: extensão do formulário de itens da lista para validade e dados de embalagem.
-- `reference-product-expansion-v230.js`: expansão idempotente do catálogo de referência.
-- `reference-market-refresh.js`: seed/atualização idempotente do catálogo de mercados.
-- `version-v230.js`: atualização da versão visível no rodapé sem alterar o núcleo.
-- `sw.js`: cache PWA e injeção dos módulos necessários nas páginas navegadas.
+- `enhancements.js`: compartilhamento, importação compartilhada e integrações da interface.
+- `list-enhancements.js`: extensões do formulário de itens da lista.
+- `reference-market-refresh.js`: verificação e atualização idempotente do catálogo de mercados.
+- `reference-product-expansion-v230-5.js`: expansão idempotente do catálogo de produtos de referência até o alvo atual de 20.000 registros.
+- `version-v230.js`: atualização da versão visível no aplicativo.
+- `sw.js`: cache PWA e disponibilidade offline dos módulos necessários.
 
 ## Modelo de estoque
 
@@ -43,18 +43,20 @@ Regras importantes:
 - Lotes não são apagados automaticamente por validade.
 - O filtro de estoque considera validade e quantidade mínima.
 
-## Banco de referência
+## Banco de referência offline
 
 `referenceProducts` e `referenceMarkets` são bancos locais de referência, separados dos dados pessoais.
 
-- Produtos de referência são excluídos do backup pessoal.
-- A expansão V2.3.0 é idempotente e usa marcador em `settings`.
-- A expansão acrescenta até 1000 combinações novas de produtos, evitando duplicidade por nome, marca e unidade.
-- O catálogo de mercados possui dezenas de nomes brasileiros, incluindo referências da Bahia/Salvador.
+- Produtos de referência não fazem parte do backup pessoal.
+- O catálogo de produtos possui expansão incremental e idempotente.
+- O alvo atual da expansão é **20.000 produtos**.
+- A expansão adiciona somente registros que ainda não existem e preserva os registros já armazenados.
+- O catálogo de mercados é mantido com **120 mercados de referência**.
+- A quantidade efetivamente disponível depende do estado do IndexedDB no dispositivo e da conclusão da preparação local.
 
 ## Migrações IndexedDB
 
-Contrato da V2.3.0:
+Contrato atual:
 
 - V1: `catalogs`, `lists`, `history`, `settings`.
 - V2: `wishlist`.
@@ -63,38 +65,44 @@ Contrato da V2.3.0:
 - V5: nenhuma nova store.
 - V6: `inventory`.
 
-A migração deve preservar os dados pessoais existentes. O módulo `db-migrations-v230.js` mantém o contrato técnico separado para auditoria e testes; o núcleo legado continua contendo compatibilidade interna para não alterar o fluxo estável da aplicação sem necessidade.
+A migração deve preservar os dados pessoais existentes. O núcleo e o módulo `db-migrations-v230.js` mantêm compatibilidade com estruturas anteriores sem operações destrutivas desnecessárias.
 
 ## Backup
 
 - Formato atual: `backupFormatVersion: 2`.
 - Schema atual: IndexedDB v6.
-- Inclui `inventory` e os demais dados pessoais.
-- Aceita backups V1 e backups legados identificados como `version: "2.2"`.
+- Inclui os dados pessoais atuais, incluindo `inventory`.
+- Aceita backups anteriores compatíveis.
 - Limite de segurança do backup: 20 MB.
-- Catálogos e dados de referência internos não são misturados aos dados pessoais.
+- Catálogos e dados de referência internos não são misturados indevidamente aos dados pessoais.
 
 ## Compartilhamento
 
-- Formato V3 aceita payloads V2/V3.
+- O formato atual aceita payloads legados compatíveis.
 - Apenas a lista e os catálogos necessários são compartilhados.
-- Estoque/inventário nunca é incluído no compartilhamento.
-- O modo local usa serialização Base64URL.
-- O modo remoto opcional usa Worker/KV com origem restrita ao aplicativo.
-- TTL remoto: 7 dias.
+- Estoque/inventário não é incluído no compartilhamento.
+- O modo local usa serialização compacta apropriada ao fluxo offline.
+- O modo remoto opcional utiliza o Worker/KV existente quando configurado.
 - Limites e validações de quantidade, datas e strings são aplicados antes do armazenamento.
 
 ## Segurança e privacidade
 
 - Conteúdo inserido pelo usuário deve ser escapado antes de entrar em HTML.
-- Não usar `sendBeacon`, WebSocket, Firebase, Supabase ou SDK de rastreamento para enviar dados pessoais.
-- O Worker aceita apenas a origem oficial do aplicativo e limita corpo, itens, catálogos e validade.
+- Não usar mecanismos de rastreamento ou envio externo de dados pessoais.
+- O Worker, quando utilizado, aplica as validações e restrições previstas pelo aplicativo.
 - Dados de estoque não são persistidos em payloads compartilhados.
 - O diagnóstico de integridade não executa reparos automáticos, reduzindo o risco de perda silenciosa de dados.
 
 ## Service Worker / PWA
 
-O cache é versionado como `minha-lista-v2-3-0` e inclui os módulos V2.3.0 necessários para operação offline. O Service Worker também injeta os módulos de compatibilidade/expansão durante a navegação.
+O cache atual é `minha-lista-v2-3-12` e inclui os módulos necessários para operação offline, incluindo os módulos de catálogo de referência e interface V3. O Service Worker também mantém disponíveis módulos usados durante a navegação e preparação local.
+
+## Estado conhecido / pendências
+
+- O **flash visual de ícones/renderização** durante a inicialização e algumas operações continua pendente; tentativas anteriores não devem ser consideradas uma correção definitiva.
+- A **inicialização da aplicação antes da conclusão do banco de referência** está registrada no backlog para investigação: a interface não deve expor estados intermediários do catálogo durante o carregamento.
+- A centralização do mercado na lista e a exibição de somente a última edição no histórico permanecem como etapas de backlog.
+- Testes E2E completos em Chrome/Android real não são declarados como aprovados neste ambiente.
 
 ## Compatibilidade
 
@@ -106,6 +114,6 @@ O cache é versionado como `minha-lista-v2-3-0` e inclui os módulos V2.3.0 nece
 
 ## Auditoria
 
-A entrega V2.3.0 possui testes automatizados de fundação, Stage 2, preservação de dados, segurança/regressão, migração, integridade, versão e compatibilidade da validação V2.2.3.
+As verificações automatizadas existentes cobrem fundação, migração, preservação de dados, segurança/regressão, integridade, versão, compatibilidade e partes da interface.
 
-Limitação: teste E2E completo em navegador real não é declarado como aprovado neste ambiente.
+**Limitação:** a validação de comportamento visual e E2E completo em navegador real continua dependente de teste no dispositivo/navegador do usuário.
