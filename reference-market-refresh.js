@@ -1,136 +1,14 @@
 (() => {
   'use strict';
-  if (window.__mlReferenceMarketRefreshV230_6) return;
-  window.__mlReferenceMarketRefreshV230_6 = true;
-  const DB = 'MinhaListaDB',
-    VERSION = 6,
-    STORE = 'referenceMarkets';
+  if (window.__mlReferenceMarketRefreshV230_6?.refresh) return;
+  const DB = 'MinhaListaDB', VERSION = 6, STORE = 'referenceMarkets';
   const REFERENCE_DATA_MARKER = 'referenceDataVersion';
   const PRODUCT_EXPANSION_MARKER = 'referenceProductExpansionV230_6';
+  const INITIAL_CHECK_MARKER = 'referenceInitialCheckV230_6';
   const PRODUCT_TARGET = 20000;
   const MARKETS = [
-    'Atakarejo',
-    'Atacadão',
-    'Assaí Atacadista',
-    'Hiperideal',
-    'RedeMix',
-    'Mercantil Rodrigues',
-    'Mix Bahia',
-    'Novo Mix',
-    'Mix Mateus',
-    'GBarbosa',
-    'Carrefour',
-    "Sam's Club",
-    'Pão de Açúcar',
-    'Mercantil de Brotas',
-    'Mercado Central',
-    'Mercado da Sete Portas',
-    'Mercado do Bairro',
-    'Super Muffato',
-    'Condor',
-    'Angeloni',
-    'Giassi',
-    'Koch',
-    'Fort Atacadista',
-    'Mart Minas',
-    'Supernosso',
-    'EPA',
-    'Supermercados BH',
-    'Oba Hortifruti',
-    'St Marche',
-    'Dia Brasil',
-    'Roldão',
-    'Tenda Atacado',
-    'Spani Atacadista',
-    'Tonin',
-    'Villefort',
-    'ABC Atacado e Varejo',
-    'Guanabara',
-    'Zona Sul',
-    'Imperatriz',
-    'Savegnago',
-    'Tauste',
-    'Zaffari',
-    'Nacional',
-    'Muffato Max',
-    'Hortifruti Natural da Terra',
-    'Mineirão Atacarejo',
-    'Total Atacado',
-    'RF Atacado',
-    'Sol e Mar Supermercados',
-    'Mercadinhos São Luiz',
-    'Cometa Supermercados',
-    'São Luiz',
-    'Davo Supermercados',
-    'Confiança Supermercados',
-    'Koch Hipermercado',
-    'Grupo Mateus',
-    'Novo Atacarejo',
-    'Mateus Supermercados',
-    'Hiper Bompreço',
-    'Bompreço',
-    'Carrefour Bairro',
-    'Carrefour Express',
-    'TodoDia',
-    'Mercado Extra',
-    'Extra Hiper',
-    'Pão de Açúcar Minuto',
-    'Prezunic',
-    'Supermarket',
-    'Mundial',
-    'Princesa Supermercados',
-    'Hortifruti',
-    'Redeconomia',
-    'Multi Market',
-    'Inter Supermercados',
-    'Dom Atacadista',
-    'Campineira',
-    'Enxuto',
-    'Covabra',
-    'Tauste Supermercados',
-    'Confiança',
-    'Jaú Serve',
-    'Delta Max',
-    'São Vicente',
-    'Paulistão Atacadista',
-    'Pague Menos',
-    'Barbosa Supermercados',
-    'Ipanema',
-    'Semar Supermercados',
-    'Shibata',
-    'Sonda',
-    'Joanin',
-    'Nagumo',
-    'Mambo',
-    'Hirota Food',
-    'Asun',
-    'Bistek',
-    'Comper',
-    'Avenida',
-    'Tatico',
-    'Bahamas',
-    'Bahamas Mix',
-    'Mart Plus',
-    'Centerbox',
-    'Bom Vizinho',
-    'Frangolândia',
-    'Pinheiro Supermercado',
-    'Unicompra',
-    'Rede Super Líder',
-    'Primato Supermercado',
-    'Verona Supermercados',
-    'Bavaresco',
-    'Andorinha Supermercado',
-    'Supermercado Tibúrcio',
-    'Supermercado Bernardão',
-    'Bonanza Supermercado',
-    'Supermercado Moranguinho',
-    'Quartetto Supermercados',
-    'Supermercado Baklizi',
-    'Supermercado Pepão',
-    'Supermercado Delta Max',
+    'Atakarejo','Atacadão','Assaí Atacadista','Hiperideal','RedeMix','Mercantil Rodrigues','Mix Bahia','Novo Mix','Mix Mateus','GBarbosa','Carrefour',"Sam's Club",'Pão de Açúcar','Mercantil de Brotas','Mercado Central','Mercado da Sete Portas','Mercado do Bairro','Super Muffato','Condor','Angeloni','Giassi','Koch','Fort Atacadista','Mart Minas','Supernosso','EPA','Supermercados BH','Oba Hortifruti','St Marche','Dia Brasil','Roldão','Tenda Atacado','Spani Atacadista','Tonin','Villefort','ABC Atacado e Varejo','Guanabara','Zona Sul','Imperatriz','Savegnago','Tauste','Zaffari','Nacional','Muffato Max','Hortifruti Natural da Terra','Mineirão Atacarejo','Total Atacado','RF Atacado','Sol e Mar Supermercados','Mercadinhos São Luiz','Cometa Supermercados','São Luiz','Davo Supermercados','Confiança Supermercados','Koch Hipermercado','Grupo Mateus','Novo Atacarejo','Mateus Supermercados','Hiper Bompreço','Bompreço','Carrefour Bairro','Carrefour Express','TodoDia','Mercado Extra','Extra Hiper','Pão de Açúcar Minuto','Prezunic','Supermarket','Mundial','Princesa Supermercados','Hortifruti','Redeconomia','Multi Market','Inter Supermercados','Dom Atacadista','Campineira','Enxuto','Covabra','Tauste Supermercados','Confiança','Jaú Serve','Delta Max','São Vicente','Paulistão Atacadista','Pague Menos','Barbosa Supermercados','Ipanema','Semar Supermercados','Shibata','Sonda','Joanin','Nagumo','Mambo','Hirota Food','Asun','Bistek','Comper','Avenida','Tatico','Bahamas','Bahamas Mix','Mart Plus','Centerbox','Bom Vizinho','Frangolândia','Pinheiro Supermercado','Unicompra','Rede Super Líder','Primato Supermercado','Verona Supermercados','Bavaresco','Andorinha Supermercado','Supermercado Tibúrcio','Supermercado Bernardão','Bonanza Supermercado','Supermercado Moranguinho','Quartetto Supermercados','Supermercado Baklizi','Supermercado Pepão','Supermercado Delta Max',
   ];
-
   function open() {
     return new Promise((resolve, reject) => {
       const r = indexedDB.open(DB, VERSION);
@@ -185,10 +63,10 @@
       tx.onabort = () => reject(tx.error || Error('Atualização de mercados cancelada'));
     });
   }
-  function showStatus(productCount, marketCount, expanding) {
+  function showStatus(productCount, marketCount, expanding, manual = false) {
     const message = expanding
       ? `Banco de referência: ${productCount.toLocaleString('pt-BR')} produtos • ${marketCount.toLocaleString('pt-BR')} mercados • expansão em andamento`
-      : `Banco de referência: ${productCount.toLocaleString('pt-BR')} produtos • ${marketCount.toLocaleString('pt-BR')} mercados`;
+      : `${manual ? 'Banco offline atualizado:' : 'Banco de referência:'} ${productCount.toLocaleString('pt-BR')} produtos • ${marketCount.toLocaleString('pt-BR')} mercados`;
     const show = () => {
       const toast = document.getElementById('toast');
       if (!toast) return;
@@ -197,8 +75,7 @@
       clearTimeout(toast._referenceStatusTimer);
       toast._referenceStatusTimer = setTimeout(() => toast.classList.remove('show'), 5000);
     };
-    if (document.readyState === 'loading')
-      document.addEventListener('DOMContentLoaded', show, { once: true });
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show, { once: true });
     else show();
   }
   function loadProductExpansion() {
@@ -210,9 +87,17 @@
     script.defer = true;
     document.head.appendChild(script);
   }
-  async function refresh() {
+  async function refresh({ manual = false } = {}) {
     try {
       const db = await open();
+      if (!manual) {
+        const initial = await getSetting(db, INITIAL_CHECK_MARKER);
+        if (initial?.value === 1) {
+          db.close();
+          return null;
+        }
+        await setSetting(db, INITIAL_CHECK_MARKER, 1);
+      }
       let [productCount, currentMarkets, marker] = await Promise.all([
         count(db, 'referenceProducts'),
         allMarkets(db),
@@ -227,16 +112,19 @@
       if (productCount < PRODUCT_TARGET) {
         if (marker?.value === 1) await setSetting(db, PRODUCT_EXPANSION_MARKER, 0);
         db.close();
-        showStatus(productCount, currentMarkets.length, true);
+        showStatus(productCount, currentMarkets.length, true, manual);
         loadProductExpansion();
-        return;
+        return null;
       }
       await setSetting(db, PRODUCT_EXPANSION_MARKER, 1);
       db.close();
-      showStatus(productCount, currentMarkets.length, false);
+      showStatus(productCount, currentMarkets.length, false, manual);
+      return { productCount, marketCount: currentMarkets.length };
     } catch (error) {
       console.error('Referência de mercados/produtos:', error);
+      return null;
     }
   }
+  window.__mlReferenceMarketRefreshV230_6 = { refresh };
   refresh();
 })();
