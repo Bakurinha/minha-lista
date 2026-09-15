@@ -251,7 +251,10 @@
   const MARKET_HIDDEN_MARKER = 'data-v230-item-market-hidden';
 
   function rememberListId(trigger) {
-    const id = trigger?.dataset?.list || trigger?.dataset?.id || trigger?.closest?.('[data-list]')?.dataset?.list;
+    const id =
+      trigger?.dataset?.list ||
+      trigger?.dataset?.id ||
+      trigger?.closest?.('[data-list]')?.dataset?.list;
     if (id) window[ACTIVE_LIST_KEY] = id;
   }
 
@@ -346,7 +349,9 @@
 
   function initCentralization() {
     document.addEventListener('click', (event) => {
-      const trigger = event.target.closest?.('[data-list], [data-action="open-list"], [data-action="add-item"], [data-action="edit-item"]');
+      const trigger = event.target.closest?.(
+        '[data-list], [data-action="open-list"], [data-action="add-item"], [data-action="edit-item"]'
+      );
       if (!trigger) return;
       rememberListId(trigger);
       setTimeout(() => {
