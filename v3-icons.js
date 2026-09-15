@@ -243,6 +243,7 @@
         proxy.classList.remove('ml-search-scroll');
         return;
       }
+
       const nextHeight = Math.min(Math.max(proxy.scrollHeight, oneLineHeight), maxHeight);
       proxy.style.height = `${nextHeight}px`;
       proxy.classList.toggle('ml-search-scroll', proxy.scrollHeight > maxHeight);
@@ -285,7 +286,5 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  if (document.readyState === 'loading')
-    document.addEventListener('DOMContentLoaded', install, { once: true });
-  else install();
+  install();
 })();
