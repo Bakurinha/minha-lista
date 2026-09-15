@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-12';
+const CACHE = 'minha-lista-v2-3-13';
 const CORE = [
   './',
   './index.html',
@@ -69,4 +69,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.14: refreshes reference-count logic and keeps expansion modules available offline.
+// V2.3.13: offline database reference check is automatic only on first initialization; refresh is manual.
