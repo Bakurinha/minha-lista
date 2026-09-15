@@ -241,6 +241,136 @@
   else init();
 })();
 
+// V2.3.x — Centraliza o mercado dos itens no mercado da LISTA sem reescrever dados legados.
+(() => {
+  'use strict';
+
+  const ITEM_FORM_ID = 'itemForm';
+  const ITEM_MARKET_ID = 'ifMarket';
+  const ACTIVE_LIST_KEY = '__mlV230ActiveListId';
+  const MARKET_HIDDEN_MARKER = 'data-v230-item-market-hidden';
+
+  function rememberListId(trigger) {
+    const id = trigger?.dataset?.list || trigger?.dataset?.id || trigger?.closest?.('[data-list]')?.dataset?.list;
+    if (id) window[ACTIVE_LIST_KEY] = id;
+  }
+
+  function inferActiveListId() {
+    if (window[ACTIVE_LIST_KEY]) return String(window[ACTIVE_LIST_KEY]);
+    const rendered = document.querySelector('#listItems [data-list]');
+    if (rendered?.dataset?.list) return String(rendered.dataset.list);
+    return '';
+  }
+
+  async function getListMarket(listId) {
+    if (!listId) return '';
+    const db = await open();
+    try {
+      const lists = await readAll(db, STORE);
+      return String(lists.find((list) => list.id === listId)?.marketName || '').trim();
+    } finally {
+      db.close();
+    }
+  }
+
+  function hideItemMarketField(form) {
+    const input = form?.querySelector(`#${ITEM_MARKET_ID}`);
+    if (!input || input.closest(`[${MARKET_HIDDEN_MARKER}]`)) return;
+    const field = input.closest('.field');
+    if (!field) return;
+    field.setAttribute(MARKET_HIDDEN_MARKER, '1');
+    field.classList.add('hidden');
+    input.setAttribute('aria-hidden', 'true');
+    input.tabIndex = -1;
+    input.readOnly = true;
+  }
+
+  async function syncItemMarket(form) {
+    const input = form?.querySelector(`#${ITEM_MARKET_ID}`);
+    if (!input) return;
+    const listId = inferActiveListId();
+    if (!listId) return;
+    try {
+      const market = await getListMarket(listId);
+      input.value = market;
+      hideItemMarketField(form);
+      form.dataset.v230ItemMarketListId = listId;
+      form.dataset.v230ItemMarketSynced = '1';
+    } catch (error) {
+      console.error('Mercado do item: falha ao sincronizar com a lista.', error);
+    }
+  }
+
+  function stripRenderedItemMarkets() {
+    const container = document.getElementById('listItems');
+    if (!container) return;
+    const listMarket = String(window.__mlV230RenderedListMarket || '').trim();
+    if (!listMarket) return;
+    const suffix = ` • ${listMarket}`;
+    container.querySelectorAll('.item-meta').forEach((node) => {
+      const text = String(node.textContent || '');
+      if (!text.includes(suffix)) return;
+      node.textContent = text.replace(suffix, '');
+    });
+  }
+
+  async function cacheRenderedListMarket() {
+    const listId = inferActiveListId();
+    if (!listId) return;
+    try {
+      window.__mlV230RenderedListMarket = await getListMarket(listId);
+      stripRenderedItemMarkets();
+    } catch (error) {
+      console.error('Mercado da lista: falha ao preparar visualização.', error);
+    }
+  }
+
+  function observeItemForm() {
+    const form = document.getElementById(ITEM_FORM_ID);
+    if (!form) return;
+    hideItemMarketField(form);
+    syncItemMarket(form).catch(console.error);
+    if (form.dataset.v230MarketSubmitBound === '1') return;
+    form.dataset.v230MarketSubmitBound = '1';
+    form.addEventListener(
+      'submit',
+      () => {
+        const input = form.querySelector(`#${ITEM_MARKET_ID}`);
+        if (!input) return;
+        // O núcleo legado ainda lê ifMarket; mantemos o campo somente como valor técnico.
+        syncItemMarket(form).catch(console.error);
+      },
+      true
+    );
+  }
+
+  function initCentralization() {
+    document.addEventListener('click', (event) => {
+      const trigger = event.target.closest?.('[data-list], [data-action="open-list"], [data-action="add-item"], [data-action="edit-item"]');
+      if (!trigger) return;
+      rememberListId(trigger);
+      setTimeout(() => {
+        cacheRenderedListMarket().catch(console.error);
+        observeItemForm();
+      }, 0);
+      setTimeout(() => observeItemForm(), 60);
+    });
+
+    const observer = new MutationObserver(() => {
+      observeItemForm();
+      stripRenderedItemMarkets();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    observeItemForm();
+    cacheRenderedListMarket().catch(console.error);
+  }
+
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', initCentralization, { once: true });
+  else initCentralization();
+})();
+
 // Bootstrap V2.3.0: camada global de ícones vem antes dos módulos que geram conteúdo dinâmico.
 (() => {
   'use strict';
