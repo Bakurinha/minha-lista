@@ -1,5 +1,37 @@
 # CHANGELOG — Minha Lista de Supermercado
 
+## V2.3.13 — 06/10/2026
+
+### Auditoria e estabilização
+
+- Reavaliado o backlog e o bootstrap completo da aplicação.
+- Corrigido o runtime para carregar de fato `v3-compact-controls.js`, incluindo Itens Cadastrados, Lista de desejos e os demais campos de pesquisa.
+- Padronizados os campos de pesquisa com altura inicial compacta, crescimento vertical de até duas linhas e largura responsiva normal.
+- Removida a mistura de UI dentro de `db-migrations-v230.js`; o módulo voltou a ser exclusivamente de migração.
+- A tela inicial passou a aguardar núcleo, camada V3, controles de pesquisa e a verificação real do banco de referência.
+- Removido o marcador de `localStorage` que podia pular a conferência real do banco de referência em reinicializações.
+- Removidos carregamentos duplicados de V3 e o bloqueio de eventos de navegação no menu hamburger.
+
+### Mercado e histórico
+
+- Mercado centralizado nativamente na lista.
+- Removida a edição/filtragem visual de mercado por item, preservando os campos legados no armazenamento para compatibilidade.
+- Novos registros de preços usam o mercado da lista.
+- Histórico passa a mostrar o registro mais recente por produto + mercado, sem apagar os registros anteriores.
+
+### Privacidade e compartilhamento
+
+- Textos de privacidade atualizados para refletir o compartilhamento remoto opcional por código.
+- Documentado que estoque/inventário não é enviado no compartilhamento.
+- Documentado o prazo de 7 dias do compartilhamento temporário.
+
+### Qualidade
+
+- Testes V3 e de regressão atualizados para o comportamento atual, sem versões antigas fixas.
+- Adicionada auditoria de runtime/inicialização ao CI.
+- Versão, manifest e cache PWA alinhados em `2.3.13`.
+
+
 ## V2.3.12 — 14/09/2026
 
 ### Catálogo de referência offline

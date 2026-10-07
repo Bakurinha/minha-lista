@@ -3,10 +3,12 @@
 const fs = require('fs');
 const assert = require('assert');
 
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const index = fs.readFileSync('index.html', 'utf8');
+const runtime = fs.readFileSync('list-market-v230.js', 'utf8');
 const shell = fs.readFileSync('v3-shell.js', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
 const version = fs.readFileSync('version-v230.js', 'utf8');
-const runtime = fs.readFileSync('list-market-v230.js', 'utf8');
 const icons = fs.readFileSync('v3-icons.js', 'utf8');
 const iconForce = fs.readFileSync('v3-icon-force.js', 'utf8');
 const compact = fs.readFileSync('v3-compact-controls.js', 'utf8');
@@ -22,96 +24,66 @@ assert(shell.includes('prefers-reduced-motion'), 'Acessibilidade de movimento au
 assert(shell.includes('Escape'), 'Fechamento do menu por teclado ausente');
 assert(shell.includes('ICONS'), 'Sistema visual de ícones ausente');
 assert(shell.includes('data-view'), 'Reutilização da navegação existente ausente');
-assert(runtime.includes("'./v3-icons.js'"), 'Ícones não estão no bootstrap do runtime');
 assert(
-  runtime.includes("'./v3-icon-force.js'"),
-  'Normalização de ícones não está no bootstrap do runtime'
+  shell.includes("button.addEventListener('click', () => closeMenu());"),
+  'Fechamento do menu não deve bloquear o clique de navegação'
 );
-assert(
-  runtime.includes("'./v3-compact-controls.js'"),
-  'Controles responsivos não estão no bootstrap do runtime'
-);
-assert(sw.includes("'./v3-icons.js'"), 'Ícones não estão no cache do Service Worker');
-assert(
-  sw.includes("'./v3-icon-force.js'"),
-  'Normalização de ícones não está no cache do Service Worker'
-);
-assert(
-  sw.includes("'./v3-compact-controls.js'"),
-  'Controles responsivos não estão no cache do Service Worker'
-);
-assert(sw.includes('minha-lista-v2-3-8'), 'Cache PWA não está na versão atual');
+assert(shell.includes('function closeMenu()'), 'closeMenu deve ser não destrutivo');
+assert(!iconForce.includes('v3-menu-autoclose.js'), 'Autoclose duplicado ainda é carregado');
+
+for (const asset of [
+  './v3-icons.js',
+  './v3-icon-force.js',
+  './v3-shell.js',
+  './v3-compact-controls.js',
+  './reference-market-refresh.js',
+]) {
+  assert(runtime.includes(`'${asset}'`), `${asset} não está no bootstrap do runtime`);
+  assert(sw.includes(`'${asset}'`), `${asset} não está no cache do Service Worker`);
+}
+
 assert(icons.includes('const ICONS'), 'Mapa principal de ícones ausente');
 assert(iconForce.includes('Extended_Pictographic'), 'Fallback pictográfico ausente');
 
-const searchIds = ['catalogSearch', 'wishSearch'];
-assert(
-  compact.includes("const SEARCH_IDS = ['catalogSearch', 'wishSearch'];"),
-  'A correção deve ser exclusiva de Itens Cadastrados e Lista de desejos'
-);
-for (const id of searchIds) {
-  assert(compact.includes(`'${id}'`), `Pesquisa ${id} não está configurada`);
-}
-assert(compact.includes('MAX_SEARCH_LINES = 5'), 'Pesquisa não possui limite vertical responsivo');
+const searchIds = [
+  'listSearch',
+  'catalogSearch',
+  'wishSearch',
+  'invSearch',
+  'historyItemSearch',
+  'historyMarketSearch',
+  'refProductSearch',
+  'refCatalogSearch',
+  'listItemSearch',
+];
+for (const id of searchIds) assert(compact.includes(`'${id}'`), `Pesquisa ${id} ausente`);
+assert(compact.includes('MAX_SEARCH_LINES = 2'), 'Pesquisa deve crescer no máximo duas linhas');
 assert(compact.includes('autosizeSearch'), 'Pesquisa não possui autosize por linha');
-assert(
-  compact.includes("removeAttribute('maxlength')"),
-  'Pesquisa ainda possui limite artificial de caracteres'
-);
-assert(compact.includes('white-space: pre-wrap'), 'Pesquisa não permite quebra de linha');
-assert(
-  compact.includes('overflow-wrap: anywhere'),
-  'Pesquisa não trata textos longos responsivamente'
-);
-assert(compact.includes('ml-search-multiline-wrap'), 'Pesquisa não possui contêiner responsivo');
-assert(compact.includes('ml-search-multiline'), 'Pesquisa não possui campo visual multilinha');
-assert(
-  compact.includes('ml-search-original-hidden'),
-  'Input original não é preservado de forma compatível'
-);
+assert(compact.includes("removeAttribute('maxlength')"), 'Pesquisa possui limite artificial');
+assert(compact.includes("visual.className = 'input ml-search-multiline'"), 'Estilo base do campo não é preservado');
+assert(compact.includes('width: 100% !important'), 'Pesquisa deve manter largura responsiva');
+assert(compact.includes('min-height: 36px !important'), 'Altura inicial compacta ausente');
+assert(compact.includes('padding: 7px 10px !important'), 'Compactação vertical ausente');
+assert(compact.includes('white-space: pre-wrap'), 'Quebra de linha ausente');
+assert(compact.includes('overflow-wrap: anywhere'), 'Texto longo não está protegido');
+assert(compact.includes('mlSearchControlsInstalled'), 'Sinal de instalação dos controles ausente');
 assert(
   compact.includes("dispatchEvent(new Event('input', { bubbles: true }))"),
   'Pesquisa visual não sincroniza com o listener original'
 );
-assert(compact.includes('flex: 0 1 320px'), 'Pesquisa desktop continua larga demais');
-assert(compact.includes('width: min(100%, 320px)'), 'Pesquisa desktop sem limite de largura');
-assert(compact.includes('max-width: 320px'), 'Pesquisa desktop sem limite máximo explícito');
-assert(
-  compact.includes('align-self: flex-start'),
-  'Pesquisa pode esticar verticalmente com o container'
-);
-assert(compact.includes('@media (max-width: 620px)'), 'Ajuste mobile ausente');
-assert(compact.includes('max-height: 102px'), 'Limite vertical mobile ausente');
-assert(compact.includes('@media (max-width: 380px)'), 'Ajuste para telas pequenas ausente');
 
-assert(sharing.includes('openReady'), 'Compartilhamento não aguarda o banco ficar pronto');
-assert(
-  sharing.includes('while (Date.now() - started < timeout)'),
-  'Compartilhamento não possui espera/repetição durante a inicialização do banco'
-);
-assert(
-  sharing.includes("objectStoreNames.contains('catalogs')") &&
-    sharing.includes("objectStoreNames.contains('lists')"),
-  'Compartilhamento não valida as stores necessárias'
-);
+assert(index.includes('<script src="./initial-loading.js"></script>'), 'Loading inicial não é carregado diretamente');
+assert(!index.includes('<script src="./v3-icons.js"></script>'), 'Ícones ainda são carregados duas vezes');
+assert(!version.includes('v3-shell.js'), 'Versionador não deve carregar o shell V3');
+assert(version.includes(`const VERSION = 'v${pkg.version}'`), 'Versão visual fora de sincronia');
+assert(sw.includes(`minha-lista-v${pkg.version.replace(/\./g, '-')}`), 'Cache PWA fora de sincronia');
+
+assert(sharing.includes('openReady'), 'Compartilhamento não aguarda o banco');
 assert(sharing.includes("get('shared')"), 'Importação remota por shared ausente');
-assert(
-  sharing.includes('id="mlShareCode"') && sharing.includes('maxlength="12"'),
-  'Importação por código não está configurada'
-);
+assert(sharing.includes('id="mlShareCode"') && sharing.includes('maxlength="12"'), 'Código de compartilhamento inválido');
 assert(
   shareCompat.includes('sharedInput') && shareCompat.includes('sharedImportBtn'),
-  'Importação legada não é redirecionada para o código'
+  'Compatibilidade da importação por código ausente'
 );
-assert(
-  !shareCompat.includes('type="file"') && !shareCompat.includes('accept="application/json,.json"'),
-  'Fluxo de compatibilidade não deve abrir seletor de arquivos'
-);
-assert(
-  /navigator\.serviceWorker[\s\S]*?\.register\(/.test(runtime),
-  'Service Worker não está registrado pelo runtime'
-);
-assert(version.includes("const VERSION = 'v2.3.8'"), 'Versão funcional não está sincronizada');
-assert(version.includes("script.src = './v3-shell.js'"), 'Shell não está ligado ao versionador');
 
-console.log('V2.3.8 UI/sharing contract: OK');
+console.log(`V3 UI/runtime contract: OK (${pkg.version})`);

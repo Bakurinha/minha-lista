@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  // Versão funcional exibida pela interface e usada pela camada de compatibilidade.
-  const VERSION = 'v2.3.12';
+  // A versão visível é sincronizada com package.json pelo script de versão.
+  const VERSION = 'v2.3.13';
   const VERSION_PATTERN = /v\d+\.\d+\.\d+/gi;
 
   function updateVisibleVersion() {
@@ -29,23 +29,9 @@
     });
   }
 
-  function loadV3Shell() {
-    if (document.querySelector('script[data-v3-shell]')) return;
-    const script = document.createElement('script');
-    script.src = './v3-shell.js';
-    script.defer = true;
-    script.dataset.v3Shell = '1';
-    document.head.appendChild(script);
-  }
-
-  function init() {
-    updateVisibleVersion();
-    loadV3Shell();
-  }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
+    document.addEventListener('DOMContentLoaded', updateVisibleVersion, { once: true });
   } else {
-    init();
+    updateVisibleVersion();
   }
 })();

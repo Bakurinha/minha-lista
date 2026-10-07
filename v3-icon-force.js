@@ -18,21 +18,10 @@
     document.head.appendChild(style);
   }
 
-  function loadMenuAutoclose() {
-    if (window.__mlMenuAutocloseRequested) return;
-    window.__mlMenuAutocloseRequested = true;
-    const script = document.createElement('script');
-    script.src = './v3-menu-autoclose.js';
-    script.defer = true;
-    document.head.appendChild(script);
-  }
-
   function install() {
     if (document.body.dataset.v3IconForceInstalled === '1') return;
     document.body.dataset.v3IconForceInstalled = '1';
     normalizeMenuToggle();
-    loadMenuAutoclose();
-
     const menuObserver = new MutationObserver(() => normalizeMenuToggle());
     menuObserver.observe(document.body, { childList: true, subtree: true });
   }

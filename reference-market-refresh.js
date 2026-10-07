@@ -6,8 +6,15 @@
     STORE = 'referenceMarkets';
   const REFERENCE_DATA_MARKER = 'referenceDataVersion';
   const PRODUCT_EXPANSION_MARKER = 'referenceProductExpansionV230_6';
-  const INITIAL_CHECK_MARKER = 'referenceInitialCheckV230_6';
   const PRODUCT_TARGET = 20000;
+  window.__mlReferenceReadyV230 = { ready: false, error: false };
+
+  function markReady(detail = {}) {
+    window.__mlReferenceReadyV230 = { ready: true, error: false, ...detail };
+    window.dispatchEvent(
+      new CustomEvent('ml:reference-ready', { detail: window.__mlReferenceReadyV230 })
+    );
+  }
   const MARKETS = [
     'Atakarejo',
     'Atacadão',
@@ -207,6 +214,10 @@
     script.src = './reference-product-expansion-v230-5.js?v=6';
     script.dataset.referenceExpansion = marker;
     script.defer = true;
+    script.onerror = () => {
+      console.error('Banco de referência: falha ao carregar expansão de produtos.');
+      markReady({ error: true, reason: 'expansion-load' });
+    };
     document.head.appendChild(script);
   }
   function bindManualButton() {
@@ -229,35 +240,49 @@
   }
   async function refresh({ manual = false } = {}) {
     try {
-      if (!manual && localStorage.getItem(INITIAL_CHECK_MARKER) === '1') return null;
       const db = await open();
-      if (!manual) localStorage.setItem(INITIAL_CHECK_MARKER, '1');
       let [productCount, currentMarkets, marker] = await Promise.all([
         count(db, 'referenceProducts'),
         allMarkets(db),
         getSetting(db, PRODUCT_EXPANSION_MARKER),
       ]);
+
       if (!sameMarkets(currentMarkets)) {
         await writeMarkets(db);
         currentMarkets = MARKETS.map((name, index) => ({ id: `ref-m-${index + 1}`, name }));
-      } else await setSetting(db, REFERENCE_DATA_MARKER, 1);
+      } else {
+        await setSetting(db, REFERENCE_DATA_MARKER, 1);
+      }
+
       if (productCount < PRODUCT_TARGET) {
         if (marker?.value === 1) await setSetting(db, PRODUCT_EXPANSION_MARKER, 0);
         db.close();
-        showStatus(productCount, currentMarkets.length, true, manual);
+        if (manual) showStatus(productCount, currentMarkets.length, true, true);
         loadProductExpansion();
         return null;
       }
+
       await setSetting(db, PRODUCT_EXPANSION_MARKER, 1);
       db.close();
-      showStatus(productCount, currentMarkets.length, false, manual);
-      return { productCount, marketCount: currentMarkets.length };
+      const result = { productCount, marketCount: currentMarkets.length };
+      markReady(result);
+      if (manual) showStatus(productCount, currentMarkets.length, false, true);
+      return result;
     } catch (error) {
       console.error('Referência de mercados/produtos:', error);
+      markReady({ error: true, reason: 'reference-check' });
       return null;
     }
   }
+  function startAutomaticRefresh() {
+    if (window.__mlAppReadyV230?.ready === true) {
+      refresh();
+      return;
+    }
+    window.addEventListener('ml:app-ready', () => refresh(), { once: true });
+  }
+
   window.__mlReferenceMarketRefreshV230_6 = { refresh };
   bindManualButton();
-  refresh();
+  startAutomaticRefresh();
 })();

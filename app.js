@@ -326,6 +326,7 @@
         referenceMarkets
           .map((m) => m.name)
           .concat(
+            lists.map((l) => String(l.marketName || '').trim()),
             history.map((h) => String(h.marketName || '').trim()),
             lists.flatMap((l) => (l.items || []).map((i) => String(i.marketName || '').trim()))
           )
@@ -337,11 +338,11 @@
     const current = await getAll('settings');
     const installed = current.find((x) => x.key === 'referenceDataVersion')?.value || 0;
     if (installed === REFERENCE_VERSION) return;
+
+    // O seed base é aditivo: nunca limpa o catálogo expandido já existente.
     await transaction(['referenceProducts', 'referenceMarkets', 'settings'], 'readwrite', (tx) => {
       const p = tx.objectStore('referenceProducts'),
         m = tx.objectStore('referenceMarkets');
-      p.clear();
-      m.clear();
       for (const x of REFERENCE_PRODUCTS) p.put(x);
       for (const x of REFERENCE_MARKETS) m.put(x);
       tx.objectStore('settings').put({ key: 'referenceDataVersion', value: REFERENCE_VERSION });
@@ -734,7 +735,7 @@
             const items = l.items || [],
               done = items.filter((i) => i.done).length,
               total = listTotal(l);
-            return `<div class="card"><div class="card-head"><div><div class="card-title">${esc(l.name)}</div><div class="meta">${l.purchaseType === 'virtual' ? '🌐 Compra virtual' : '🏪 Compra local'}${l.date ? ` • 📅 ${formatDate(l.date)}` : ''} • ${items.length} ${items.length === 1 ? 'item' : 'itens'} • ${done} comprados</div>${l.comments ? `<div class="meta">📝 ${esc(l.comments)}</div>` : ''}${total ? `<div class="meta">Total: <strong>${money(total)}</strong></div>` : ''}</div><div class="actions"><button class="btn primary small" data-action="open-list" data-id="${esc(l.id)}">Abrir</button><button class="btn ghost small" data-action="edit-list" data-id="${esc(l.id)}" aria-label="Editar lista">✏️ Editar</button><button class="btn ghost small" data-action="duplicate-list" data-id="${esc(l.id)}" aria-label="Duplicar lista">📋 Duplicar</button><button class="btn ghost small" data-action="buy-again" data-id="${esc(l.id)}" aria-label="Comprar novamente">🛒 Comprar novamente</button><button class="btn ghost small" data-action="archive-list" data-id="${esc(l.id)}" aria-label="Arquivar lista">📁 Arquivar</button><button class="btn danger small" data-action="delete-list" data-id="${esc(l.id)}" aria-label="Excluir lista">🗑️ Excluir</button></div></div></div>`;
+            return `<div class="card"><div class="card-head"><div><div class="card-title">${esc(l.name)}</div><div class="meta">${l.purchaseType === 'virtual' ? '🌐 Compra virtual' : '🏪 Compra local'}${l.marketName ? ` • 🏪 ${esc(l.marketName)}` : ''}${l.date ? ` • 📅 ${formatDate(l.date)}` : ''} • ${items.length} ${items.length === 1 ? 'item' : 'itens'} • ${done} comprados</div>${l.comments ? `<div class="meta">📝 ${esc(l.comments)}</div>` : ''}${total ? `<div class="meta">Total: <strong>${money(total)}</strong></div>` : ''}</div><div class="actions"><button class="btn primary small" data-action="open-list" data-id="${esc(l.id)}">Abrir</button><button class="btn ghost small" data-action="edit-list" data-id="${esc(l.id)}" aria-label="Editar lista">✏️ Editar</button><button class="btn ghost small" data-action="duplicate-list" data-id="${esc(l.id)}" aria-label="Duplicar lista">📋 Duplicar</button><button class="btn ghost small" data-action="buy-again" data-id="${esc(l.id)}" aria-label="Comprar novamente">🛒 Comprar novamente</button><button class="btn ghost small" data-action="archive-list" data-id="${esc(l.id)}" aria-label="Arquivar lista">📁 Arquivar</button><button class="btn danger small" data-action="delete-list" data-id="${esc(l.id)}" aria-label="Excluir lista">🗑️ Excluir</button></div></div></div>`;
           })
           .join('')
       : '<div class="empty"><div class="emoji">🛍️</div><strong>Nenhuma lista encontrada</strong><div>Crie uma nova lista para começar.</div></div>';
@@ -777,10 +778,30 @@
           .join('')
       : '<div class="empty"><div class="emoji">⭐</div><strong>Nenhum desejo cadastrado</strong><div>Adicione algo que você quer comprar no futuro.</div></div>';
   }
+  function historyIdentity(h) {
+    return h.mainItemId || `${normalize(h.itemName)}|${normalize(h.brand)}|${normalize(h.unit)}`;
+  }
+
+  function historyTimestamp(h) {
+    return String(h.createdAt || (h.date ? `${h.date}T00:00:00.000Z` : ''));
+  }
+
+  function latestHistoryRows(source = history) {
+    const latest = new Map();
+    for (const h of source) {
+      const key = `${historyIdentity(h)}|${normalize(h.marketName || '')}`;
+      const current = latest.get(key);
+      if (!current || historyTimestamp(h) > historyTimestamp(current)) latest.set(key, h);
+    }
+    return [...latest.values()].sort((a, b) =>
+      historyTimestamp(b).localeCompare(historyTimestamp(a))
+    );
+  }
+
   function renderHistory() {
     const qi = normalize($('historyItemSearch').value),
       qm = normalize($('historyMarketSearch').value);
-    const arr = history.filter(
+    const arr = latestHistoryRows(history).filter(
       (h) =>
         normalize(`${h.itemName || ''} ${h.brand || ''}`).includes(qi) &&
         normalize(h.marketName || '').includes(qm)
@@ -788,14 +809,7 @@
     $('historySummary').textContent =
       `${arr.length} ${arr.length === 1 ? 'registro' : 'registros'}`;
     $('historyCards').innerHTML = arr.length
-      ? [
-          ...new Map(
-            arr.map((h) => [
-              h.mainItemId || `${normalize(h.itemName)}|${normalize(h.brand)}|${normalize(h.unit)}`,
-              h,
-            ])
-          ).values(),
-        ]
+      ? arr
           .map(
             (h) =>
               `<div class="card"><div class="card-head"><div><div class="card-title">${esc(h.itemName || 'Produto')}</div><div class="meta">${h.brand ? `Marca: ${esc(h.brand)} • ` : ''}${h.unit ? `Unidade: ${esc(h.unit)} • ` : ''}${h.marketName ? `Mercado: ${esc(h.marketName)} • ` : ''}${formatDate(h.date)} • ${money(h.value)}</div></div></div></div>`
@@ -833,20 +847,12 @@
     }
   }
   function listForm(l) {
-    return `<form id="listForm"><div class="field"><label for="lfName">Nome da lista *</label><input id="lfName" class="input" maxlength="120" required value="${esc(l?.name || '')}" autocomplete="off"></div><div class="form-grid" style="margin-top:9px"><div class="field"><label for="lfDate">Data</label><input id="lfDate" class="input" type="date" value="${esc(l?.date || '')}"></div><div class="field"><label for="lfType">Tipo de compra</label><select id="lfType" class="select"><option value="local" ${l?.purchaseType !== 'virtual' ? 'selected' : ''}>🏪 Compra local</option><option value="virtual" ${l?.purchaseType === 'virtual' ? 'selected' : ''}>🌐 Compra virtual</option></select></div></div><div class="field" style="margin-top:9px"><label for="lfComments">Observações</label><textarea id="lfComments" class="textarea" rows="3" maxlength="2000" placeholder="Ex.: comprar somente se estiver em promoção...">${esc(l?.comments || '')}</textarea></div><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar lista</button></div></form>`;
+    const currentMarket = String(l?.marketName || '').trim();
+    const markets = [
+      ...new Set([...getMarketNames(), ...(currentMarket ? [currentMarket] : [])]),
+    ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    return `<form id="listForm"><div class="field"><label for="lfName">Nome da lista *</label><input id="lfName" class="input" maxlength="120" required value="${esc(l?.name || '')}" autocomplete="off"></div><div class="form-grid" style="margin-top:9px"><div class="field"><label for="lfDate">Data</label><input id="lfDate" class="input" type="date" value="${esc(l?.date || '')}"></div><div class="field"><label for="lfType">Tipo de compra</label><select id="lfType" class="select"><option value="local" ${l?.purchaseType !== 'virtual' ? 'selected' : ''}>🏪 Compra local</option><option value="virtual" ${l?.purchaseType === 'virtual' ? 'selected' : ''}>🌐 Compra virtual</option></select></div></div><div class="field" style="margin-top:9px"><label for="lfMarket">Mercado da lista</label><select id="lfMarket" class="select"><option value="">Sem mercado definido</option>${markets.map((market) => `<option value="${esc(market)}" ${market === currentMarket ? 'selected' : ''}>${esc(market)}</option>`).join('')}</select><div class="hint">O mercado pertence à lista e será usado no histórico de preços.</div></div><div class="field" style="margin-top:9px"><label for="lfComments">Observações</label><textarea id="lfComments" class="textarea" rows="3" maxlength="2000" placeholder="Ex.: comprar somente se estiver em promoção...">${esc(l?.comments || '')}</textarea></div><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar lista</button></div></form>`;
   }
-  const categories = [
-    'Alimentos',
-    'Bebidas',
-    'Carnes',
-    'Hortifruti',
-    'Laticínios',
-    'Higiene',
-    'Limpeza',
-    'Padaria',
-    'Congelados',
-    'Outros',
-  ];
   function catalogForm(c) {
     return `<form id="catalogForm"><div class="field"><label for="cfName">Nome *</label><input id="cfName" class="input" maxlength="120" required value="${esc(c?.name || '')}" autocomplete="off"></div><div class="form-grid" style="margin-top:9px"><div class="field"><label for="cfBrand">Marca</label><input id="cfBrand" class="input" maxlength="80" value="${esc(c?.brand || '')}" placeholder="Opcional"></div><div class="field"><label for="cfUnit">Unidade</label><input id="cfUnit" class="input" maxlength="40" value="${esc(c?.unit || 'un')}" placeholder="Ex.: 1 kg, 500 ml, un"></div><div class="field"><label for="cfCategory">Categoria</label><select id="cfCategory" class="select">${categories.map((x) => `<option value="${esc(x)}" ${c?.category === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label for="cfEan">EAN / código de barras</label><input id="cfEan" class="input" inputmode="numeric" maxlength="14" value="${esc(c?.ean || '')}" placeholder="Opcional"></div></div><div class="hint">ID interno único é gerado automaticamente e é diferente do EAN.</div><div class="field" style="margin-top:9px"><label for="cfNotes">Observações</label><textarea id="cfNotes" class="textarea" rows="3" maxlength="1000">${esc(c?.notes || '')}</textarea></div><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar item</button></div></form>`;
   }
@@ -863,8 +869,7 @@
       )
       .join('');
     const d = item ? itemDisplayData(item) : { name: '', brand: '', unit: 'un' };
-    const markets = [...new Set(referenceMarkets.map((m) => m.name).concat(getMarketNames()))];
-    return `<form id="itemForm"><div class="field"><label for="ifProduct">Produto *</label><div class="row"><select id="ifProduct" class="select" required><option value="">Selecione...</option>${opts}</select><button type="button" class="btn ghost" id="ifReferenceBtn">✨ Banco</button></div></div><div class="form-grid" style="margin-top:9px"><div class="field"><label for="ifBrand">Marca</label><input id="ifBrand" class="input" maxlength="80" value="${esc(d.brand)}" placeholder="Ex.: Qualy"></div><div class="field"><label for="ifUnit">Unidade</label><input id="ifUnit" class="input" maxlength="40" value="${esc(d.unit || 'un')}" placeholder="Ex.: 1 kg, 500 ml, un"></div><div class="field"><label for="ifQty">Quantidade</label><input id="ifQty" class="input" inputmode="decimal" value="${item?.quantity ?? ''}" placeholder="Ex.: 2"></div><div class="field"><label for="ifValue">Valor</label><input id="ifValue" class="input" inputmode="decimal" value="${item?.value != null ? String(item.value).replace('.', ',') : ''}" placeholder="Ex.: 18,90"></div><div class="field"><label for="ifDate">Data</label><input id="ifDate" class="input" type="date" value="${esc(item?.date || '')}"></div><div class="field"><label for="ifMarket">Mercado</label><input id="ifMarket" class="input" list="marketList" maxlength="100" value="${esc(item?.marketName || '')}" placeholder="Ex.: Atakarejo"></div></div><div class="field" style="margin-top:9px"><label for="ifComments">Observações</label><textarea id="ifComments" class="textarea" rows="3" maxlength="500" placeholder="Ex.: sem açúcar, tamanho grande...">${esc(item?.comments || '')}</textarea></div><datalist id="marketList">${markets.map((x) => `<option value="${esc(x)}"></option>`).join('')}</datalist><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar produto</button></div></form>`;
+    return `<form id="itemForm"><div class="field"><label for="ifProduct">Produto *</label><div class="row"><select id="ifProduct" class="select" required><option value="">Selecione...</option>${opts}</select><button type="button" class="btn ghost" id="ifReferenceBtn">✨ Banco</button></div></div><div class="form-grid" style="margin-top:9px"><div class="field"><label for="ifBrand">Marca</label><input id="ifBrand" class="input" maxlength="80" value="${esc(d.brand)}" placeholder="Ex.: Qualy"></div><div class="field"><label for="ifUnit">Unidade</label><input id="ifUnit" class="input" maxlength="40" value="${esc(d.unit || 'un')}" placeholder="Ex.: 1 kg, 500 ml, un"></div><div class="field"><label for="ifQty">Quantidade</label><input id="ifQty" class="input" inputmode="decimal" value="${item?.quantity ?? ''}" placeholder="Ex.: 2"></div><div class="field"><label for="ifValue">Valor</label><input id="ifValue" class="input" inputmode="decimal" value="${item?.value != null ? String(item.value).replace('.', ',') : ''}" placeholder="Ex.: 18,90"></div><div class="field"><label for="ifDate">Data</label><input id="ifDate" class="input" type="date" value="${esc(item?.date || '')}"></div></div><div class="field" style="margin-top:9px"><label for="ifComments">Observações</label><textarea id="ifComments" class="textarea" rows="3" maxlength="500" placeholder="Ex.: sem açúcar, tamanho grande...">${esc(item?.comments || '')}</textarea></div><div style="margin-top:12px"><button class="btn primary" type="submit">Salvar produto</button></div></form>`;
   }
   async function saveList(e, id) {
     e.preventDefault();
@@ -885,6 +890,7 @@
         name,
         date: $('lfDate').value || null,
         purchaseType: $('lfType').value === 'virtual' ? 'virtual' : 'local',
+        marketName: $('lfMarket').value.trim().slice(0, 160),
         comments: $('lfComments').value.trim(),
       };
       await writeStores(['lists'], (tx) => tx.objectStore('lists').put(updated));
@@ -1033,12 +1039,11 @@
       allItems = (l.items || []).map((x, idx) => ({ ...x, _idx: idx }));
     let items = allItems.filter((i) => {
       const d = itemDisplayData(i);
-      const text = normalize(`${d.name} ${d.brand} ${d.unit} ${d.category} ${i.marketName || ''}`);
+      const text = normalize(`${d.name} ${d.brand} ${d.unit} ${d.category}`);
       if (q && !text.includes(q)) return false;
       if (s.filter === 'done' && !i.done) return false;
       if (s.filter === 'pending' && i.done) return false;
       if (s.category && d.category !== s.category) return false;
-      if (s.market && normalize(i.marketName) !== normalize(s.market)) return false;
       const sub = itemSubtotal(i);
       if (s.minPrice !== '' && (sub === null || sub < Number(s.minPrice))) return false;
       if (s.maxPrice !== '' && (sub === null || sub > Number(s.maxPrice))) return false;
@@ -1058,13 +1063,13 @@
   function renderListItemsOnly() {
     const l = lists.find((x) => x.id === currentListId);
     if (!l || !$('listItems')) return;
-    const { allItems, items } = filteredListItems(l);
+    const { items } = filteredListItems(l);
     $('listItems').innerHTML = items.length
       ? items
           .map((x) => {
             const d = itemDisplayData(x),
               sub = itemSubtotal(x);
-            return `<div class="item ${x.done ? 'done' : ''}"><input class="check" type="checkbox" data-action="toggle-item" data-list="${esc(l.id)}" data-index="${x._idx}" ${x.done ? 'checked' : ''} aria-label="Marcar ${esc(d.name)} como comprado"><div class="item-main"><div class="item-name">${esc(d.name)}${x.quantity ? ` × ${esc(x.quantity)}${d.unit ? ` ${esc(d.unit)}` : ''}` : ''}</div><div class="item-meta">${d.brand ? `Marca: ${esc(d.brand)} • ` : ''}${d.unit ? `Unidade: ${esc(d.unit)} • ` : ''}${d.category ? `Categoria: ${esc(d.category)} • ` : ''}${x.value != null ? `${money(x.value)}${x.quantity ? ` • Subtotal: ${money(sub)}` : ''}` : 'Sem valor'}${x.marketName ? ` • ${esc(x.marketName)}` : ''}${x.date ? ` • ${formatDate(x.date)}` : ''}</div>${x.comments ? `<div class="item-meta">📝 ${esc(x.comments)}</div>` : ''}</div><div class="item-actions"><button class="iconbtn" data-action="edit-item" data-list="${esc(l.id)}" data-index="${x._idx}" aria-label="Editar produto">✏️</button><button class="iconbtn" data-action="delete-item" data-list="${esc(l.id)}" data-index="${x._idx}" aria-label="Excluir produto">🗑️</button></div></div>`;
+            return `<div class="item ${x.done ? 'done' : ''}"><input class="check" type="checkbox" data-action="toggle-item" data-list="${esc(l.id)}" data-index="${x._idx}" ${x.done ? 'checked' : ''} aria-label="Marcar ${esc(d.name)} como comprado"><div class="item-main"><div class="item-name">${esc(d.name)}${x.quantity ? ` × ${esc(x.quantity)}${d.unit ? ` ${esc(d.unit)}` : ''}` : ''}</div><div class="item-meta">${d.brand ? `Marca: ${esc(d.brand)} • ` : ''}${d.unit ? `Unidade: ${esc(d.unit)} • ` : ''}${d.category ? `Categoria: ${esc(d.category)} • ` : ''}${x.value != null ? `${money(x.value)}${x.quantity ? ` • Subtotal: ${money(sub)}` : ''}` : 'Sem valor'}${x.date ? ` • ${formatDate(x.date)}` : ''}</div>${x.comments ? `<div class="item-meta">📝 ${esc(x.comments)}</div>` : ''}</div><div class="item-actions"><button class="iconbtn" data-action="edit-item" data-list="${esc(l.id)}" data-index="${x._idx}" aria-label="Editar produto">✏️</button><button class="iconbtn" data-action="delete-item" data-list="${esc(l.id)}" data-index="${x._idx}" aria-label="Excluir produto">🗑️</button></div></div>`;
           })
           .join('')
       : '<div class="empty"><div class="emoji">🛒</div><strong>Nenhum item encontrado</strong><div>Ajuste a pesquisa ou adicione um produto.</div></div>';
@@ -1083,12 +1088,9 @@
     const cats = [
       ...new Set(allItems.map((i) => itemDisplayData(i).category).filter(Boolean)),
     ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-    const markets = [...new Set(allItems.map((i) => i.marketName).filter(Boolean))].sort((a, b) =>
-      a.localeCompare(b, 'pt-BR')
-    );
     showModal(
       l.name,
-      `<div class="meta">${l.purchaseType === 'virtual' ? '🌐 Compra virtual' : '🏪 Compra local'}${l.date ? ` • 📅 ${formatDate(l.date)}` : ''}</div>${l.comments ? `<div class="panel" style="margin-top:9px">📝 ${esc(l.comments)}</div>` : ''}<div class="stats"><div class="stat"><strong>${total}</strong><span>itens</span></div><div class="stat"><strong>${done}</strong><span>comprados</span></div><div class="stat"><strong>${total - done}</strong><span>pendentes</span></div><div class="stat"><strong>${money(sum)}</strong><span>total</span></div></div><div class="row stack-mobile" style="margin:12px 0"><input id="listItemSearch" class="input" placeholder="Pesquisar item, marca, unidade ou mercado..." value="${esc(s.q)}" aria-label="Pesquisar itens da lista" autocomplete="off"><button class="btn ghost" id="filterBtn">🔎 Filtros</button></div><div id="advancedFilters" class="filters ${s.category || s.market || s.minPrice || s.maxPrice || s.date ? 'show' : ''}"><div class="form-grid"><div class="field"><label for="lfCatFilter">Categoria</label><select id="lfCatFilter" class="select"><option value="">Todas</option>${cats.map((x) => `<option value="${esc(x)}" ${s.category === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label for="lfMarketFilter">Mercado</label><select id="lfMarketFilter" class="select"><option value="">Todos</option>${markets.map((x) => `<option value="${esc(x)}" ${s.market === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label for="lfMinPrice">Preço mínimo</label><input id="lfMinPrice" class="input" inputmode="decimal" value="${esc(s.minPrice)}" placeholder="R$ 0,00"></div><div class="field"><label for="lfMaxPrice">Preço máximo</label><input id="lfMaxPrice" class="input" inputmode="decimal" value="${esc(s.maxPrice)}" placeholder="R$ 0,00"></div><div class="field"><label for="lfDateFilter">Data</label><input id="lfDateFilter" class="input" type="date" value="${esc(s.date)}"></div></div><button class="btn ghost small" id="clearFiltersBtn" style="margin-top:9px">Limpar filtros</button></div><div class="form-grid" style="margin-top:9px"><div class="field"><label for="listFilter">Situação</label><select id="listFilter" class="select"><option value="all" ${s.filter === 'all' ? 'selected' : ''}>Todos</option><option value="pending" ${s.filter === 'pending' ? 'selected' : ''}>Pendentes</option><option value="done" ${s.filter === 'done' ? 'selected' : ''}>Comprados</option></select></div><div class="field"><label for="listSort">Ordenação</label><select id="listSort" class="select"><option value="default" ${s.sort === 'default' ? 'selected' : ''}>Ordem original</option><option value="pending" ${s.sort === 'pending' ? 'selected' : ''}>Pendentes primeiro</option><option value="done" ${s.sort === 'done' ? 'selected' : ''}>Comprados primeiro</option><option value="name" ${s.sort === 'name' ? 'selected' : ''}>Nome A–Z</option><option value="price" ${s.sort === 'price' ? 'selected' : ''}>Preço</option><option value="date" ${s.sort === 'date' ? 'selected' : ''}>Data</option></select></div></div><div class="row stack-mobile" style="margin:12px 0"><button class="btn primary" id="addItemBtn">+ Adicionar produto</button><button class="btn ghost" id="copyItemsBtn">📋 Copiar produtos</button><button class="btn ghost" id="buyAgainBtn">🛒 Comprar novamente</button><button class="btn danger small" id="clearDoneBtn">Limpar comprados</button></div><div id="listItems"></div>`
+      `<div class="meta">${l.purchaseType === 'virtual' ? '🌐 Compra virtual' : '🏪 Compra local'}${l.marketName ? ` • Mercado: ${esc(l.marketName)}` : ''}${l.date ? ` • 📅 ${formatDate(l.date)}` : ''}</div>${l.comments ? `<div class="panel" style="margin-top:9px">📝 ${esc(l.comments)}</div>` : ''}<div class="stats"><div class="stat"><strong>${total}</strong><span>itens</span></div><div class="stat"><strong>${done}</strong><span>comprados</span></div><div class="stat"><strong>${total - done}</strong><span>pendentes</span></div><div class="stat"><strong>${money(sum)}</strong><span>total</span></div></div><div class="row stack-mobile" style="margin:12px 0"><input id="listItemSearch" class="input" placeholder="Pesquisar item, marca ou unidade..." value="${esc(s.q)}" aria-label="Pesquisar itens da lista" autocomplete="off"><button class="btn ghost" id="filterBtn">🔎 Filtros</button></div><div id="advancedFilters" class="filters ${s.category || s.minPrice || s.maxPrice || s.date ? 'show' : ''}"><div class="form-grid"><div class="field"><label for="lfCatFilter">Categoria</label><select id="lfCatFilter" class="select"><option value="">Todas</option>${cats.map((x) => `<option value="${esc(x)}" ${s.category === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label for="lfMinPrice">Preço mínimo</label><input id="lfMinPrice" class="input" inputmode="decimal" value="${esc(s.minPrice)}" placeholder="R$ 0,00"></div><div class="field"><label for="lfMaxPrice">Preço máximo</label><input id="lfMaxPrice" class="input" inputmode="decimal" value="${esc(s.maxPrice)}" placeholder="R$ 0,00"></div><div class="field"><label for="lfDateFilter">Data</label><input id="lfDateFilter" class="input" type="date" value="${esc(s.date)}"></div></div><button class="btn ghost small" id="clearFiltersBtn" style="margin-top:9px">Limpar filtros</button></div><div class="form-grid" style="margin-top:9px"><div class="field"><label for="listFilter">Situação</label><select id="listFilter" class="select"><option value="all" ${s.filter === 'all' ? 'selected' : ''}>Todos</option><option value="pending" ${s.filter === 'pending' ? 'selected' : ''}>Pendentes</option><option value="done" ${s.filter === 'done' ? 'selected' : ''}>Comprados</option></select></div><div class="field"><label for="listSort">Ordenação</label><select id="listSort" class="select"><option value="default" ${s.sort === 'default' ? 'selected' : ''}>Ordem original</option><option value="pending" ${s.sort === 'pending' ? 'selected' : ''}>Pendentes primeiro</option><option value="done" ${s.sort === 'done' ? 'selected' : ''}>Comprados primeiro</option><option value="name" ${s.sort === 'name' ? 'selected' : ''}>Nome A–Z</option><option value="price" ${s.sort === 'price' ? 'selected' : ''}>Preço</option><option value="date" ${s.sort === 'date' ? 'selected' : ''}>Data</option></select></div></div><div class="row stack-mobile" style="margin:12px 0"><button class="btn primary" id="addItemBtn">+ Adicionar produto</button><button class="btn ghost" id="copyItemsBtn">📋 Copiar produtos</button><button class="btn ghost" id="buyAgainBtn">🛒 Comprar novamente</button><button class="btn danger small" id="clearDoneBtn">Limpar comprados</button></div><div id="listItems"></div>`
     );
     bindListModalEvents();
     renderListItemsOnly();
@@ -1129,10 +1131,6 @@
       listState.category = e.target.value;
       renderListItemsOnly();
     };
-    $('lfMarketFilter').onchange = (e) => {
-      listState.market = e.target.value;
-      renderListItemsOnly();
-    };
     $('lfMinPrice').oninput = (e) => {
       const v = parseMoney(e.target.value);
       listState.minPrice = v == null ? '' : String(v);
@@ -1149,7 +1147,6 @@
     };
     $('clearFiltersBtn').onclick = () => {
       listState.category = '';
-      listState.market = '';
       listState.minPrice = '';
       listState.maxPrice = '';
       listState.date = '';
@@ -1261,21 +1258,12 @@
             marketName: '',
             comments: '',
           };
-      const old = {
-        mainItemId: obj.mainItemId,
-        value: obj.value,
-        date: obj.date,
-        marketName: obj.marketName,
-        brand: obj.productBrand,
-        unit: obj.productUnit,
-      };
       const updated = {
         ...obj,
         mainItemId,
         quantity,
         date: $('ifDate').value || null,
         value,
-        marketName: $('ifMarket').value.trim(),
         comments: $('ifComments').value.trim(),
         ...productSnapshot({
           name: catalogById(mainItemId)?.name,
@@ -1287,26 +1275,34 @@
       const nextItems = existing
         ? l.items.map((i) => (i.id === existing.id ? updated : i))
         : [...l.items, updated];
-      const changed =
-        old.mainItemId !== updated.mainItemId ||
-        old.value !== updated.value ||
-        old.date !== updated.date ||
-        old.marketName !== updated.marketName ||
-        old.brand !== updated.productBrand ||
-        old.unit !== updated.productUnit;
+      const currentMarket = String(l.marketName || '').trim();
+      const targetDate = updated.date || localToday();
+      const c = catalogById(updated.mainItemId);
+      const targetBrand = updated.productBrand || c?.brand || '';
+      const targetUnit = updated.productUnit || c?.unit || '';
+      const previousHistory = latestHistoryRows(history).find(
+        (entry) =>
+          entry.mainItemId === updated.mainItemId &&
+          normalize(entry.marketName || '') === normalize(currentMarket)
+      );
+      const historyChanged =
+        !previousHistory ||
+        previousHistory.value !== updated.value ||
+        (previousHistory.date || null) !== targetDate ||
+        String(previousHistory.brand || '') !== String(targetBrand) ||
+        String(previousHistory.unit || '') !== String(targetUnit);
       const writes = ['lists'];
       let hist = null;
-      if (updated.value != null && (!existing || changed)) {
-        const c = catalogById(updated.mainItemId);
+      if (updated.value != null && historyChanged) {
         hist = {
           id: uid(),
           mainItemId: c?.id || null,
           itemName: c?.name || 'Produto removido',
-          brand: updated.productBrand || c?.brand || '',
-          unit: updated.productUnit || c?.unit || '',
+          brand: targetBrand,
+          unit: targetUnit,
           value: updated.value,
-          marketName: updated.marketName || '',
-          date: updated.date || localToday(),
+          marketName: currentMarket,
+          date: targetDate,
           createdAt: nowISO(),
           origin: 'manual-list',
         };
@@ -1330,7 +1326,7 @@
     if (!l) return;
     showModal(
       'Duplicar lista',
-      `<div class="muted">Escolha o que deseja levar para a nova lista. Itens comprados ficam desmarcados por padrão.</div><form id="duplicateForm"><div class="checkrow"><input id="dpProducts" type="checkbox" checked><label for="dpProducts">Produtos</label></div><div class="checkrow"><input id="dpQty" type="checkbox" checked><label for="dpQty">Quantidades</label></div><div class="checkrow"><input id="dpValues" type="checkbox" checked><label for="dpValues">Valores</label></div><div class="checkrow"><input id="dpMarkets" type="checkbox" checked><label for="dpMarkets">Mercados</label></div><div class="checkrow"><input id="dpNotes" type="checkbox" checked><label for="dpNotes">Observações</label></div><div class="checkrow"><input id="dpDone" type="checkbox"><label for="dpDone">Itens comprados marcados</label></div><div class="field" style="margin-top:9px"><label for="dpName">Nome da nova lista</label><input id="dpName" class="input" maxlength="120" value="${esc(l.name + ' (cópia)')}"></div><button class="btn primary" style="margin-top:12px" type="submit">Duplicar</button></form>`,
+      `<div class="muted">Escolha o que deseja levar para a nova lista. O mercado pertence à lista e será mantido. Itens comprados ficam desmarcados por padrão.</div><form id="duplicateForm"><div class="checkrow"><input id="dpProducts" type="checkbox" checked><label for="dpProducts">Produtos</label></div><div class="checkrow"><input id="dpQty" type="checkbox" checked><label for="dpQty">Quantidades</label></div><div class="checkrow"><input id="dpValues" type="checkbox" checked><label for="dpValues">Valores</label></div><div class="checkrow"><input id="dpNotes" type="checkbox" checked><label for="dpNotes">Observações</label></div><div class="checkrow"><input id="dpDone" type="checkbox"><label for="dpDone">Itens comprados marcados</label></div><div class="field" style="margin-top:9px"><label for="dpName">Nome da nova lista</label><input id="dpName" class="input" maxlength="120" value="${esc(l.name + ' (cópia)')}"></div><button class="btn primary" style="margin-top:12px" type="submit">Duplicar</button></form>`,
       'dpName'
     );
     $('duplicateForm').onsubmit = async (e) => {
@@ -1344,14 +1340,14 @@
           quantity: $('dpQty').checked ? i.quantity : null,
           date: null,
           value: $('dpValues').checked ? i.value : null,
-          marketName: $('dpMarkets').checked ? i.marketName : '',
+          marketName: String(i.marketName || ''),
           comments: $('dpNotes').checked ? i.comments : '',
           productName: i.productName,
           productBrand: i.productBrand,
           productUnit: i.productUnit,
           productCategory: i.productCategory,
         }))
-        .filter((i) => ($('dpProducts').checked ? true : false));
+        .filter(() => $('dpProducts').checked);
       const copy = {
         ...l,
         id: uid(),
@@ -1417,7 +1413,7 @@
     if (!l) return;
     showModal(
       '🛒 Comprar novamente',
-      `<div class="muted">Escolha quais informações da compra anterior devem ser reaproveitadas.</div><form id="buyAgainForm"><div class="checkrow"><input id="baQty" type="checkbox" checked><label for="baQty">Manter quantidades</label></div><div class="checkrow"><input id="baValues" type="checkbox"><label for="baValues">Manter valores</label></div><div class="checkrow"><input id="baMarkets" type="checkbox"><label for="baMarkets">Manter mercados</label></div><div class="checkrow"><input id="baNotes" type="checkbox"><label for="baNotes">Manter observações</label></div><div class="field" style="margin-top:9px"><label for="baName">Nome da nova lista</label><input id="baName" class="input" maxlength="120" value="${esc(l.name + ' (nova compra)')}"></div><button class="btn primary" style="margin-top:12px" type="submit">Criar nova lista</button></form>`,
+      `<div class="muted">Escolha quais informações da compra anterior devem ser reaproveitadas. O mercado da lista será mantido.</div><form id="buyAgainForm"><div class="checkrow"><input id="baQty" type="checkbox" checked><label for="baQty">Manter quantidades</label></div><div class="checkrow"><input id="baValues" type="checkbox"><label for="baValues">Manter valores</label></div><div class="checkrow"><input id="baNotes" type="checkbox"><label for="baNotes">Manter observações</label></div><div class="field" style="margin-top:9px"><label for="baName">Nome da nova lista</label><input id="baName" class="input" maxlength="120" value="${esc(l.name + ' (nova compra)')}"></div><button class="btn primary" style="margin-top:12px" type="submit">Criar nova lista</button></form>`,
       'baName'
     );
     $('buyAgainForm').onsubmit = async (e) => {
@@ -1438,7 +1434,7 @@
             quantity: $('baQty').checked ? i.quantity : null,
             value: $('baValues').checked ? i.value : null,
             date: null,
-            marketName: $('baMarkets').checked ? i.marketName : '',
+            marketName: String(i.marketName || ''),
             comments: $('baNotes').checked ? i.comments : '',
             productName: d.name,
             productBrand: d.brand,
@@ -1458,23 +1454,14 @@
     };
   }
   function buyAgainFromHistory() {
-    const arr = history
-      .slice()
-      .sort((a, b) => dateSortValue(b.date).localeCompare(dateSortValue(a.date)));
-    if (!arr.length) {
+    const rows = latestHistoryRows(history);
+    if (!rows.length) {
       notify('Não há histórico para usar.');
       return;
     }
-    const groups = new Map();
-    for (const h of arr) {
-      const key =
-        h.mainItemId || `${normalize(h.itemName)}|${normalize(h.brand)}|${normalize(h.unit)}`;
-      if (!groups.has(key)) groups.set(key, h);
-    }
-    const rows = [...groups.values()];
     showModal(
       'Comprar novamente do histórico',
-      `<form id="historyBuyForm"><div class="field"><label for="historyBuyName">Nome da nova lista</label><input id="historyBuyName" class="input" maxlength="120" value="Nova compra - ${formatDate(localToday())}"></div><div class="hint">Selecione os produtos que deseja levar.</div>${rows.map((h, n) => `<div class="checkrow"><input id="hb${n}" type="checkbox" checked data-hbuy="${n}"><label for="hb${n}">${esc(h.itemName)}${h.brand ? ` — ${esc(h.brand)}` : ''}${h.unit ? ` • ${esc(h.unit)}` : ''}</label></div>`).join('')}<button class="btn primary" style="margin-top:12px" type="submit">Criar lista</button></form>`,
+      `<form id="historyBuyForm"><div class="field"><label for="historyBuyName">Nome da nova lista</label><input id="historyBuyName" class="input" maxlength="120" value="Nova compra - ${formatDate(localToday())}"></div><div class="hint">Selecione os produtos que deseja levar. Registros de mercados diferentes permanecem separados.</div>${rows.map((h, n) => `<div class="checkrow"><input id="hb${n}" type="checkbox" checked data-hbuy="${n}"><label for="hb${n}">${esc(h.itemName)}${h.brand ? ` — ${esc(h.brand)}` : ''}${h.unit ? ` • ${esc(h.unit)}` : ''}${h.marketName ? ` • ${esc(h.marketName)}` : ''}</label></div>`).join('')}<button class="btn primary" style="margin-top:12px" type="submit">Criar lista</button></form>`,
       'historyBuyName'
     );
     $('historyBuyForm').onsubmit = async (e) => {
@@ -1522,12 +1509,16 @@
           productCategory: c.category || 'Outros',
         });
       }
+      const chosenMarkets = [
+        ...new Set(chosen.map((h) => String(h.marketName || '').trim()).filter(Boolean)),
+      ];
       const l = {
         id: uid(),
         name: $('historyBuyName').value.trim() || 'Nova compra',
         date: localToday(),
         createdAt: nowISO(),
         purchaseType: 'local',
+        marketName: chosenMarkets.length === 1 ? chosenMarkets[0] : '',
         comments: 'Criada a partir do histórico de preços.',
         archived: false,
         items,
@@ -2250,7 +2241,7 @@
     if (settings.privacySeen) return;
     showModal(
       '🔐 Privacidade dos seus dados',
-      `<div class="notice"><strong>Sua lista fica neste dispositivo.</strong><br>Produtos, preços e observações são armazenados localmente. A V2.2.2 não envia o conteúdo das suas listas para servidores e não realiza coleta de preços.</div><p class="muted">Você pode exportar seus dados a qualquer momento em Configurações → Exportar backup.</p><button class="btn primary" id="privacyUnderstand">Entendi</button>`,
+      `<div class="notice"><strong>Seus dados principais ficam neste dispositivo.</strong><br>Listas, produtos, histórico, desejos e estoque são armazenados localmente. O aplicativo não usa login nem Analytics para o funcionamento normal.</div><div class="panel" style="margin-top:10px"><strong>Compartilhamento por código</strong><br><span class="muted">Somente quando você solicitar o compartilhamento, uma cópia da lista e dos produtos necessários é enviada ao serviço temporário Cloudflare Worker/KV. Estoque e inventário não são enviados, e o código expira em 7 dias.</span></div><p class="muted">Você pode exportar um backup local a qualquer momento em Configurações.</p><button class="btn primary" id="privacyUnderstand">Entendi</button>`,
       'privacyUnderstand'
     );
     $('privacyUnderstand').onclick = async () => {
@@ -2543,6 +2534,7 @@
   });
   async function init() {
     if (!('indexedDB' in window)) {
+      window.__mlAppReadyV230 = { ready: true, error: true };
       alert('Este navegador não suporta IndexedDB.');
       return;
     }
@@ -2551,17 +2543,17 @@
       await seedReferenceData();
       await migrateOld();
       await load();
+      window.__mlAppReadyV230 = { ready: true, error: false };
+      window.dispatchEvent(new CustomEvent('ml:app-ready'));
       setTimeout(firstRunPrivacy, 250);
     } catch (err) {
       console.error(err);
+      window.__mlAppReadyV230 = { ready: true, error: true };
+      window.dispatchEvent(new CustomEvent('ml:app-ready'));
       alert(
         'Não foi possível abrir o armazenamento local. Tente novamente pelo endereço HTTPS do GitHub Pages.'
       );
     }
   }
-  if ('serviceWorker' in navigator)
-    window.addEventListener('load', () =>
-      navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('Service Worker:', e))
-    );
   init();
 })();

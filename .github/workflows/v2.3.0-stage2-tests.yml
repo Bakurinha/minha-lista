@@ -27,6 +27,9 @@ jobs:
           node --check inventory.js
           node --check reference-market-refresh.js
           node --check reference-product-expansion-v230.js
+          node --check reference-product-expansion-v230-5.js
+          node --check initial-loading.js
+          node --check list-market-v230.js
           node --check enhancements.js
           node --check backup-v230.js
           node --check list-enhancements.js
@@ -35,6 +38,7 @@ jobs:
           node --check db-open-bridge-v230.js
           node --check version-v230.js
           node --check v3-shell.js
+          node --check v3-icon-force.js
           node --check v3-compact-controls.js
           node --check share-optimized-v230.js
           node --check tests/v230-data-preservation.test.js
@@ -43,6 +47,7 @@ jobs:
           node --check tests/v230-security-regression.test.js
           node --check tests/v230-version.test.js
           node --check tests/v230-v3-ui.test.js
+          node --check tests/v230-runtime-audit.test.js
           node --check tests/v230-share-optimized.test.js
           node --check share-service/worker.js
           node --check share-service/test/worker.test.js
@@ -63,6 +68,8 @@ jobs:
         run: node tests/v230-version.test.js
       - name: V3 UI contract
         run: node tests/v230-v3-ui.test.js
+      - name: Runtime startup audit
+        run: node tests/v230-runtime-audit.test.js
       - name: Optimized sharing contract
         run: node tests/v230-share-optimized.test.js
       - name: Worker validation tests

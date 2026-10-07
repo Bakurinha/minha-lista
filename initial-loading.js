@@ -4,6 +4,7 @@
   const ID = 'initialLoading';
   const STYLE_ID = 'initialLoadingStyle';
   const BODY_CLASS = 'initial-loading-active';
+  const MAX_WAIT_MS = 45000;
 
   function installStyle() {
     if (document.getElementById(STYLE_ID)) return;
@@ -49,13 +50,16 @@
         width: 28px;
         height: 28px;
         margin: 0 auto 13px;
-        border: 3px solid rgba(22,163,74,.18);
+        border: 3px solid rgba(22, 163, 74, .18);
         border-top-color: var(--primary, #16a34a);
         border-radius: 50%;
         animation: initialLoadingSpin .7s linear infinite;
       }
       @keyframes initialLoadingSpin {
         to { transform: rotate(360deg); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #${ID} .initial-loading-spinner { animation-duration: 1.4s; }
       }
     `;
     document.head.appendChild(style);
@@ -66,27 +70,36 @@
     installStyle();
     document.body.classList.add(BODY_CLASS);
 
-    let overlay = document.getElementById(ID);
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = ID;
-      overlay.setAttribute('role', 'status');
-      overlay.setAttribute('aria-live', 'polite');
-      overlay.innerHTML = `
-        <div class="initial-loading-box">
-          <div class="initial-loading-spinner" aria-hidden="true"></div>
-          <div class="initial-loading-title">Minha Lista</div>
-          <div class="initial-loading-subtitle">carregando...</div>
-        </div>
-      `;
-      document.body.prepend(overlay);
-    }
+    if (document.getElementById(ID)) return;
+    const overlay = document.createElement('div');
+    overlay.id = ID;
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.innerHTML = `
+      <div class="initial-loading-box">
+        <div class="initial-loading-spinner" aria-hidden="true"></div>
+        <div class="initial-loading-title">Minha Lista</div>
+        <div class="initial-loading-subtitle">carregando...</div>
+      </div>
+    `;
+    document.body.prepend(overlay);
   }
 
-  function isAppReady() {
-    const cards = document.getElementById('listsCards');
-    const iconsReady = document.body?.dataset?.v3IconsInstalled === '1';
-    return !!cards && iconsReady && (cards.children.length > 0 || cards.innerHTML.trim() !== '');
+  function appReady() {
+    return window.__mlAppReadyV230?.ready === true;
+  }
+
+  function referenceReady() {
+    return window.__mlReferenceReadyV230?.ready === true;
+  }
+
+  function uiReady() {
+    const body = document.body;
+    return (
+      body?.dataset?.v3IconsInstalled === '1' &&
+      body?.dataset?.v3ShellInstalled === '1' &&
+      body?.dataset?.mlSearchControlsInstalled === '1'
+    );
   }
 
   function hide() {
@@ -97,34 +110,10 @@
     setTimeout(() => overlay.remove(), 220);
   }
 
-  function cleanFirstRunPrivacyTitle() {
-    const title = document.getElementById('modalTitle');
-    if (
-      !title ||
-      (title.textContent.trim() !== '🔐 Privacidade dos seus dados' &&
-        title.textContent.trim() !== 'Privacidade dos seus dados')
-    )
-      return;
-    title.querySelectorAll('.ml-v3-icon').forEach((icon) => icon.remove());
-    [...title.childNodes].forEach((node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        node.nodeValue = String(node.nodeValue || '').replace(/🔐/gu, '');
-      }
-    });
-  }
-
-  function watchFirstRunPrivacy() {
-    const started = Date.now();
-    const timer = setInterval(() => {
-      cleanFirstRunPrivacyTitle();
-      if (Date.now() - started >= 12000) clearInterval(timer);
-    }, 50);
-  }
-
   function watch() {
     const started = Date.now();
     const timer = setInterval(() => {
-      if (isAppReady() || Date.now() - started >= 10000) {
+      if ((appReady() && referenceReady() && uiReady()) || Date.now() - started >= MAX_WAIT_MS) {
         clearInterval(timer);
         hide();
       }
@@ -133,13 +122,9 @@
 
   function init() {
     mount();
-    watchFirstRunPrivacy();
     watch();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
-  }
+  if (document.body) init();
+  else document.addEventListener('DOMContentLoaded', init, { once: true });
 })();

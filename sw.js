@@ -1,4 +1,4 @@
-const CACHE = 'minha-lista-v2-3-12';
+const CACHE = 'minha-lista-v2-3-13';
 const CORE = [
   './',
   './index.html',
@@ -18,7 +18,6 @@ const CORE = [
   './v3-shell.js',
   './v3-icons.js',
   './v3-icon-force.js',
-  './v3-menu-autoclose.js',
   './v3-compact-controls.js',
   './share-config.js',
   './reference-market-refresh.js',
@@ -69,4 +68,4 @@ self.addEventListener('fetch', (event) => {
       )
   );
 });
-// V2.3.13: offline database reference check is automatic only on first initialization; refresh is manual.
+// V2.3.13: startup waits for app, UI and real IndexedDB reference checks before revealing the interface.

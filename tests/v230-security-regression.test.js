@@ -3,11 +3,11 @@
 const fs = require('fs');
 const assert = require('assert');
 
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
 const app = fs.readFileSync('app.js', 'utf8');
 const inv = fs.readFileSync('inventory.js', 'utf8');
 const list = fs.readFileSync('list-enhancements.js', 'utf8');
-const listMarket = fs.readFileSync('list-market-v230.js', 'utf8');
-const listMarketCore = listMarket.split('\n// Bootstrap V2.3.0')[0];
+const runtime = fs.readFileSync('list-market-v230.js', 'utf8');
 const share = fs.readFileSync('share-config.js', 'utf8');
 const shareCompat = fs.readFileSync('share-optimized-v230.js', 'utf8');
 const backup = fs.readFileSync('backup-v230.js', 'utf8');
@@ -15,63 +15,56 @@ const sw = fs.readFileSync('sw.js', 'utf8');
 const worker = fs.readFileSync('share-service/worker.js', 'utf8');
 const index = fs.readFileSync('index.html', 'utf8');
 
-assert(app.includes('textContent'), 'renderização segura por texto deve existir');
-assert(!app.includes('sendBeacon'), 'não deve usar sendBeacon');
-assert(!app.includes('WebSocket'), 'não deve usar WebSocket');
-assert(!app.includes('firebase'), 'não deve depender de Firebase');
-assert(!app.includes('supabase'), 'não deve depender de Supabase');
+assert(app.includes('textContent'), 'Renderização segura por texto deve existir');
+assert(!app.includes('sendBeacon'), 'Não deve usar sendBeacon');
+assert(!app.includes('WebSocket'), 'Não deve usar WebSocket');
+assert(!app.includes('firebase'), 'Não deve depender de Firebase');
+assert(!app.includes('supabase'), 'Não deve depender de Supabase');
 
-assert(share.includes('shared-list-v3'), 'compartilhamento oficial deve suportar V3');
+assert(share.includes('shared-list-v3-compact'), 'Compartilhamento oficial deve suportar V3 compacto');
+assert(share.includes('/api/share'), 'Compartilhamento oficial deve usar a API configurada');
+assert(shareCompat.includes('__mlShareOptimizedLoaded'), 'Shim legado deve permanecer controlado');
+assert(backup.includes('backupFormatVersion: 2'), 'Backup deve usar formato V2');
+assert(backup.includes('inventory'), 'Backup deve preservar inventário');
+
+assert(app.includes('id="lfMarket"'), 'Mercado da lista deve estar no formulário principal');
 assert(
-  share.includes('shared-list-v3-compact'),
-  'compartilhamento oficial deve suportar formato compacto'
+  app.includes("marketName: $('lfMarket').value.trim().slice(0, 160)"),
+  'Mercado da lista deve ser persistido pelo núcleo'
 );
+assert(!app.includes('id="ifMarket"'), 'Mercado não deve ser editado por item');
+assert(!app.includes('lfMarketFilter'), 'Filtro legado de mercado por item ainda está ativo');
+assert(!app.includes('dpMarkets'), 'Duplicação ainda expõe mercado por item');
+assert(!app.includes('baMarkets'), 'Comprar novamente ainda expõe mercado por item');
 assert(
-  share.includes('/api/share'),
-  'compartilhamento oficial deve usar a API de compartilhamento'
+  app.includes("const currentMarket = String(l.marketName || '').trim()") &&
+    app.includes('marketName: currentMarket'),
+  'Histórico novo deve usar o mercado da lista'
 );
-assert(
-  shareCompat.includes('__mlShareOptimizedLoaded'),
-  'shim legado de compartilhamento deve permanecer inerte'
-);
-assert(backup.includes('backupFormatVersion: 2'), 'backup deve usar formato V2');
-assert(backup.includes('inventory'), 'backup deve preservar inventário');
 assert(
   list.includes('Mercado antigo do item é preservado'),
-  'mercado legado deve ser explicitamente preservado'
+  'Compatibilidade com marketName legado do item deve ser preservada'
 );
+assert(!/delete\s+item\.marketName/.test(list), 'Mercado legado do item não pode ser apagado');
+
+assert(app.includes('function latestHistoryRows'), 'Consolidação do histórico ausente');
 assert(
-  !/delete\s+item\.marketName/.test(list),
-  'mercado antigo dos itens não deve ser apagado durante a atualização'
+  app.includes("${historyIdentity(h)}|${normalize(h.marketName || '')}"),
+  'Histórico deve consolidar por produto + mercado'
 );
 
-assert(listMarket.includes('v230ListMarket'), 'mercado da lista deve possuir campo próprio');
-assert(listMarket.includes('marketName'), 'mercado da lista deve ser persistido em marketName');
-assert(listMarket.includes('MAX_MARKET'), 'mercado da lista deve possuir limite de tamanho');
-assert(
-  !listMarketCore.includes('inventory'),
-  'implementação do mercado da lista não deve acessar estoque'
-);
-assert(
-  listMarket.includes('O mercado será exibido na lista e ficará associado a ela.'),
-  'mercado da lista deve ser apresentado como dado da própria lista'
-);
-assert(
-  listMarket.includes('FALLBACK_MARKETS'),
-  'seletor deve possuir fallback local para não depender da leitura do banco para aparecer'
-);
-assert(
-  !/delete\s+next\.marketName/.test(listMarketCore),
-  'mercado antigo dos itens não deve ser removido ao salvar o mercado da lista'
-);
+assert(!runtime.includes('indexedDB.open'), 'Bootstrap não deve duplicar persistência de mercado');
+assert(runtime.includes("'./v3-compact-controls.js'"), 'Bootstrap deve carregar pesquisas responsivas');
+assert(/navigator\.serviceWorker[\s\S]*?\.register\(/.test(runtime), 'Service Worker deve ter um registro único no runtime');
+assert(!/serviceWorker\.register/.test(app), 'Núcleo não deve registrar o Service Worker novamente');
 
-assert(sw.includes("'./v3-shell.js'"), 'Service Worker deve cachear o shell V3');
-assert(sw.includes("'./version-v230.js'"), 'Service Worker deve cachear o versionador');
-assert(sw.includes('minha-lista-v2-3-8'), 'Service Worker deve usar o cache da versão atual');
-assert(!sw.includes('src="./v3-shell.js"'), 'Service Worker não deve injetar scripts no HTML');
-assert(index.includes('list-market-v230.js'), 'HTML deve carregar a entrada do runtime');
+assert(sw.includes(`minha-lista-v${pkg.version.replace(/\./g, '-')}`), 'Cache PWA deve seguir package.json');
+assert(!sw.includes('v3-menu-autoclose.js'), 'Cache não deve manter autoclose duplicado');
+assert(index.includes('initial-loading.js'), 'Loading inicial deve ser explícito');
+assert(index.includes('temporariamente ao serviço de compartilhamento'), 'Privacidade estática deve explicar envio explícito');
 
-assert(/MAX_BODY_BYTES/.test(worker), 'Worker deve limitar tamanho do corpo');
+assert(/MAX_BODY_BYTES/.test(worker), 'Worker deve limitar o corpo');
 assert(/CORS|Access-Control-Allow-Origin/.test(worker), 'Worker deve declarar CORS');
+assert(/expirationTtl:\s*SHARE_TTL/.test(worker), 'Worker deve expirar compartilhamentos');
 
-console.log('V2.3.0 security/regression source audit: OK');
+console.log(`security/regression source audit: OK (${pkg.version})`);

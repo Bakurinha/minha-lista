@@ -83,19 +83,11 @@
       }
       if (button.dataset.v3Bound === '1') return;
       button.dataset.v3Bound = '1';
-      button.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        closeMenu(event);
-      });
+      button.addEventListener('click', () => closeMenu());
     });
   }
 
-  function closeMenu(event) {
-    if (event) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    }
+  function closeMenu() {
     document.body.classList.remove('v3-menu-open');
     const toggle = document.querySelector('.v3-menu-toggle');
     if (toggle) {

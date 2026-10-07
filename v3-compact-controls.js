@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  // Padroniza EXCLUSIVAMENTE a área de pesquisa em todas as telas que possuem busca.
-  // A largura não é reduzida: no celular acompanha a largura disponível.
+  // Mantém o input original (e seus listeners) como fonte funcional e usa um
+  // textarea visual para acompanhar o texto verticalmente sem alargar o layout.
   const STYLE_ID = 'ml-v3-compact-controls';
   const SEARCH_IDS = [
     'listSearch',
@@ -11,6 +11,9 @@
     'invSearch',
     'historyItemSearch',
     'historyMarketSearch',
+    'refProductSearch',
+    'refCatalogSearch',
+    'listItemSearch',
   ];
   const MAX_SEARCH_LINES = 2;
 
@@ -34,10 +37,13 @@
         min-width: 0 !important;
         min-height: 36px !important;
         max-height: calc(1.35em * ${MAX_SEARCH_LINES} + 18px) !important;
+        padding: 7px 10px !important;
+        font-size: 14px !important;
+        line-height: 1.35 !important;
         box-sizing: border-box !important;
         resize: none !important;
         overflow-x: hidden !important;
-        overflow-y: auto !important;
+        overflow-y: hidden !important;
         white-space: pre-wrap !important;
         overflow-wrap: anywhere !important;
         word-break: break-word !important;
@@ -87,7 +93,7 @@
     wrap.dataset.mlSearchWrap = original.id;
 
     const visual = document.createElement('textarea');
-    visual.className = 'ml-search-multiline';
+    visual.className = 'input ml-search-multiline';
     visual.id = `${original.id}Multiline`;
     visual.rows = 1;
     visual.value = original.value;
@@ -97,6 +103,10 @@
     visual.inputMode = 'search';
     visual.enterKeyHint = 'search';
     visual.spellcheck = false;
+
+    document.querySelectorAll(`label[for="${original.id}"]`).forEach((label) => {
+      label.htmlFor = visual.id;
+    });
 
     original.classList.add('ml-search-original-hidden');
     original.setAttribute('aria-hidden', 'true');
@@ -132,6 +142,7 @@
   function init() {
     injectStyles();
     upgradeSearchFields();
+    document.body.dataset.mlSearchControlsInstalled = '1';
     const observer = new MutationObserver(upgradeSearchFields);
     observer.observe(document.body, { childList: true, subtree: true });
   }

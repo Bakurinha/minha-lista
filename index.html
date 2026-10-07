@@ -622,11 +622,12 @@
     </style>
   </head>
   <body>
+    <script src="./initial-loading.js"></script>
     <div class="app">
       <header class="top">
         <div>
           <h1>🛒 Minha lista</h1>
-          <div class="sub">Supermercado • offline • v2.3.12</div>
+          <div class="sub">Supermercado • offline • v2.3.13</div>
         </div>
         <div class="badge" id="globalBadge" aria-label="Itens pendentes">0</div>
       </header>
@@ -793,16 +794,18 @@
             /></label>
           </div>
           <div class="hint">
-            O compartilhamento é feito por arquivo/JSON local. Nenhum dado é enviado para um
-            servidor pelo aplicativo.
+            O compartilhamento por código envia somente a lista escolhida e os produtos
+            necessários para um serviço temporário. Estoque/inventário não é enviado e o código
+            expira em 7 dias.
           </div>
         </div>
         <div class="panel">
           <h3 class="section-title">🔐 Privacidade</h3>
           <div class="notice">
-            <strong>V2.3.0 local</strong><br />Esta versão não coleta preços, não possui Analytics,
-            não possui login, não envia o conteúdo das listas para servidores e não usa banco
-            remoto.
+            <strong>V2.3.13 local-first</strong><br />O funcionamento normal não usa login nem
+            Analytics e mantém seus dados no dispositivo. Somente quando você solicita o
+            compartilhamento por código, uma cópia da lista e dos produtos necessários é enviada
+            temporariamente ao serviço de compartilhamento.
           </div>
           <button class="btn ghost" id="privacyBtn" style="margin-top: 10px">
             Ver informações de privacidade
@@ -817,7 +820,7 @@
         </div>
         <div class="panel">
           <h3 class="section-title">ℹ️ Aplicativo</h3>
-          <div class="muted">Minha Lista de Supermercado • V2.3.0</div>
+          <div class="muted">Minha Lista de Supermercado • V2.3.13</div>
           <button class="btn ghost" id="installHintBtn" style="margin-top: 10px">
             📱 Como instalar
           </button>
@@ -847,6 +850,5 @@
     <script src="./db-open-bridge-v230.js"></script>
     <script src="./app.js"></script>
     <script src="./list-market-v230.js"></script>
-    <script src="./v3-icons.js"></script>
   </body>
 </html>
