@@ -60,7 +60,10 @@ for (const id of searchIds) assert(compact.includes(`'${id}'`), `Pesquisa ${id} 
 assert(compact.includes('MAX_SEARCH_LINES = 2'), 'Pesquisa deve crescer no máximo duas linhas');
 assert(compact.includes('autosizeSearch'), 'Pesquisa não possui autosize por linha');
 assert(compact.includes("removeAttribute('maxlength')"), 'Pesquisa possui limite artificial');
-assert(compact.includes("visual.className = 'input ml-search-multiline'"), 'Estilo base do campo não é preservado');
+assert(
+  compact.includes("visual.className = 'input ml-search-multiline'"),
+  'Estilo base do campo não é preservado'
+);
 assert(compact.includes('width: 100% !important'), 'Pesquisa deve manter largura responsiva');
 assert(compact.includes('min-height: 36px !important'), 'Altura inicial compacta ausente');
 assert(compact.includes('padding: 7px 10px !important'), 'Compactação vertical ausente');
@@ -72,15 +75,27 @@ assert(
   'Pesquisa visual não sincroniza com o listener original'
 );
 
-assert(index.includes('<script src="./initial-loading.js"></script>'), 'Loading inicial não é carregado diretamente');
-assert(!index.includes('<script src="./v3-icons.js"></script>'), 'Ícones ainda são carregados duas vezes');
+assert(
+  index.includes('<script src="./initial-loading.js"></script>'),
+  'Loading inicial não é carregado diretamente'
+);
+assert(
+  !index.includes('<script src="./v3-icons.js"></script>'),
+  'Ícones ainda são carregados duas vezes'
+);
 assert(!version.includes('v3-shell.js'), 'Versionador não deve carregar o shell V3');
 assert(version.includes(`const VERSION = 'v${pkg.version}'`), 'Versão visual fora de sincronia');
-assert(sw.includes(`minha-lista-v${pkg.version.replace(/\./g, '-')}`), 'Cache PWA fora de sincronia');
+assert(
+  sw.includes(`minha-lista-v${pkg.version.replace(/\./g, '-')}`),
+  'Cache PWA fora de sincronia'
+);
 
 assert(sharing.includes('openReady'), 'Compartilhamento não aguarda o banco');
 assert(sharing.includes("get('shared')"), 'Importação remota por shared ausente');
-assert(sharing.includes('id="mlShareCode"') && sharing.includes('maxlength="12"'), 'Código de compartilhamento inválido');
+assert(
+  sharing.includes('id="mlShareCode"') && sharing.includes('maxlength="12"'),
+  'Código de compartilhamento inválido'
+);
 assert(
   shareCompat.includes('sharedInput') && shareCompat.includes('sharedImportBtn'),
   'Compatibilidade da importação por código ausente'

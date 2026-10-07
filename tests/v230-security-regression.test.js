@@ -21,7 +21,10 @@ assert(!app.includes('WebSocket'), 'Não deve usar WebSocket');
 assert(!app.includes('firebase'), 'Não deve depender de Firebase');
 assert(!app.includes('supabase'), 'Não deve depender de Supabase');
 
-assert(share.includes('shared-list-v3-compact'), 'Compartilhamento oficial deve suportar V3 compacto');
+assert(
+  share.includes('shared-list-v3-compact'),
+  'Compartilhamento oficial deve suportar V3 compacto'
+);
 assert(share.includes('/api/share'), 'Compartilhamento oficial deve usar a API configurada');
 assert(shareCompat.includes('__mlShareOptimizedLoaded'), 'Shim legado deve permanecer controlado');
 assert(backup.includes('backupFormatVersion: 2'), 'Backup deve usar formato V2');
@@ -54,14 +57,29 @@ assert(
 );
 
 assert(!runtime.includes('indexedDB.open'), 'Bootstrap não deve duplicar persistência de mercado');
-assert(runtime.includes("'./v3-compact-controls.js'"), 'Bootstrap deve carregar pesquisas responsivas');
-assert(/navigator\.serviceWorker[\s\S]*?\.register\(/.test(runtime), 'Service Worker deve ter um registro único no runtime');
-assert(!/serviceWorker\.register/.test(app), 'Núcleo não deve registrar o Service Worker novamente');
+assert(
+  runtime.includes("'./v3-compact-controls.js'"),
+  'Bootstrap deve carregar pesquisas responsivas'
+);
+assert(
+  /navigator\.serviceWorker[\s\S]*?\.register\(/.test(runtime),
+  'Service Worker deve ter um registro único no runtime'
+);
+assert(
+  !/serviceWorker\.register/.test(app),
+  'Núcleo não deve registrar o Service Worker novamente'
+);
 
-assert(sw.includes(`minha-lista-v${pkg.version.replace(/\./g, '-')}`), 'Cache PWA deve seguir package.json');
+assert(
+  sw.includes(`minha-lista-v${pkg.version.replace(/\./g, '-')}`),
+  'Cache PWA deve seguir package.json'
+);
 assert(!sw.includes('v3-menu-autoclose.js'), 'Cache não deve manter autoclose duplicado');
 assert(index.includes('initial-loading.js'), 'Loading inicial deve ser explícito');
-assert(index.includes('temporariamente ao serviço de compartilhamento'), 'Privacidade estática deve explicar envio explícito');
+assert(
+  index.includes('temporariamente ao serviço de compartilhamento'),
+  'Privacidade estática deve explicar envio explícito'
+);
 
 assert(/MAX_BODY_BYTES/.test(worker), 'Worker deve limitar o corpo');
 assert(/CORS|Access-Control-Allow-Origin/.test(worker), 'Worker deve declarar CORS');

@@ -31,7 +31,6 @@
 - Adicionada auditoria de runtime/inicialização ao CI.
 - Versão, manifest e cache PWA alinhados em `2.3.13`.
 
-
 ## V2.3.12 — 14/09/2026
 
 ### Catálogo de referência offline
