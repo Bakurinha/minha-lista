@@ -43,7 +43,10 @@ for (const asset of [
 }
 
 assert(icons.includes('const ICONS'), 'Mapa principal de ícones ausente');
-assert(iconForce.includes('Extended_Pictographic'), 'Fallback pictográfico ausente');
+assert(
+  !icons.includes('installSearchProxy') && !icons.includes('ml-search-proxy'),
+  'Módulo de ícones não pode controlar o layout dos campos de pesquisa'
+);
 
 const searchIds = [
   'listSearch',

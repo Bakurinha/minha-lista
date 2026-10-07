@@ -47,99 +47,8 @@
     body.v3-ui .section-title .ml-v3-icon { width:20px; height:20px; vertical-align:-0.2em; }
     body.v3-ui .empty .ml-v3-icon { width:38px; height:38px; margin-bottom:7px; }
 
-    body.v3-ui .ml-search-proxy {
-      box-sizing: border-box !important;
-      resize: none;
-      overflow-x: hidden;
-      overflow-y: hidden;
-      min-height: 42px;
-      height: 42px;
-      line-height: 22px;
-      padding-top: 9px;
-      padding-bottom: 9px;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      display: block;
-    }
-    @media (max-width: 600px) {
-      body.v3-ui .ml-search-proxy.ml-search-mobile-compact {
-        min-height: 28px !important;
-        height: 28px !important;
-        line-height: 18px !important;
-        padding-top: 4px !important;
-        padding-bottom: 4px !important;
-      }
-    }
-    body.v3-ui .ml-search-proxy.ml-search-scroll {
-      overflow-y: auto;
-    }
-    /* Corrige especificamente os campos visuais de Itens e Desejos */
-    body.v3-ui #catalogSearch,
-    body.v3-ui #wishSearch,
-    body.v3-ui #catalogSearch__ui,
-    body.v3-ui #wishSearch__ui, 
-    body.v3-ui #wishInput,
-    body.v3-ui #catalogInput,
-    body.v3-ui #invFilter,
-    body.v3-ui #listItemSearch {
-      box-sizing: border-box !important;
-      width: 100% !important;
-      height: 42px !important;
-      min-height: 42px !important;
-      max-height: 42px !important;
-      padding: 9px 13px !important;
-      line-height: 22px !important;
-      overflow: hidden !important;
-      resize: none !important;
-    }
-    /* Largura compacta das pesquisas principais, sem alterar o Histórico. */
-    body.v3-ui #listSearch__ui,
-    body.v3-ui #catalogSearch__ui,
-    body.v3-ui #wishSearch__ui,
-    body.v3-ui #invSearch__ui {
-      width: 100%;
-      max-width: 500px;
-      margin-right: auto;
-    }
 
-    /* Campo de filtro do Estoque. */
-    body.v3-ui .filters .input,
-    body.v3-ui .filters .select {
-      width: 100%;
-      max-width: 420px;
-    }
-
-    @media (max-width: 600px) {
-      body.v3-ui #listSearch__ui,
-      body.v3-ui #catalogSearch__ui,
-      body.v3-ui #wishSearch__ui,
-      body.v3-ui #invSearch__ui {
-        width: 100%;
-        max-width: none;
-      }
-      body.v3-ui .filters .input,
-      body.v3-ui .filters .select {
-        width: 70%;
-        max-width: none;
-      }
-    }
   `;
-
-  const SEARCH_IDS = new Set([
-    'listSearch',
-    'catalogSearch',
-    'wishSearch',
-    'historyItemSearch',
-    'historyMarketSearch',
-    'invSearch',
-  ]);
-
-  const MOBILE_COMPACT_SEARCH_IDS = new Set([
-    'listSearch',
-    'catalogSearch',
-    'wishSearch',
-    'invSearch',
-  ]);
 
   function installStyle() {
     if (document.getElementById('v3-icons-style')) return;
@@ -193,92 +102,17 @@
     nodes.forEach(replaceTextNode);
   }
 
-  function installSearchProxy(input) {
-    if (!(input instanceof HTMLInputElement)) return;
-    if (!SEARCH_IDS.has(input.id) || input.dataset.mlSearchProxyBound === '1') return;
-
-    const isMobileCompactSearch = MOBILE_COMPACT_SEARCH_IDS.has(input.id);
-    const proxy = document.createElement('textarea');
-    proxy.className = `${input.className} ml-search-proxy${isMobileCompactSearch ? ' ml-search-mobile-compact' : ''}`;
-    proxy.id = `${input.id}__ui`;
-    proxy.name = input.name || '';
-    proxy.placeholder = input.placeholder || '';
-    proxy.autocomplete = input.autocomplete || 'off';
-    proxy.setAttribute(
-      'aria-label',
-      input.getAttribute('aria-label') || input.placeholder || 'Pesquisar'
-    );
-    proxy.setAttribute('spellcheck', 'false');
-    proxy.value = input.value || '';
-    proxy.dataset.mlSearchProxyFor = input.id;
-
-    input.dataset.mlSearchProxyBound = '1';
-    input.tabIndex = -1;
-    input.setAttribute('aria-hidden', 'true');
-    input.style.display = 'none';
-    input.parentNode.insertBefore(proxy, input);
-
-    const sync = () => {
-      input.value = proxy.value;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-    };
-
-    const resize = () => {
-      proxy.style.height = '42px';
-      const styles = getComputedStyle(proxy);
-      const lineHeight = Number.parseFloat(styles.lineHeight) || 22;
-      const borderY =
-        (Number.parseFloat(styles.borderTopWidth) || 1) +
-        (Number.parseFloat(styles.borderBottomWidth) || 1);
-      const paddingY =
-        (Number.parseFloat(styles.paddingTop) || 9) +
-        (Number.parseFloat(styles.paddingBottom) || 9);
-      const oneLineHeight = Math.ceil(lineHeight + paddingY + borderY);
-      const maxHeight = Math.max(oneLineHeight, Math.ceil(lineHeight * 2 + paddingY + borderY));
-      if (['listSearch', 'catalogSearch', 'wishSearch', 'invSearch'].includes(input.id)) {
-        proxy.style.height = '42px';
-        proxy.style.minHeight = '42px';
-        proxy.style.maxHeight = '42px';
-        proxy.style.overflowY = 'hidden';
-        proxy.classList.remove('ml-search-scroll');
-        return;
-      }
-
-      const nextHeight = Math.min(Math.max(proxy.scrollHeight, oneLineHeight), maxHeight);
-      proxy.style.height = `${nextHeight}px`;
-      proxy.classList.toggle('ml-search-scroll', proxy.scrollHeight > maxHeight);
-    };
-
-    proxy.addEventListener('input', () => {
-      sync();
-      resize();
-    });
-    proxy.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') event.preventDefault();
-    });
-
-    resize();
-  }
-
-  function installSearchProxies(root = document.body) {
-    if (!root) return;
-    if (root.matches?.('input.input')) installSearchProxy(root);
-    root.querySelectorAll?.('input.input').forEach(installSearchProxy);
-  }
-
   function install() {
     if (document.body.dataset.v3IconsInstalled === '1') return;
     document.body.dataset.v3IconsInstalled = '1';
     installStyle();
     scan();
-    installSearchProxies();
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.TEXT_NODE) replaceTextNode(node);
           else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('ml-v3-icon')) {
             scan(node);
-            installSearchProxies(node);
           }
         });
       }

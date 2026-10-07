@@ -7,6 +7,7 @@ const migrations = fs.readFileSync('db-migrations-v230.js', 'utf8');
 const loading = fs.readFileSync('initial-loading.js', 'utf8');
 const refresh = fs.readFileSync('reference-market-refresh.js', 'utf8');
 const runtime = fs.readFileSync('list-market-v230.js', 'utf8');
+const icons = fs.readFileSync('v3-icons.js', 'utf8');
 const index = fs.readFileSync('index.html', 'utf8');
 const app = fs.readFileSync('app.js', 'utf8');
 
@@ -52,6 +53,10 @@ assert(
 );
 
 assert(runtime.includes("'./v3-compact-controls.js'"), 'Pesquisa responsiva ausente do bootstrap');
+assert(
+  !icons.includes('installSearchProxy') && !icons.includes('ml-search-proxy'),
+  'Pesquisa deve ter um único responsável: v3-compact-controls.js'
+);
 assert(
   runtime.includes("'./reference-market-refresh.js'"),
   'Verificação do banco ausente do bootstrap'
