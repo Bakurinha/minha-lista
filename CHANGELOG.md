@@ -5,7 +5,6 @@
 - Actions fixadas por SHA verificado; permissões de leitura explícitas e credenciais de checkout removidas dos fluxos sem escrita.
 - Dependabot configurado para propor atualizações de Actions e dos pacotes npm aplicáveis, sem merge automático.
 
-
 ## V2.3.13 — 06/10/2026
 
 ### Auditoria e estabilização
