@@ -5,13 +5,14 @@
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "npx --yes --package typescript@5.9.2 tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "version:sync": "node scripts/version.js sync",
     "version:patch": "node scripts/version.js patch",
     "version:minor": "node scripts/version.js minor",
     "version:major": "node scripts/version.js major"
   },
   "devDependencies": {
-    "prettier": "3.6.2"
+    "prettier": "3.6.2",
+    "typescript": "5.9.2"
   }
 }

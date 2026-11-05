@@ -19,16 +19,20 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   format:
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -44,14 +48,72 @@ jobs:
       - name: Format source files
         run: npm run format
 
-      - name: Commit formatting and version synchronization
+      - name: Prepare reviewable patch
+        id: changes
+        shell: bash
         run: |
-          if git diff --quiet; then
-            echo 'Code and version references are already synchronized.'
-            exit 0
+          set -euo pipefail
+          git add -N -- . ':!node_modules' ':!.github' ':!SECURITY.md'
+          git diff --binary HEAD -- . ':!node_modules' ':!.github' ':!SECURITY.md' > "$RUNNER_TEMP/generated.patch"
+          if [ -s "$RUNNER_TEMP/generated.patch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+      - name: Upload generated patch
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: format-proposal
+          path: ${{ runner.temp }}/generated.patch
+          retention-days: 7
+          if-no-files-found: error
+
+  propose:
+    needs: format
+    if: needs.format.outputs.changed == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: format-proposal
+          path: ${{ runner.temp }}/proposal
+      # No package installation or repository script runs in this job.
+      - name: Validate and commit generated files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config core.hooksPath /dev/null
+          git apply --index -- "$RUNNER_TEMP/proposal/generated.patch"
+          python3 - <<'PY'
+          import subprocess
+          paths = subprocess.check_output(['git', 'diff', '--cached', '--name-only', '-z']).decode().split('\0')
+          for path in filter(None, paths):
+              if not (not path.startswith(('.', 'node_modules/')) and path.endswith(('.js', '.ts', '.json', '.css', '.html', '.md')) and '/.' not in path):
+                  raise SystemExit('Unexpected generated path; publication stopped')
+          modes = subprocess.check_output(['git', 'diff', '--cached', '--raw']).decode().splitlines()
+          if any(line.split()[1] not in ('100644', '000000') for line in modes):
+              raise SystemExit('Unexpected generated file mode; publication stopped')
+          PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'chore: sync version and format source'
-          git push
+          git -c commit.gpgsign=false commit -m 'chore: sync version and format source'
+      - name: Open draft pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="automation/format-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          gh auth setup-git
+          git push origin "HEAD:refs/heads/$branch"
+          gh pr create --repo "$GH_REPO" --base 'main' --head "$branch" --draft \
+            --title 'chore: sync version and format source' \
+            --body 'Generated in an isolated read-only job. Review the diff and approve the required CI runs before merging. No automatic merge or production deployment is performed by this workflow.'
