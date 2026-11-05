@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git add -N -- . ':!node_modules' ':!.github' ':!SECURITY.md'
+          # Version sync and Prettier only modify tracked files.
           git diff --binary HEAD -- . ':!node_modules' ':!.github' ':!SECURITY.md' > "$RUNNER_TEMP/generated.patch"
           if [ -s "$RUNNER_TEMP/generated.patch" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
