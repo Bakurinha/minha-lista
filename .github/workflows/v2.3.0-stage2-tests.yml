@@ -80,3 +80,6 @@ jobs:
         run: node --test share-service/test/worker.test.js
       - name: Foundation checks
         run: node tests/v230-foundation.test.js
+
+      - name: Formatting patch regression tests
+        run: node --test tests/workflow-format-patch.test.js
